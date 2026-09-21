@@ -20,6 +20,7 @@ export * from "./CategoryModal";
 export * from "./ApproveAccountModal";
 export * from "./RejectAccountModal";
 export * from "./DocumentPreviewModal";
+export * from "./ReportDetailsModal";
 
 
 

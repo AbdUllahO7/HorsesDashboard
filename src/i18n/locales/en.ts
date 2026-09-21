@@ -28,6 +28,7 @@ export const en: TranslationSchema = {
     reports: "Reports & Analytics",
     reviews: "Complaints & Reviews",
     userAccounts: "User Accounts",
+    tickets: "Reports & Violations",
     settings: "Settings",
   },
   dashboard: {

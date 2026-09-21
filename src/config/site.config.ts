@@ -71,6 +71,13 @@ export const siteConfig = {
       iconName: "UserCheck",
     },
     {
+      id: "tickets",
+      title: "Reports & Tickets",
+      titleAr: "البلاغات",
+      href: "/tickets",
+      iconName: "ShieldAlert",
+    },
+    {
       id: "settings",
       title: "Settings",
       titleAr: "إعدادات",
