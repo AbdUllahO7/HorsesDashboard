@@ -1,0 +1,74 @@
+import { NavigationItem } from "@/types/common";
+
+export const siteConfig = {
+  name: "منصة الخيول والمواشي",
+  nameEn: "Horses & Livestock Admin",
+  description: "لوحة التحكم الإدارية لإدارة المزادات وبائعي المواشي والمستلزمات",
+  defaultLocale: "ar",
+  direction: "rtl",
+  sidebarNav: [
+    {
+      id: "overview",
+      title: "Dashboard",
+      titleAr: "لوحة التحكم",
+      href: "/",
+      iconName: "Gauge",
+    },
+    {
+      id: "livestock-sellers",
+      title: "Livestock Sellers",
+      titleAr: "إدارة بائعي المواشي",
+      href: "/listings/sellers",
+      iconName: "Users",
+    },
+    {
+      id: "supplies-sellers",
+      title: "Supplies Sellers",
+      titleAr: "بائعي المستلزمات",
+      href: "/listings/supplies-sellers",
+      iconName: "UsersRound",
+    },
+    {
+      id: "customers",
+      title: "Customers Management",
+      titleAr: "إدارة العملاء",
+      href: "/users",
+      iconName: "FileText",
+    },
+    {
+      id: "categories",
+      title: "Categories Management",
+      titleAr: "إدارة التصنيفات",
+      href: "/listings/categories",
+      iconName: "LayoutGrid",
+    },
+    {
+      id: "auctions",
+      title: "Auctions Management",
+      titleAr: "إدارة المزادات",
+      href: "/auctions",
+      iconName: "Gavel",
+    },
+    {
+      id: "reports",
+      title: "Reports & Analytics",
+      titleAr: "التقارير والإحصائيات",
+      href: "/orders",
+      iconName: "FileSpreadsheet",
+    },
+    {
+      id: "reviews",
+      title: "Complaints & Reviews",
+      titleAr: "الشكاوى والتقييمات",
+      href: "/orders/reviews",
+      iconName: "HelpCircle",
+    },
+    {
+      id: "settings",
+      title: "Settings",
+      titleAr: "إعدادات",
+      href: "/settings",
+      iconName: "Settings",
+    },
+  ] as NavigationItem[],
+};

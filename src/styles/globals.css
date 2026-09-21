@@ -1,0 +1,77 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@theme {
+  --color-canvas: #F4F5F9;
+  --color-background: #F4F5F9;
+  --color-background-subtle: #F8F9FC;
+  --color-background-muted: #EFF1F6;
+  
+  --color-surface: #FFFFFF;
+  --color-surface-sidebar: #FFFFFF;
+  --color-surface-header: #FFFFFF;
+  --color-surface-card: #FFFFFF;
+  --color-surface-card-hover: #FCFCFE;
+  --color-surface-dropdown: #FFFFFF;
+  --color-surface-input: #F3F4F8;
+
+  --color-border-subtle: #EDEEF2;
+  --color-border-strong: #DCDFE8;
+  --color-border-accent: #EADBBD;
+
+  --color-gold-primary: #B59E5F;
+  --color-gold-dark: #A6883C;
+  --color-gold-hover: #A38B47;
+  --color-gold-active: #8F7836;
+  --color-gold-muted: #FAF4E8;
+  --color-gold-pill: #F7EED8;
+  --color-gold-badge: #FAF4E8;
+  --color-gold-border: #EADBBD;
+
+  --color-text-primary: #1E1E2D;
+  --color-text-secondary: #4A4E5A;
+  --color-text-muted: #8E8E93;
+  --color-text-gold: #A6883C;
+  --color-text-inverse: #FFFFFF;
+
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-danger: var(--status-danger);
+  --color-status-info: var(--status-info);
+
+  --font-cairo: var(--font-cairo), "Cairo", sans-serif;
+}
+
+/* Base global styling */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  background-color: #F4F5F9;
+  color: #1E1E2D;
+  font-family: var(--font-cairo), "Cairo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  direction: rtl;
+  text-align: right;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F4F5F9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D5D8E2;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #B59E5F;
+}

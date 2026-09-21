@@ -1,0 +1,64 @@
+@layer base {
+  :root {
+    /* Main Canvas Background (Soft cool gray from image) */
+    --background: #F4F5F9;
+    --background-subtle: #F8F9FC;
+    --background-muted: #EFF1F6;
+    
+    /* Surfaces: Pure White Cards, Sidebar, Header, Subheader */
+    --surface: #FFFFFF;
+    --surface-sidebar: #FFFFFF;
+    --surface-header: #FFFFFF;
+    --surface-card: #FFFFFF;
+    --surface-card-hover: #FCFCFE;
+    --surface-dropdown: #FFFFFF;
+    --surface-input: #F3F4F8;
+
+    /* Borders & Dividers */
+    --border: #EDEEF2;
+    --border-subtle: #EDEEF2;
+    --border-strong: #DCDFE8;
+    --border-accent: #EADBBD;
+
+    /* Brand Gold Accents (From Image) */
+    --primary-gold: #B59E5F;
+    --primary-gold-dark: #A6883C;
+    --primary-gold-hover: #A38B47;
+    --primary-gold-active: #8F7836;
+    --primary-gold-muted: #FAF4E8;
+    --primary-gold-pill: #F7EED8;
+    --primary-gold-badge: #FAF4E8;
+    --primary-gold-border: #EADBBD;
+
+    /* Typography Colors */
+    --text-primary: #1E1E2D;
+    --text-secondary: #4A4E5A;
+    --text-muted: #8E8E93;
+    --text-gold: #A6883C;
+    --text-inverse: #FFFFFF;
+
+    /* Status Indicators */
+    --status-success: #10B981;
+    --status-success-bg: #ECFDF5;
+    --status-warning: #F59E0B;
+    --status-warning-bg: #FFFBEB;
+    --status-danger: #EF4444;
+    --status-danger-bg: #FEF2F2;
+    --status-info: #3B82F6;
+    --status-info-bg: #EFF6FF;
+
+    /* Layout Metrics */
+    --sidebar-width: 260px;
+    --header-height: 68px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    /* Elevation / Shadows */
+    --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.03);
+    --shadow-gold-glow: 0 2px 10px rgba(181, 158, 95, 0.15);
+  }
+}
