@@ -34,6 +34,7 @@ import {
   DataTable,
   Column,
   TableToolbar,
+  Breadcrumb,
 } from "@/components";
 
 type StatusTab = "all" | SellerStatus;
@@ -335,11 +336,7 @@ export default function SuppliesSellersPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <div className="flex items-center justify-end text-xs text-[#8E8E93] font-medium gap-1.5">
-        <span className="text-[#1E1E2D] font-bold">إدارة بائعي المستلزمات</span>
-        <span>&gt;</span>
-        <span>لوحة التحكم</span>
-      </div>
+      <Breadcrumb pageTitle="إدارة بائعي المستلزمات" />
 
       {/* 2. Top 4 Stat Cards from Service Config */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

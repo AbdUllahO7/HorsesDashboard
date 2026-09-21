@@ -1,9 +1,12 @@
 import React from "react";
 import { BarChart3, Download, Calendar } from "lucide-react";
+import { Breadcrumb } from "@/components";
 
 export default function OrdersAndReportsPage() {
   return (
     <div className="space-y-6">
+      <Breadcrumb pageTitle="التقارير والإحصائيات" />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-[#1E1E2D]">التقارير والطلبات</h1>

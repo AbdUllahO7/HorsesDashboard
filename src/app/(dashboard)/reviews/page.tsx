@@ -23,6 +23,7 @@ import {
   DataTable,
   Column,
   TableToolbar,
+  Breadcrumb,
 } from "@/components";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -261,11 +262,7 @@ export default function ReviewsAndComplaintsPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <div className="flex items-center justify-start text-xs text-[#8E8E93] font-medium gap-1.5">
-        <span className="text-[#1E1E2D] font-bold">الشكاوى والتقييمات</span>
-        <span>&gt;</span>
-        <span>لوحة التحكم</span>
-      </div>
+      <Breadcrumb pageTitle="الشكاوى والتقييمات" />
 
       {/* 2. Top 4 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
