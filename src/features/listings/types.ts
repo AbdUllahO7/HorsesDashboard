@@ -2,16 +2,44 @@ import { BaseFilterParams } from "@/types/api";
 
 export type ListingCategory = "horses" | "supplies" | "accessories" | "feed";
 
+export type SellerStatus = "active" | "pending" | "inactive" | "blocked";
+
+export interface LivestockSeller {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: SellerStatus;
+  isAuctionsEnabled: boolean;
+  auctionsCount: number;
+  isLiveStreamEnabled: boolean;
+  createdAt: string;
+}
+
+export interface SellersStats {
+  totalSellers: number;
+  activeSellers: number;
+  inactiveSellers: number;
+  blockedSellers: number;
+}
+
+export interface LivestockSellerFilterParams extends BaseFilterParams {
+  statusTab?: "all" | SellerStatus;
+  sortBy?: "name" | "email" | "phone" | "status" | "auctionsCount";
+  sortOrder?: "asc" | "desc";
+}
+
 export interface Seller {
   id: string;
   name: string;
+  email?: string;
   phone: string;
   type: "livestock" | "supplies";
-  status: "active" | "pending" | "blocked";
-  totalListings: number;
-  totalSales: number;
-  rating: number;
-  joinedDate: string;
+  status: SellerStatus;
+  totalListings?: number;
+  totalSales?: number;
+  rating?: number;
+  joinedDate?: string;
 }
 
 export interface ListingItem {
