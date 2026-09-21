@@ -22,6 +22,7 @@ export * from "./RejectAccountModal";
 export * from "./DocumentPreviewModal";
 export * from "./ReportDetailsModal";
 export * from "./AdModal";
+export * from "./InvoiceDetailsModal";
 
 
 

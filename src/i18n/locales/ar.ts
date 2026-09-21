@@ -29,6 +29,7 @@ export const ar = {
     tickets: "البلاغات",
     ads: "الإعلانات",
     accounting: "المحاسبة",
+    invoices: "الفواتير",
     settings: "إعدادات",
   },
   dashboard: {

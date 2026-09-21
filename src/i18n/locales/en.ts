@@ -31,6 +31,7 @@ export const en: TranslationSchema = {
     tickets: "Reports & Violations",
     ads: "Ads Management",
     accounting: "Accounting & Finance",
+    invoices: "Invoices",
     settings: "Settings",
   },
   dashboard: {

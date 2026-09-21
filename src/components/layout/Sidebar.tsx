@@ -22,6 +22,7 @@ import {
   ShieldAlert,
   Megaphone,
   Calculator,
+  Receipt,
   LogOut,
   X,
 } from "lucide-react";
@@ -39,6 +40,7 @@ const iconMap: Record<string, React.ReactNode> = {
   ShieldAlert: <ShieldAlert className="h-5 w-5" strokeWidth={1.8} />,
   Megaphone: <Megaphone className="h-5 w-5" strokeWidth={1.8} />,
   Calculator: <Calculator className="h-5 w-5" strokeWidth={1.8} />,
+  Receipt: <Receipt className="h-5 w-5" strokeWidth={1.8} />,
   Settings: <Settings className="h-5 w-5" strokeWidth={1.8} />,
 };
 
@@ -55,6 +57,7 @@ const navKeyMap: Record<string, TranslationKey> = {
   tickets: "nav.tickets",
   ads: "nav.ads",
   accounting: "nav.accounting",
+  invoices: "nav.invoices",
   settings: "nav.settings",
 };
 

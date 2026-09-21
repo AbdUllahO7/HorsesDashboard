@@ -92,6 +92,13 @@ export const siteConfig = {
       iconName: "Calculator",
     },
     {
+      id: "invoices",
+      title: "Invoices",
+      titleAr: "الفواتير",
+      href: "/invoices",
+      iconName: "Receipt",
+    },
+    {
       id: "settings",
       title: "Settings",
       titleAr: "إعدادات",
