@@ -31,7 +31,10 @@ import {
   ConfirmModalVariant,
   DataTable,
   Column,
+  TableToolbar,
+  FilterTab,
 } from "@/components";
+
 
 
 type StatusTab = "all" | SellerStatus;
@@ -432,60 +435,24 @@ export default function LivestockSellersPage() {
         {/* Card Title */}
         <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">قائمة البائعين</h2>
 
-        {/* Toolbar: Search/Sort on the RIGHT, Tabs on the LEFT */}
-        <div className="flex flex-col-reverse lg:flex-row items-stretch lg:items-center justify-between gap-4 mb-6">
-          {/* Left Side: Filter Tabs */}
-          <div className="flex items-center flex-wrap gap-2">
-            {filterTabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setCurrentPage(1);
-                  }}
-                  className={`px-3.5 py-1.5 text-xs font-semibold rounded-md border transition-all cursor-pointer whitespace-nowrap ${
-                    isActive
-                      ? "bg-[#B8860B] text-white border-[#B8860B] shadow-2xs"
-                      : "border-[#E5E7EB] bg-white text-[#4A4E5A] hover:bg-[#F9FAFB]"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Right Side: Search & Sort Controls */}
-          <div className="flex items-center gap-2.5">
-            {/* Sort Button */}
-            <button
-              title="فرز النتائج"
-              className="flex items-center gap-1.5 rounded-md border border-[#EADBBD] bg-[#FAF4E6] px-3.5 py-1.5 text-xs font-bold text-[#A6883C] hover:bg-[#F3E7C9] transition-colors cursor-pointer shadow-2xs"
-            >
-              <ArrowUpDown className="h-3.5 w-3.5" />
-              <span>فرز</span>
-            </button>
-
-            {/* Search Input */}
-            <div className="relative w-full sm:w-64">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder="ابحث هنا"
-                className="w-full rounded-md border border-[#E5E7EB] bg-white py-1.5 pr-3 pl-9 text-xs text-[#1E1E2D] placeholder-[#9CA3AF] outline-none focus:border-[#B59E5F] transition-all"
-              />
-              <Search className="absolute left-2.5 top-2 h-4 w-4 text-[#9CA3AF]" />
-            </div>
-          </div>
-        </div>
+        {/* Dynamic Reusable Table Toolbar (Search, Sort & Filter Tabs) */}
+        <TableToolbar<StatusTab>
+          searchQuery={searchQuery}
+          onSearchChange={(query) => {
+            setSearchQuery(query);
+            setCurrentPage(1);
+          }}
+          searchPlaceholder="ابحث هنا"
+          tabs={filterTabs}
+          activeTab={activeTab}
+          onTabChange={(tabId) => {
+            setActiveTab(tabId);
+            setCurrentPage(1);
+          }}
+        />
 
         {/* 3. Reusable Dynamic Data Table with onRowClick */}
+
         <DataTable<LivestockSeller>
           columns={columns}
           data={sellers}
