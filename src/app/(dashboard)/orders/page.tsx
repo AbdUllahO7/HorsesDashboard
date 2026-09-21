@@ -26,6 +26,7 @@ import {
   TopLiveStreamItem,
 } from "@/features/analytics/types";
 import { Breadcrumb, StatCard } from "@/components";
+import { useTranslation } from "@/i18n";
 import { cn } from "@/core/utils/cn";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -36,6 +37,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export default function ReportsAndAnalyticsPage() {
+  const { t } = useTranslation();
+
   // State
   const [stats, setStats] = useState<DashboardOverviewStats | null>(null);
   const [statCardsConfig, setStatCardsConfig] = useState<AnalyticsStatCardItem[]>(analyticsStatCardsConfig);
@@ -81,7 +84,7 @@ export default function ReportsAndAnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <Breadcrumb pageTitle="التقارير والإحصائيات" />
+      <Breadcrumb pageTitle={t("reports.title", "التقارير والإحصائيات")} />
 
       {/* 2. Top 4 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

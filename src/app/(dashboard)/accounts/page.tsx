@@ -14,6 +14,7 @@ import {
   RejectAccountModal,
   DocumentPreviewModal,
 } from "@/components";
+import { useTranslation } from "@/i18n";
 
 interface PreviewDocState {
   isOpen: boolean;
@@ -23,6 +24,8 @@ interface PreviewDocState {
 }
 
 export default function UserAccountsReviewPage() {
+  const { t } = useTranslation();
+
   // State
   const [accounts, setAccounts] = useState<UserAccountItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -102,7 +105,7 @@ export default function UserAccountsReviewPage() {
   const columns: Column<UserAccountItem>[] = [
     {
       key: "name",
-      header: "اسم المستخدم",
+      header: t("userAccounts.userName", "اسم المستخدم"),
       sortable: true,
       align: "right",
       render: (item) => (
@@ -111,7 +114,7 @@ export default function UserAccountsReviewPage() {
     },
     {
       key: "phone",
-      header: "رقم الهاتف",
+      header: t("userAccounts.phone", "رقم الهاتف"),
       sortable: true,
       align: "right",
       render: (item) => (
@@ -122,7 +125,7 @@ export default function UserAccountsReviewPage() {
     },
     {
       key: "email",
-      header: "البريد الالكتروني",
+      header: t("userAccounts.email", "البريد الالكتروني"),
       sortable: true,
       align: "right",
       render: (item) => (
@@ -200,7 +203,7 @@ export default function UserAccountsReviewPage() {
     },
     {
       key: "actions",
-      header: "الاجراءات",
+      header: t("common.actions", "الاجراءات"),
       align: "center",
       render: (item) => (
         <div
@@ -251,11 +254,13 @@ export default function UserAccountsReviewPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <Breadcrumb pageTitle="حسابات المستخدمين" />
+      <Breadcrumb pageTitle={t("userAccounts.title", "حسابات المستخدمين")} />
 
       {/* 2. Page Header Title */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#1E1E2D]">الحسابات قيد المراجعة</h1>
+        <h1 className="text-xl font-bold text-[#1E1E2D]">
+          {t("userAccounts.listTitle", "قائمة طلبات الحسابات")}
+        </h1>
       </div>
 
       {/* 3. Main Content Card */}

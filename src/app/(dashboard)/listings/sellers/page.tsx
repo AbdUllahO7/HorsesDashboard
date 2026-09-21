@@ -265,16 +265,16 @@ export default function LivestockSellersPage() {
   const columns: Column<LivestockSeller>[] = [
     {
       key: "phone",
-      header: "رقم الهاتف",
+      header: t("livestockSellers.phone", "رقم الهاتف"),
       sortable: true,
       align: "right",
       render: (seller) => (
-        <span className="font-medium text-[#1E1E2D]">{seller.phone}</span>
+        <span className="font-medium text-[#1E1E2D]" dir="ltr">{seller.phone}</span>
       ),
     },
     {
       key: "email",
-      header: "بريد الكتروني",
+      header: t("livestockSellers.email", "بريد الكتروني"),
       sortable: true,
       align: "right",
       render: (seller) => (
@@ -283,7 +283,7 @@ export default function LivestockSellersPage() {
     },
     {
       key: "name",
-      header: "اسم البائع",
+      header: t("livestockSellers.sellerName", "اسم البائع"),
       sortable: true,
       align: "right",
       render: (seller) => (
@@ -299,14 +299,14 @@ export default function LivestockSellersPage() {
     },
     {
       key: "status",
-      header: "الحالة",
+      header: t("common.status", "الحالة"),
       sortable: true,
       align: "center",
       render: (seller) => <StatusBadge status={seller.status} />,
     },
     {
       key: "auctions",
-      header: "المزادات",
+      header: t("livestockSellers.auctions", "المزادات"),
       sortable: true,
       align: "center",
       render: (seller) => (
@@ -319,7 +319,7 @@ export default function LivestockSellersPage() {
     },
     {
       key: "auctionsCount",
-      header: "عدد المزادات",
+      header: t("livestockSellers.auctionsCount", "عدد المزادات"),
       sortable: true,
       align: "center",
       render: (seller) => (
@@ -328,7 +328,7 @@ export default function LivestockSellersPage() {
     },
     {
       key: "liveStream",
-      header: "البث المباشر",
+      header: t("livestockSellers.liveStream", "البث المباشر"),
       sortable: true,
       align: "center",
       render: (seller) => (
@@ -341,7 +341,7 @@ export default function LivestockSellersPage() {
     },
     {
       key: "actions",
-      header: "الاجراءات",
+      header: t("common.actions", "الاجراءات"),
       align: "center",
       render: (seller) => (
         <div
@@ -407,7 +407,7 @@ export default function LivestockSellersPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <Breadcrumb pageTitle="إدارة بائعي المواشي" />
+      <Breadcrumb pageTitle={t("livestockSellers.title", "إدارة بائعي المواشي")} />
 
       {/* 2. Top 4 Stat Cards from Service Config */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -427,11 +427,12 @@ export default function LivestockSellersPage() {
         })}
       </div>
 
-
       {/* 2. Main Content Card */}
       <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6 shadow-2xs">
         {/* Card Title */}
-        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">قائمة البائعين</h2>
+        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">
+          {t("livestockSellers.listTitle", "قائمة البائعين")}
+        </h2>
 
         {/* Dynamic Reusable Table Toolbar (Search, Sort & Filter Tabs) */}
         <TableToolbar<StatusTab>

@@ -18,6 +18,7 @@ import {
   AdModal,
   ConfirmModalVariant,
 } from "@/components";
+import { useTranslation } from "@/i18n";
 
 type AdTabId = "types" | "published";
 
@@ -31,6 +32,8 @@ interface ConfirmDialogState {
 }
 
 export default function AdsManagementPage() {
+  const { t } = useTranslation();
+
   // State
   const [filterTabs, setFilterTabs] = useState<AdFilterTabItem[]>(adsFilterTabs);
   const [ads, setAds] = useState<AdItem[]>([]);
@@ -144,7 +147,7 @@ export default function AdsManagementPage() {
   const columns: Column<AdItem>[] = [
     {
       key: "title",
-      header: "نوع الاعلان",
+      header: t("ads.adName", "نوع الاعلان"),
       sortable: true,
       align: "right",
       render: (item) => (
@@ -162,7 +165,7 @@ export default function AdsManagementPage() {
     },
     {
       key: "actions",
-      header: "الاجراءات",
+      header: t("common.actions", "الاجراءات"),
       align: "center",
       render: (item) => (
         <div
@@ -199,11 +202,13 @@ export default function AdsManagementPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <Breadcrumb pageTitle="ادارة الاعلانات" />
+      <Breadcrumb pageTitle={t("ads.title", "ادارة الاعلانات")} />
 
       {/* 2. Top Bar: Title & Add Button */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#1E1E2D]">ادارة الاعلانات</h1>
+        <h1 className="text-xl font-bold text-[#1E1E2D]">
+          {t("ads.listTitle", "قائمة الإعلانات")}
+        </h1>
         <button
           type="button"
           onClick={() => {
@@ -213,7 +218,7 @@ export default function AdsManagementPage() {
           className="flex items-center gap-1.5 rounded-xl bg-[#B8860B] px-4 py-2 text-xs font-bold text-white hover:bg-[#A37508] transition-colors shadow-2xs cursor-pointer"
         >
           <Plus className="h-4 w-4" />
-          <span>إضافة اعلان</span>
+          <span>{t("ads.addNewAd", "إضافة اعلان")}</span>
         </button>
       </div>
 

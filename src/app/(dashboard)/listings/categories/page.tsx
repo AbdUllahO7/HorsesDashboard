@@ -16,6 +16,7 @@ import {
   CategoryModal,
   ConfirmModalVariant,
 } from "@/components";
+import { useTranslation } from "@/i18n";
 import { cn } from "@/core/utils/cn";
 
 type FilterTabId = "all" | "livestock" | "supplies";
@@ -30,9 +31,11 @@ interface ConfirmDialogState {
 }
 
 export default function CategoriesPage() {
+  const { t } = useTranslation();
+
   // State
-  const [filterTabs, setFilterTabs] = useState<CategoryFilterTabItem[]>(categoryFilterTabs);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [filterTabs, setFilterTabs] = useState<CategoryFilterTabItem[]>(categoryFilterTabs);
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<FilterTabId>("all");
@@ -40,7 +43,7 @@ export default function CategoriesPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(4);
 
-  // Modal State
+  // Modal states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
@@ -144,11 +147,13 @@ export default function CategoriesPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <Breadcrumb pageTitle="إدارة التصنيفات" />
+      <Breadcrumb pageTitle={t("categories.title", "إدارة التصنيفات")} />
 
       {/* 2. Top Bar: Title & Add Button */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#1E1E2D]">قائمة التصنيفات</h1>
+        <h1 className="text-xl font-bold text-[#1E1E2D]">
+          {t("categories.listTitle", "قائمة التصنيفات")}
+        </h1>
         <button
           type="button"
           onClick={() => {
@@ -158,7 +163,7 @@ export default function CategoriesPage() {
           className="flex items-center gap-1.5 rounded-xl bg-[#B8860B] px-4 py-2 text-xs font-bold text-white hover:bg-[#A37508] transition-colors shadow-2xs cursor-pointer"
         >
           <Plus className="h-4 w-4" />
-          <span>إضافة تصنيف</span>
+          <span>{t("categories.addNewCategory", "إضافة تصنيف")}</span>
         </button>
       </div>
 

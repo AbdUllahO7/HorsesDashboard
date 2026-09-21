@@ -211,7 +211,7 @@ export default function CustomersPage() {
   const columns: Column<CustomerUser>[] = [
     {
       key: "phone",
-      header: "رقم الهاتف",
+      header: t("customers.phone", "رقم الهاتف"),
       sortable: true,
       align: "right",
       render: (customer) => (
@@ -220,7 +220,7 @@ export default function CustomersPage() {
     },
     {
       key: "email",
-      header: "بريد الكتروني",
+      header: t("customers.email", "بريد الكتروني"),
       sortable: true,
       align: "right",
       render: (customer) => (
@@ -229,7 +229,7 @@ export default function CustomersPage() {
     },
     {
       key: "name",
-      header: "اسم العميل",
+      header: t("customers.customerName", "اسم العميل"),
       sortable: true,
       align: "right",
       render: (customer) => (
@@ -245,14 +245,14 @@ export default function CustomersPage() {
     },
     {
       key: "status",
-      header: "الحالة",
+      header: t("common.status", "الحالة"),
       sortable: true,
       align: "center",
       render: (customer) => <StatusBadge status={customer.status} />,
     },
     {
       key: "interactionsCount",
-      header: "التفاعلات",
+      header: t("customers.interactionsCount", "التفاعلات"),
       sortable: true,
       align: "center",
       render: (customer) => (
@@ -261,7 +261,7 @@ export default function CustomersPage() {
     },
     {
       key: "joinedDate",
-      header: "تاريخ الانضمام",
+      header: t("customers.joinedDate", "تاريخ الانضمام"),
       sortable: true,
       align: "center",
       render: (customer) => (
@@ -270,7 +270,7 @@ export default function CustomersPage() {
     },
     {
       key: "actions",
-      header: "الاجراءات",
+      header: t("common.actions", "الاجراءات"),
       align: "center",
       render: (customer) => (
         <div
@@ -336,7 +336,7 @@ export default function CustomersPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <Breadcrumb pageTitle="إدارة العملاء" />
+      <Breadcrumb pageTitle={t("customers.title", "إدارة العملاء")} />
 
       {/* 2. Top 4 Stat Cards from Service Config */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -359,7 +359,9 @@ export default function CustomersPage() {
       {/* 3. Main Content Card */}
       <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6 shadow-2xs">
         {/* Card Title */}
-        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">قائمة العملاء</h2>
+        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">
+          {t("customers.listTitle", "قائمة العملاء")}
+        </h2>
 
         {/* Dynamic Reusable Table Toolbar */}
         <TableToolbar<StatusTab>

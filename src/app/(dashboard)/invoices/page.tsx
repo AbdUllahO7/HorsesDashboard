@@ -11,8 +11,11 @@ import {
   Pagination,
   InvoiceDetailsModal,
 } from "@/components";
+import { useTranslation } from "@/i18n";
 
 export default function InvoicesPage() {
+  const { t } = useTranslation();
+
   // State
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -70,7 +73,7 @@ export default function InvoicesPage() {
   const listColumns: Column<Invoice>[] = [
     {
       key: "serialNumber",
-      header: "الرقم التسلسلي",
+      header: t("invoices.serialNumber", "الرقم التسلسلي"),
       sortable: true,
       align: "right",
       render: (item) => (
@@ -84,7 +87,7 @@ export default function InvoicesPage() {
     },
     {
       key: "actions",
-      header: "الاجراءات",
+      header: t("common.actions", "الاجراءات"),
       align: "center",
       render: (item) => (
         <div className="flex items-center justify-center gap-3">
@@ -117,7 +120,7 @@ export default function InvoicesPage() {
   const detailsColumns: Column<InvoiceItem>[] = [
     {
       key: "productName",
-      header: "اسم المنتج",
+      header: t("invoices.productName", "اسم المنتج"),
       sortable: true,
       align: "right",
       render: (item) => (
@@ -126,7 +129,7 @@ export default function InvoicesPage() {
     },
     {
       key: "quantity",
-      header: "العدد",
+      header: t("invoices.quantity", "العدد"),
       sortable: true,
       align: "center",
       render: (item) => (
@@ -135,7 +138,7 @@ export default function InvoicesPage() {
     },
     {
       key: "unitPrice",
-      header: "السعر الافرادي",
+      header: t("invoices.unitPrice", "السعر الافرادي"),
       sortable: true,
       align: "center",
       render: (item) => (
@@ -144,7 +147,7 @@ export default function InvoicesPage() {
     },
     {
       key: "totalPrice",
-      header: "السعر الاجمالي",
+      header: t("invoices.totalPrice", "السعر الاجمالي"),
       sortable: true,
       align: "center",
       render: (item) => (
@@ -157,12 +160,12 @@ export default function InvoicesPage() {
     <div className="space-y-6">
       {/* 1. Breadcrumb */}
       {viewMode === "list" ? (
-        <Breadcrumb pageTitle="الفواتير" />
+        <Breadcrumb pageTitle={t("invoices.title", "الفواتير")} />
       ) : (
         <Breadcrumb
           items={[
-            { label: "الفواتير", href: "/invoices" },
-            { label: `تفاصيل الفاتورة ${selectedInvoice?.serialNumber || ""}` },
+            { label: t("invoices.title", "الفواتير"), href: "/invoices" },
+            { label: `${t("invoices.invoiceDetails", "تفاصيل الفاتورة")} ${selectedInvoice?.serialNumber || ""}` },
           ]}
         />
       )}

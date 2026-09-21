@@ -14,6 +14,7 @@ import {
   ReportDetailsModal,
   ConfirmModalVariant,
 } from "@/components";
+import { useTranslation } from "@/i18n";
 
 interface ConfirmDialogState {
   isOpen: boolean;
@@ -25,6 +26,8 @@ interface ConfirmDialogState {
 }
 
 export default function ReportsAndTicketsPage() {
+  const { t } = useTranslation();
+
   // State
   const [reports, setReports] = useState<ReportTicketItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -124,7 +127,7 @@ export default function ReportsAndTicketsPage() {
   const columns: Column<ReportTicketItem>[] = [
     {
       key: "reporterName",
-      header: "مقدم البلاغ",
+      header: t("tickets.reporter", "مقدم البلاغ"),
       sortable: true,
       align: "right",
       render: (item) => (
@@ -133,7 +136,7 @@ export default function ReportsAndTicketsPage() {
     },
     {
       key: "reportedUserName",
-      header: "المبلغ عليه",
+      header: t("tickets.reportedUser", "المبلغ عليه"),
       sortable: true,
       align: "right",
       render: (item) => (
@@ -142,7 +145,7 @@ export default function ReportsAndTicketsPage() {
     },
     {
       key: "reason",
-      header: "سبب البلاغ",
+      header: t("tickets.reason", "سبب البلاغ"),
       align: "center",
       render: (item) => (
         <button
@@ -160,7 +163,7 @@ export default function ReportsAndTicketsPage() {
     },
     {
       key: "actions",
-      header: "الاجراءات",
+      header: t("common.actions", "الاجراءات"),
       align: "center",
       render: (item) => (
         <div
@@ -194,11 +197,13 @@ export default function ReportsAndTicketsPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <Breadcrumb pageTitle="البلاغات" />
+      <Breadcrumb pageTitle={t("tickets.title", "البلاغات")} />
 
       {/* 2. Page Header Title */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#1E1E2D]">البلاغات</h1>
+        <h1 className="text-xl font-bold text-[#1E1E2D]">
+          {t("tickets.listTitle", "قائمة البلاغات")}
+        </h1>
       </div>
 
       {/* 3. Main Content Card */}

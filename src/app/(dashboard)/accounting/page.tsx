@@ -19,6 +19,7 @@ import {
   Column,
   Pagination,
 } from "@/components";
+import { useTranslation } from "@/i18n";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   DollarSign,
@@ -27,6 +28,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export default function AccountingPage() {
+  const { t } = useTranslation();
+
   // State
   const [stats, setStats] = useState<AccountingStats | null>(null);
   const [statCardsConfig, setStatCardsConfig] = useState<AccountingStatCardItem[]>(accountingStatCardsConfig);
@@ -64,7 +67,7 @@ export default function AccountingPage() {
   const serviceColumns: Column<ProfitableServiceItem>[] = [
     {
       key: "serviceName",
-      header: "اسم الخدمة",
+      header: t("accounting.serviceName", "اسم الخدمة"),
       sortable: true,
       align: "right",
       render: (item) => (
@@ -73,7 +76,7 @@ export default function AccountingPage() {
     },
     {
       key: "revenue",
-      header: "المبلغ العائد من الربح",
+      header: t("accounting.revenue", "المبلغ العائد من الربح"),
       sortable: true,
       align: "right",
       render: (item) => (
@@ -88,7 +91,7 @@ export default function AccountingPage() {
   const userColumns: Column<ActiveUserItem>[] = [
     {
       key: "userName",
-      header: "اسم المستخدم",
+      header: t("accounting.userName", "اسم المستخدم"),
       sortable: true,
       align: "center",
       render: (item) => (
@@ -100,11 +103,11 @@ export default function AccountingPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <Breadcrumb pageTitle="المحاسبة" />
+      <Breadcrumb pageTitle={t("accounting.title", "المحاسبة")} />
 
       {/* 2. Page Header Title */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#1E1E2D]">المحاسبة</h1>
+        <h1 className="text-xl font-bold text-[#1E1E2D]">{t("accounting.title", "المحاسبة")}</h1>
       </div>
 
       {/* 3. Top 3 Stat Cards */}
@@ -127,25 +130,27 @@ export default function AccountingPage() {
 
       {/* 4. Section 1: أكثر الخدمات ربحا */}
       <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6 shadow-2xs">
-        <h2 className="text-sm font-bold text-[#1E1E2D] mb-4">أكثر الخدمات ربحا</h2>
+        <h2 className="text-sm font-bold text-[#1E1E2D] mb-4">
+          {t("accounting.profitableServices", "أكثر الخدمات ربحا")}
+        </h2>
         <DataTable
           columns={serviceColumns}
           data={profitableServices}
           loading={loading}
           keyExtractor={(item) => item.id}
-          emptyMessage="لا توجد بيانات خدمات حالياً"
         />
       </div>
 
       {/* 5. Section 2: أكثر المستخدمين نشاطا */}
       <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6 shadow-2xs">
-        <h2 className="text-sm font-bold text-[#1E1E2D] mb-4">أكثر المستخدمين نشاطا</h2>
+        <h2 className="text-sm font-bold text-[#1E1E2D] mb-4">
+          {t("accounting.activeUsers", "أكثر المستخدمين نشاطا")}
+        </h2>
         <DataTable
           columns={userColumns}
           data={activeUsers}
           loading={loading}
           keyExtractor={(item) => item.id}
-          emptyMessage="لا توجد بيانات مستخدمين حالياً"
         />
 
         {/* Pagination */}

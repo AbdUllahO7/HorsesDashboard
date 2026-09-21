@@ -211,16 +211,16 @@ export default function SuppliesSellersPage() {
   const columns: Column<SuppliesSeller>[] = [
     {
       key: "phone",
-      header: "رقم الهاتف",
+      header: t("suppliesSellers.phone", "رقم الهاتف"),
       sortable: true,
       align: "right",
       render: (seller) => (
-        <span className="font-medium text-[#1E1E2D]">{seller.phone}</span>
+        <span className="font-medium text-[#1E1E2D]" dir="ltr">{seller.phone}</span>
       ),
     },
     {
       key: "email",
-      header: "بريد الكتروني",
+      header: t("suppliesSellers.email", "بريد الكتروني"),
       sortable: true,
       align: "right",
       render: (seller) => (
@@ -229,7 +229,7 @@ export default function SuppliesSellersPage() {
     },
     {
       key: "name",
-      header: "اسم البائع",
+      header: t("suppliesSellers.sellerName", "اسم البائع"),
       sortable: true,
       align: "right",
       render: (seller) => (
@@ -245,14 +245,14 @@ export default function SuppliesSellersPage() {
     },
     {
       key: "status",
-      header: "الحالة",
+      header: t("common.status", "الحالة"),
       sortable: true,
       align: "center",
       render: (seller) => <StatusBadge status={seller.status} />,
     },
     {
       key: "productsCount",
-      header: "عدد المنتجات",
+      header: t("suppliesSellers.productsCount", "عدد المنتجات"),
       sortable: true,
       align: "center",
       render: (seller) => (
@@ -261,7 +261,7 @@ export default function SuppliesSellersPage() {
     },
     {
       key: "joinedDate",
-      header: "تاريخ الانضمام",
+      header: t("suppliesSellers.joinedDate", "تاريخ الانضمام"),
       sortable: true,
       align: "center",
       render: (seller) => (
@@ -270,7 +270,7 @@ export default function SuppliesSellersPage() {
     },
     {
       key: "actions",
-      header: "الاجراءات",
+      header: t("common.actions", "الاجراءات"),
       align: "center",
       render: (seller) => (
         <div
@@ -336,7 +336,7 @@ export default function SuppliesSellersPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <Breadcrumb pageTitle="إدارة بائعي المستلزمات" />
+      <Breadcrumb pageTitle={t("suppliesSellers.title", "بائعي المستلزمات")} />
 
       {/* 2. Top 4 Stat Cards from Service Config */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -359,7 +359,9 @@ export default function SuppliesSellersPage() {
       {/* 2. Main Content Card */}
       <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6 shadow-2xs">
         {/* Card Title */}
-        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">قائمة البائعين</h2>
+        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">
+          {t("suppliesSellers.listTitle", "قائمة بائعي المستلزمات")}
+        </h2>
 
         {/* Dynamic Reusable Table Toolbar */}
         <TableToolbar<StatusTab>

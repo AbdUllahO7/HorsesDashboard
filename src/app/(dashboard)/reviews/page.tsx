@@ -25,6 +25,7 @@ import {
   TableToolbar,
   Breadcrumb,
 } from "@/components";
+import { useTranslation } from "@/i18n";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   HelpCircle,
@@ -43,6 +44,8 @@ interface ConfirmDialogState {
 }
 
 export default function ReviewsAndComplaintsPage() {
+  const { t } = useTranslation();
+
   // State
   const [stats, setStats] = useState<ReviewsStats | null>(null);
   const [filterTabs, setFilterTabs] = useState<ReviewFilterTabItem[]>(reviewFilterTabs);
@@ -169,7 +172,7 @@ export default function ReviewsAndComplaintsPage() {
   const columns: Column<ComplaintReviewItem>[] = [
     {
       key: "typeLabel",
-      header: "النوع",
+      header: t("common.status", "النوع"),
       sortable: true,
       render: (item) => (
         <span className="text-xs font-semibold text-[#333748]">
@@ -179,7 +182,7 @@ export default function ReviewsAndComplaintsPage() {
     },
     {
       key: "subject",
-      header: "الموضوع",
+      header: t("reviews.subject", "الموضوع"),
       sortable: true,
       render: (item) => (
         <span className="text-xs font-bold text-[#1E1E2D]">
@@ -189,7 +192,7 @@ export default function ReviewsAndComplaintsPage() {
     },
     {
       key: "sellerName",
-      header: "اسم البائع",
+      header: t("reviews.merchant", "اسم البائع"),
       sortable: true,
       render: (item) => (
         <span className="text-xs font-medium text-[#333748]">
@@ -199,7 +202,7 @@ export default function ReviewsAndComplaintsPage() {
     },
     {
       key: "customerName",
-      header: "اسم العميل",
+      header: t("reviews.customer", "اسم العميل"),
       sortable: true,
       render: (item) => (
         <span className="text-xs font-medium text-[#333748]">
@@ -209,7 +212,7 @@ export default function ReviewsAndComplaintsPage() {
     },
     {
       key: "status",
-      header: "الحالة",
+      header: t("common.status", "الحالة"),
       sortable: true,
       render: (item) => (
         <StatusBadge status={item.status} customLabel={item.statusLabel} />
@@ -231,7 +234,7 @@ export default function ReviewsAndComplaintsPage() {
     },
     {
       key: "joinedDate",
-      header: "تاريخ الانضمام",
+      header: t("customers.joinedDate", "تاريخ الانضمام"),
       sortable: true,
       render: (item) => (
         <span className="text-xs text-[#4B5563] font-medium" dir="ltr">
@@ -241,7 +244,7 @@ export default function ReviewsAndComplaintsPage() {
     },
     {
       key: "actions",
-      header: "الاجراءات",
+      header: t("common.actions", "الاجراءات"),
       align: "center",
       render: (item) => (
         <button
@@ -262,7 +265,7 @@ export default function ReviewsAndComplaintsPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <Breadcrumb pageTitle="الشكاوى والتقييمات" />
+      <Breadcrumb pageTitle={t("reviews.title", "الشكاوى والتقييمات")} />
 
       {/* 2. Top 4 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -285,7 +288,9 @@ export default function ReviewsAndComplaintsPage() {
       {/* 3. Main Content Card */}
       <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6 shadow-2xs">
         {/* Card Title */}
-        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">قائمة الشكاوى والتقييمات</h2>
+        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">
+          {t("reviews.complaintsTitle", "قائمة الشكاوى والتقييمات")}
+        </h2>
 
         {/* Dynamic Table Toolbar */}
         <TableToolbar

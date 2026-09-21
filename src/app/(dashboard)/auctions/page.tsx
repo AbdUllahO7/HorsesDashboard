@@ -156,7 +156,7 @@ export default function AuctionsPage() {
   const columns: Column<AuctionTableItem>[] = [
     {
       key: "title",
-      header: "عنوان المزاد",
+      header: t("auctions.auctionName", "عنوان المزاد"),
       sortable: true,
       align: "right",
       render: (auction) => (
@@ -165,7 +165,7 @@ export default function AuctionsPage() {
     },
     {
       key: "sellerName",
-      header: "اسم البائع",
+      header: t("auctions.sellerName", "اسم البائع"),
       sortable: true,
       align: "right",
       render: (auction) => (
@@ -174,7 +174,7 @@ export default function AuctionsPage() {
     },
     {
       key: "category",
-      header: "التصنيف",
+      header: t("categories.categoryName", "التصنيف"),
       sortable: true,
       align: "right",
       render: (auction) => (
@@ -183,14 +183,14 @@ export default function AuctionsPage() {
     },
     {
       key: "status",
-      header: "الحالة",
+      header: t("common.status", "الحالة"),
       sortable: true,
       align: "center",
       render: (auction) => <StatusBadge status={auction.status} />,
     },
     {
       key: "totalBids",
-      header: "اجمالي المزايدات",
+      header: t("auctions.bidsCount", "اجمالي المزايدات"),
       sortable: true,
       align: "center",
       render: (auction) => (
@@ -199,7 +199,7 @@ export default function AuctionsPage() {
     },
     {
       key: "createdAt",
-      header: "تاريخ الانشاء",
+      header: t("categories.createdAt", "تاريخ الانشاء"),
       sortable: true,
       align: "center",
       render: (auction) => (
@@ -208,7 +208,7 @@ export default function AuctionsPage() {
     },
     {
       key: "actions",
-      header: "الاجراءات",
+      header: t("common.actions", "الاجراءات"),
       align: "center",
       render: (auction) => (
         <div
@@ -242,7 +242,7 @@ export default function AuctionsPage() {
   return (
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
-      <Breadcrumb pageTitle="إدارة المزادات" />
+      <Breadcrumb pageTitle={t("auctions.title", "إدارة المزادات")} />
 
       {/* 2. Top 4 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -265,7 +265,9 @@ export default function AuctionsPage() {
       {/* 3. Main Content Card */}
       <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6 shadow-2xs">
         {/* Card Title */}
-        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">قائمة المزادات</h2>
+        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">
+          {t("auctions.listTitle", "قائمة المزادات")}
+        </h2>
 
         {/* Dynamic Reusable Table Toolbar */}
         <TableToolbar<StatusTab>
