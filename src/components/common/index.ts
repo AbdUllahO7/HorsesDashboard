@@ -17,6 +17,9 @@ export * from "./CustomerDetailsModal";
 export * from "./AuctionDetailsModal";
 export * from "./Breadcrumb";
 export * from "./CategoryModal";
+export * from "./ApproveAccountModal";
+export * from "./RejectAccountModal";
+export * from "./DocumentPreviewModal";
 
 
 

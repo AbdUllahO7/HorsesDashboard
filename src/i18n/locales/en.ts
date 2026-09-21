@@ -27,6 +27,7 @@ export const en: TranslationSchema = {
     auctions: "Auctions Management",
     reports: "Reports & Analytics",
     reviews: "Complaints & Reviews",
+    userAccounts: "User Accounts",
     settings: "Settings",
   },
   dashboard: {

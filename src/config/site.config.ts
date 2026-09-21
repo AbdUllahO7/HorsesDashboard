@@ -64,6 +64,13 @@ export const siteConfig = {
       iconName: "HelpCircle",
     },
     {
+      id: "user-accounts",
+      title: "User Accounts",
+      titleAr: "حسابات المستخدمين",
+      href: "/accounts",
+      iconName: "UserCheck",
+    },
+    {
       id: "settings",
       title: "Settings",
       titleAr: "إعدادات",

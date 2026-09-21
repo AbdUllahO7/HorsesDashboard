@@ -25,6 +25,7 @@ export const ar = {
     auctions: "إدارة المزادات",
     reports: "التقارير والإحصائيات",
     reviews: "الشكاوى والتقييمات",
+    userAccounts: "حسابات المستخدمين",
     settings: "إعدادات",
   },
   dashboard: {

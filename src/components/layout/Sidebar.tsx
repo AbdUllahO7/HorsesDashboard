@@ -18,6 +18,7 @@ import {
   FileSpreadsheet,
   HelpCircle,
   Settings,
+  UserCheck,
   LogOut,
   X,
 } from "lucide-react";
@@ -31,6 +32,7 @@ const iconMap: Record<string, React.ReactNode> = {
   Gavel: <Gavel className="h-5 w-5 shrink-0" strokeWidth={1.8} />,
   FileSpreadsheet: <FileSpreadsheet className="h-5 w-5 shrink-0" strokeWidth={1.8} />,
   HelpCircle: <HelpCircle className="h-5 w-5" strokeWidth={1.8} />,
+  UserCheck: <UserCheck className="h-5 w-5" strokeWidth={1.8} />,
   Settings: <Settings className="h-5 w-5" strokeWidth={1.8} />,
 };
 
@@ -43,6 +45,7 @@ const navKeyMap: Record<string, TranslationKey> = {
   auctions: "nav.auctions",
   reports: "nav.reports",
   reviews: "nav.reviews",
+  "user-accounts": "nav.userAccounts",
   settings: "nav.settings",
 };
 
