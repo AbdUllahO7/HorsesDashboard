@@ -23,6 +23,19 @@ export interface SellersStats {
   blockedSellers: number;
 }
 
+export interface SellerFilterTabItem {
+  id: "all" | SellerStatus;
+  label: string;
+}
+
+export interface SellerStatCardItem {
+  id: string;
+  label: string;
+  countKey: keyof SellersStats;
+  iconName: "Users" | "UserCheck" | "UserX" | "UserMinus";
+}
+
+
 export interface LivestockSellerFilterParams extends BaseFilterParams {
   statusTab?: "all" | SellerStatus;
   sortBy?: "name" | "email" | "phone" | "status" | "auctionsCount";

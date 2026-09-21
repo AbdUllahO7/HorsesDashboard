@@ -9,7 +9,44 @@ import {
   LivestockSellerFilterParams,
   SellersStats,
   SellerStatus,
+  SellerFilterTabItem,
+  SellerStatCardItem,
 } from "./types";
+
+export const sellerFilterTabs: SellerFilterTabItem[] = [
+  { id: "all", label: "كل البائعين" },
+  { id: "pending", label: "قيد المراجعة" },
+  { id: "active", label: "نشط" },
+  { id: "inactive", label: "غير نشط" },
+  { id: "blocked", label: "محظور" },
+];
+
+export const sellerStatCardsConfig: SellerStatCardItem[] = [
+  {
+    id: "total",
+    label: "اجمالي البائعين",
+    countKey: "totalSellers",
+    iconName: "Users",
+  },
+  {
+    id: "active",
+    label: "البائعين النشطين",
+    countKey: "activeSellers",
+    iconName: "UserCheck",
+  },
+  {
+    id: "inactive",
+    label: "البائعين غير النشطين",
+    countKey: "inactiveSellers",
+    iconName: "UserX",
+  },
+  {
+    id: "blocked",
+    label: "البائعين المحظورين",
+    countKey: "blockedSellers",
+    iconName: "UserMinus",
+  },
+];
 
 export const mockLivestockSellersStats: SellersStats = {
   totalSellers: 55,
@@ -17,6 +54,7 @@ export const mockLivestockSellersStats: SellersStats = {
   inactiveSellers: 55,
   blockedSellers: 55,
 };
+
 
 export const mockLivestockSellersList: LivestockSeller[] = [
   {
@@ -133,9 +171,32 @@ export const mockLivestockSellersList: LivestockSeller[] = [
 
 export const listingsService = {
   /**
+   * Get livestock sellers Filter Tabs
+   */
+  getFilterTabs: async (): Promise<ApiResponse<SellerFilterTabItem[]>> => {
+    return {
+      success: true,
+      data: sellerFilterTabs,
+      message: "Filter tabs retrieved successfully",
+    };
+  },
+
+  /**
+   * Get livestock sellers KPI Stat Cards configuration
+   */
+  getStatCardsConfig: async (): Promise<ApiResponse<SellerStatCardItem[]>> => {
+    return {
+      success: true,
+      data: sellerStatCardsConfig,
+      message: "Stat cards config retrieved successfully",
+    };
+  },
+
+  /**
    * Get livestock sellers KPI summary stats
    */
   getLivestockSellersStats: async (): Promise<ApiResponse<SellersStats>> => {
+
     try {
       return await apiClient.get<SellersStats>("/admin/sellers/livestock/stats");
     } catch {

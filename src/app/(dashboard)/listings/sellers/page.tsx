@@ -19,7 +19,13 @@ import {
   LivestockSeller,
   SellersStats,
   SellerStatus,
+  SellerFilterTabItem,
+  SellerStatCardItem,
 } from "@/features/listings/types";
+import {
+  sellerFilterTabs,
+  sellerStatCardsConfig,
+} from "@/features/listings/services";
 import { useTranslation } from "@/i18n";
 import {
   StatCard,
@@ -32,12 +38,16 @@ import {
   DataTable,
   Column,
   TableToolbar,
-  FilterTab,
 } from "@/components";
 
-
-
 type StatusTab = "all" | SellerStatus;
+
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Users,
+  UserCheck,
+  UserX,
+  UserMinus,
+};
 
 interface ConfirmDialogState {
   isOpen: boolean;
@@ -53,6 +63,8 @@ export default function LivestockSellersPage() {
 
   // State
   const [stats, setStats] = useState<SellersStats | null>(null);
+  const [filterTabs, setFilterTabs] = useState<SellerFilterTabItem[]>(sellerFilterTabs);
+  const [statCardsConfig, setStatCardsConfig] = useState<SellerStatCardItem[]>(sellerStatCardsConfig);
   const [sellers, setSellers] = useState<LivestockSeller[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
@@ -71,14 +83,25 @@ export default function LivestockSellersPage() {
     onConfirm: () => {},
   });
 
-  // Load KPI Stats
+  // Load KPI Stats, Filter Tabs, and Stat Cards from service
   useEffect(() => {
-    async function loadStats() {
-      const res = await listingsService.getLivestockSellersStats();
-      if (res.success) setStats(res.data);
+    async function loadMetadata() {
+      try {
+        const [statsRes, tabsRes, cardsRes] = await Promise.all([
+          listingsService.getLivestockSellersStats(),
+          listingsService.getFilterTabs(),
+          listingsService.getStatCardsConfig(),
+        ]);
+        if (statsRes.success && statsRes.data) setStats(statsRes.data);
+        if (tabsRes.success && tabsRes.data) setFilterTabs(tabsRes.data);
+        if (cardsRes.success && cardsRes.data) setStatCardsConfig(cardsRes.data);
+      } catch (err) {
+        console.error("Failed to load metadata:", err);
+      }
     }
-    loadStats();
+    loadMetadata();
   }, []);
+
 
   // Load Sellers Table Data
   const loadSellers = useCallback(async () => {
@@ -236,40 +259,6 @@ export default function LivestockSellersPage() {
   };
 
 
-  const statCards = [
-    {
-      id: "total",
-      label: "اجمالي البائعين",
-      count: stats?.totalSellers ?? 55,
-      icon: Users,
-    },
-    {
-      id: "active",
-      label: "البائعين النشطين",
-      count: stats?.activeSellers ?? 55,
-      icon: UserCheck,
-    },
-    {
-      id: "inactive",
-      label: "البائعين غير النشطين",
-      count: stats?.inactiveSellers ?? 55,
-      icon: UserX,
-    },
-    {
-      id: "blocked",
-      label: "البائعين المحظورين",
-      count: stats?.blockedSellers ?? 55,
-      icon: UserMinus,
-    },
-  ];
-
-  const filterTabs: { id: StatusTab; label: string }[] = [
-    { id: "all", label: "كل البائعين" },
-    { id: "pending", label: "قيد المراجعة" },
-    { id: "active", label: "نشط" },
-    { id: "inactive", label: "غير نشط" },
-    { id: "blocked", label: "محظور" },
-  ];
 
   // Dynamic Columns Configuration for DataTable
   const columns: Column<LivestockSeller>[] = [
@@ -416,19 +405,24 @@ export default function LivestockSellersPage() {
 
   return (
     <div className="space-y-6">
-      {/* 1. Top 4 Stat Cards */}
+      {/* 1. Top 4 Stat Cards from Service Config */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((card) => (
-          <StatCard
-            key={card.id}
-            title={card.label}
-            value={card.count}
-            icon={card.icon}
-            loading={!stats}
-            variant="gold"
-          />
-        ))}
+        {statCardsConfig.map((card) => {
+          const IconComponent = iconMap[card.iconName] || Users;
+          const count = stats ? stats[card.countKey] : 0;
+          return (
+            <StatCard
+              key={card.id}
+              title={card.label}
+              value={count}
+              icon={IconComponent}
+              loading={!stats}
+              variant="gold"
+            />
+          );
+        })}
       </div>
+
 
       {/* 2. Main Content Card */}
       <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6 shadow-2xs">
