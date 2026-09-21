@@ -7,6 +7,23 @@ export interface DashboardOverviewStats {
   activeListingsCount?: number;
 }
 
+export interface AnalyticsStatCardItem {
+  id: string;
+  label: string;
+  countKey: keyof DashboardOverviewStats;
+  iconName: "Users" | "UsersRound" | "UserCheck" | "Gavel";
+}
+
+export interface PlatformGrowthDataPoint {
+  month: string;
+  value: number;
+}
+
+export interface AuctionCompletionTrendPoint {
+  year: string;
+  value: number; // in thousands or raw value
+}
+
 export interface TopAuctionItem {
   id: string;
   name: string;

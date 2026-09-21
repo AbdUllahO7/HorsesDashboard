@@ -156,15 +156,8 @@ export function CategoryModal({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-3 pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-xl bg-[#B8860B] px-8 py-2.5 text-xs font-bold text-white hover:bg-[#A37508] transition-colors cursor-pointer disabled:opacity-50 shadow-2xs flex items-center gap-2"
-            >
-              <span>حفظ</span>
-            </button>
-            <button
+          <div className="flex items-center justify-end gap-3 pt-4">
+              <button
               type="button"
               onClick={onClose}
               disabled={loading}
@@ -173,6 +166,14 @@ export function CategoryModal({
               <XCircle className="h-3.5 w-3.5" />
               <span>إلغاء</span>
             </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-xl bg-[#B8860B] px-8 py-2.5 text-xs font-bold text-white hover:bg-[#A37508] transition-colors cursor-pointer disabled:opacity-50 shadow-2xs flex items-center gap-2"
+            >
+              <span>حفظ</span>
+            </button>
+          
           </div>
         </form>
       </div>
