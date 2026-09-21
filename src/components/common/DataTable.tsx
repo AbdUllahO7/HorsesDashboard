@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { cn } from "@/core/utils/cn";
 import { ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { useTranslation } from "@/i18n";
 
 export type ColumnAlign = "right" | "center" | "left";
 
@@ -35,8 +36,8 @@ export function DataTable<T>({
   columns,
   data,
   loading = false,
-  emptyMessage = "لا توجد نتائج مطابقة",
-  loadingMessage = "جاري تحميل البيانات...",
+  emptyMessage,
+  loadingMessage,
   keyExtractor,
   onRowClick,
   sortBy: externalSortBy,
@@ -45,6 +46,10 @@ export function DataTable<T>({
   className,
   tableClassName,
 }: DataTableProps<T>) {
+  const { t, isRTL } = useTranslation();
+  const resolvedEmptyMessage = emptyMessage || t("common.noData", "لا توجد نتائج مطابقة");
+  const resolvedLoadingMessage = loadingMessage || t("common.loading", "جاري تحميل البيانات...");
+
   const [internalSortBy, setInternalSortBy] = useState<string | undefined>(undefined);
   const [internalSortOrder, setInternalSortOrder] = useState<"asc" | "desc">("asc");
 
@@ -67,14 +72,23 @@ export function DataTable<T>({
   };
 
   const alignClasses: Record<ColumnAlign, { header: string; cell: string }> = {
-    right: { header: "text-right justify-start", cell: "text-right" },
-    center: { header: "text-center justify-center", cell: "text-center" },
-    left: { header: "text-left justify-end", cell: "text-left" },
+    right: {
+      header: isRTL ? "text-right justify-start" : "text-right justify-end",
+      cell: "text-right",
+    },
+    center: {
+      header: "text-center justify-center",
+      cell: "text-center",
+    },
+    left: {
+      header: isRTL ? "text-left justify-end" : "text-left justify-start",
+      cell: "text-left",
+    },
   };
 
   return (
     <div className={cn("overflow-x-auto rounded-xl border border-[#EDEEF2] bg-white", className)}>
-      <table className={cn("w-full text-right text-xs", tableClassName)}>
+      <table className={cn("w-full text-xs", isRTL ? "text-right" : "text-left", tableClassName)}>
         {/* Table Header */}
         <thead className="bg-[#F8F9FC] text-[#8E8E93] border-b border-[#EDEEF2]">
           <tr>
@@ -121,14 +135,14 @@ export function DataTable<T>({
               <td colSpan={columns.length} className="py-12 text-center text-[#8E8E93]">
                 <div className="flex flex-col items-center justify-center gap-2">
                   <Loader2 className="h-6 w-6 animate-spin text-[#B59E5F]" />
-                  <p className="text-xs font-medium">{loadingMessage}</p>
+                  <p className="text-xs font-medium">{resolvedLoadingMessage}</p>
                 </div>
               </td>
             </tr>
           ) : data.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="py-12 text-center text-[#8E8E93] font-medium">
-                {emptyMessage}
+                {resolvedEmptyMessage}
               </td>
             </tr>
           ) : (

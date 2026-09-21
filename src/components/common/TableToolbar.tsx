@@ -3,6 +3,7 @@
 import React from "react";
 import { Search, ArrowUpDown } from "lucide-react";
 import { cn } from "@/core/utils/cn";
+import { useTranslation } from "@/i18n";
 
 export interface FilterTab<T = string> {
   id: T;
@@ -28,10 +29,10 @@ export interface TableToolbarProps<T = string> {
 export function TableToolbar<T = string>({
   searchQuery = "",
   onSearchChange,
-  searchPlaceholder = "ابحث هنا",
+  searchPlaceholder,
   showSearch = true,
   onSortClick,
-  sortLabel = "فرز",
+  sortLabel,
   showSort = true,
   tabs,
   activeTab,
@@ -39,6 +40,9 @@ export function TableToolbar<T = string>({
   extraActions,
   className,
 }: TableToolbarProps<T>) {
+  const { t, isRTL } = useTranslation();
+  const resolvedSearchPlaceholder = searchPlaceholder || t("common.searchPlaceholder", "ابحث هنا...");
+  const resolvedSortLabel = sortLabel || t("common.filter", "فرز");
   return (
     <div
       className={cn(
@@ -56,7 +60,7 @@ export function TableToolbar<T = string>({
             className="flex items-center gap-1.5 rounded-md border border-[#EADBBD] bg-[#FAF4E6] px-3.5 py-1.5 text-xs font-bold text-[#A6883C] hover:bg-[#F3E7C9] transition-colors cursor-pointer shadow-2xs"
           >
             <ArrowUpDown className="h-3.5 w-3.5" />
-            <span>{sortLabel}</span>
+            <span>{resolvedSortLabel}</span>
           </button>
         )}
 
@@ -66,7 +70,7 @@ export function TableToolbar<T = string>({
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange?.(e.target.value)}
-              placeholder={searchPlaceholder}
+              placeholder={resolvedSearchPlaceholder}
               className="w-full rounded-md border border-[#E5E7EB] bg-white py-1.5 pr-3 pl-9 text-xs text-[#1E1E2D] placeholder-[#9CA3AF] outline-none focus:border-[#B59E5F] transition-all"
             />
             <Search className="absolute left-2.5 top-2 h-4 w-4 text-[#9CA3AF]" />

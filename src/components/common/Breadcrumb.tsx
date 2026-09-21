@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { cn } from "@/core/utils/cn";
+import { useTranslation } from "@/i18n";
 
 export interface BreadcrumbItem {
   label: string;
@@ -19,11 +20,15 @@ export interface BreadcrumbProps {
 
 export function Breadcrumb({
   pageTitle,
-  parentTitle = "لوحة التحكم",
+  parentTitle,
   parentHref = "/",
   items,
   className,
 }: BreadcrumbProps) {
+  const { t, isRTL } = useTranslation();
+  const resolvedParentTitle = parentTitle || t("nav.dashboard", "لوحة التحكم");
+  const separator = isRTL ? ">" : "/";
+
   if (items && items.length > 0) {
     return (
       <div className={cn("flex items-center justify-start text-xs text-[#8E8E93] font-medium gap-1.5", className)}>
@@ -31,7 +36,7 @@ export function Breadcrumb({
           const isFirst = idx === 0;
           return (
             <React.Fragment key={idx}>
-              {idx > 0 && <span>&gt;</span>}
+              {idx > 0 && <span className="opacity-60">{separator}</span>}
               {item.href ? (
                 <Link
                   href={item.href}
@@ -57,14 +62,15 @@ export function Breadcrumb({
   return (
     <div className={cn("flex items-center justify-start text-xs text-[#8E8E93] font-medium gap-1.5", className)}>
       <span className="text-[#1E1E2D] font-bold">{pageTitle}</span>
-      <span>&gt;</span>
+      <span className="opacity-60">{separator}</span>
       {parentHref ? (
         <Link href={parentHref} className="hover:text-[#1E1E2D] transition-colors text-[#8E8E93]">
-          {parentTitle}
+          {resolvedParentTitle}
         </Link>
       ) : (
-        <span>{parentTitle}</span>
+        <span>{resolvedParentTitle}</span>
       )}
     </div>
   );
 }
+
