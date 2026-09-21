@@ -522,16 +522,30 @@ export default function LivestockSellersPage() {
         isOpen={Boolean(selectedSeller)}
         onClose={() => setSelectedSeller(null)}
         seller={selectedSeller}
-        onToggleAuctions={(id) => {
-          const s = sellers.find((x) => x.id === id);
-          if (s) handleToggleAuctions(s);
+        onToggleAuctions={(id, val) => {
+          setSellers((prev) =>
+            prev.map((s) => (s.id === id ? { ...s, isAuctionsEnabled: val } : s))
+          );
+          setSelectedSeller((prev) =>
+            prev && prev.id === id ? { ...prev, isAuctionsEnabled: val } : prev
+          );
+          listingsService.toggleSellerAuctions(id, val);
         }}
-        onToggleLiveStream={(id, val) => handleToggleLiveStream(id, !val)}
+        onToggleLiveStream={(id, val) => {
+          setSellers((prev) =>
+            prev.map((s) => (s.id === id ? { ...s, isLiveStreamEnabled: val } : s))
+          );
+          setSelectedSeller((prev) =>
+            prev && prev.id === id ? { ...prev, isLiveStreamEnabled: val } : prev
+          );
+          listingsService.toggleSellerLiveStream(id, val);
+        }}
         onStatusChange={(id, status) => {
           const s = sellers.find((x) => x.id === id);
           if (s) handleStatusChange(s, status);
         }}
       />
+
     </div>
   );
 }
