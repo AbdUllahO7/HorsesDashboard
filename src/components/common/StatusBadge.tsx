@@ -18,6 +18,12 @@ const statusConfig: Record<
     text: "text-[#10B981]",
     border: "border-[#A7F3D0]",
   },
+  resolved: {
+    label: "تم الحل",
+    bg: "bg-[#E8F8F0]",
+    text: "text-[#10B981]",
+    border: "border-[#A7F3D0]",
+  },
   blocked: {
     label: "محظور",
     bg: "bg-[#FEF2F2]",
@@ -26,6 +32,18 @@ const statusConfig: Record<
   },
   pending: {
     label: "قيد المراجعة",
+    bg: "bg-[#F0F5FA]",
+    text: "text-[#64748B]",
+    border: "border-[#CBD5E1]",
+  },
+  reviewing: {
+    label: "قيد المراجعة",
+    bg: "bg-[#F0F5FA]",
+    text: "text-[#64748B]",
+    border: "border-[#CBD5E1]",
+  },
+  waiting: {
+    label: "قيد الانتظار",
     bg: "bg-[#FFFBEB]",
     text: "text-[#F59E0B]",
     border: "border-[#FDE68A]",

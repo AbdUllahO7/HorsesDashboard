@@ -60,7 +60,7 @@ export const siteConfig = {
       id: "reviews",
       title: "Complaints & Reviews",
       titleAr: "الشكاوى والتقييمات",
-      href: "/orders/reviews",
+      href: "/reviews",
       iconName: "HelpCircle",
     },
     {
