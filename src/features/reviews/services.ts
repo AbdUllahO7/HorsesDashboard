@@ -1,6 +1,8 @@
 import { ApiResponse } from "@/types/api";
 import {
   ComplaintReviewItem,
+  ReviewsStats,
+  ReviewStatCardItem,
   ReviewFilterTabItem,
   ReviewFilterParams,
   ReviewsPaginationResponse,
@@ -11,6 +13,40 @@ export const reviewFilterTabs: ReviewFilterTabItem[] = [
   { id: "review", label: "تقييمات" },
   { id: "complaint", label: "شكاوي" },
 ];
+
+export const reviewStatCardsConfig: ReviewStatCardItem[] = [
+  {
+    id: "total",
+    label: "اجمالي الشكاوى",
+    countKey: "totalComplaints",
+    iconName: "HelpCircle",
+  },
+  {
+    id: "resolved",
+    label: "تم الحل",
+    countKey: "resolvedComplaints",
+    iconName: "CheckCircle2",
+  },
+  {
+    id: "pending",
+    label: "قيد المراجعة",
+    countKey: "pendingComplaints",
+    iconName: "Clock",
+  },
+  {
+    id: "waiting",
+    label: "قيد الانتظار",
+    countKey: "waitingComplaints",
+    iconName: "AlertCircle",
+  },
+];
+
+export const mockReviewsStats: ReviewsStats = {
+  totalComplaints: 55,
+  resolvedComplaints: 42,
+  pendingComplaints: 8,
+  waitingComplaints: 5,
+};
 
 export const mockComplaintsList: ComplaintReviewItem[] = [
   {
@@ -203,6 +239,22 @@ export const mockComplaintsList: ComplaintReviewItem[] = [
 ];
 
 class ReviewsService {
+  async getReviewsStats(): Promise<ApiResponse<ReviewsStats>> {
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    return {
+      success: true,
+      data: mockReviewsStats,
+    };
+  }
+
+  async getStatCardsConfig(): Promise<ApiResponse<ReviewStatCardItem[]>> {
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    return {
+      success: true,
+      data: reviewStatCardsConfig,
+    };
+  }
+
   async getFilterTabs(): Promise<ApiResponse<ReviewFilterTabItem[]>> {
     await new Promise((resolve) => setTimeout(resolve, 60));
     return {

@@ -29,6 +29,7 @@ import {
   StatusBadge,
   Pagination,
   ConfirmModal,
+  CustomerDetailsModal,
   ConfirmModalVariant,
   DataTable,
   Column,
@@ -213,7 +214,7 @@ export default function CustomersPage() {
       sortable: true,
       align: "right",
       render: (customer) => (
-        <span className="font-medium text-[#1E1E2D]">{customer.phone}</span>
+        <span className="font-medium text-[#1E1E2D]" dir="ltr">{customer.phone}</span>
       ),
     },
     {
@@ -333,7 +334,14 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-6">
-      {/* 1. Top 4 Stat Cards from Service Config */}
+      {/* 1. Breadcrumb Header */}
+      <div className="flex items-center justify-start text-xs text-[#8E8E93] font-medium gap-1.5">
+        <span className="text-[#1E1E2D] font-bold">إدارة العملاء</span>
+        <span>&gt;</span>
+        <span>لوحة التحكم</span>
+      </div>
+
+      {/* 2. Top 4 Stat Cards from Service Config */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCardsConfig.map((card) => {
           const IconComponent = iconMap[card.iconName] || Users;
@@ -351,7 +359,7 @@ export default function CustomersPage() {
         })}
       </div>
 
-      {/* 2. Main Content Card */}
+      {/* 3. Main Content Card */}
       <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6 shadow-2xs">
         {/* Card Title */}
         <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">قائمة العملاء</h2>
@@ -372,7 +380,7 @@ export default function CustomersPage() {
           }}
         />
 
-        {/* 3. Reusable Dynamic Data Table with onRowClick */}
+        {/* Reusable Dynamic Data Table with onRowClick */}
         <DataTable<CustomerUser>
           columns={columns}
           data={customers}
@@ -381,7 +389,7 @@ export default function CustomersPage() {
           keyExtractor={(customer) => customer.id}
         />
 
-        {/* 4. Pagination Component */}
+        {/* Pagination Component */}
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -389,6 +397,19 @@ export default function CustomersPage() {
           className="mt-6 border-t border-[#EDEEF2] pt-4"
         />
       </div>
+
+      {/* Customer Details Modal */}
+      <CustomerDetailsModal
+        isOpen={Boolean(selectedCustomer)}
+        customer={selectedCustomer}
+        onClose={() => setSelectedCustomer(null)}
+        onStatusChange={(cust, status) => {
+          handleStatusChange(cust, status);
+        }}
+        onDelete={(cust) => {
+          handleDeleteCustomer(cust);
+        }}
+      />
 
       {/* Dynamic Reusable Confirm Modal */}
       <ConfirmModal

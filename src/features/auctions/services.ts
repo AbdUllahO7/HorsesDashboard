@@ -4,6 +4,8 @@ import { ApiResponse, PaginatedData } from "@/types/api";
 import {
   Auction,
   AuctionTableItem,
+  AuctionStats,
+  AuctionStatCardItem,
   AuctionFilterParams,
   AuctionFilterTabItem,
 } from "./types";
@@ -13,6 +15,40 @@ export const auctionFilterTabs: AuctionFilterTabItem[] = [
   { id: "active", label: "نشط" },
   { id: "completed", label: "مكتمل" },
 ];
+
+export const auctionStatCardsConfig: AuctionStatCardItem[] = [
+  {
+    id: "total",
+    label: "اجمالي المزادات",
+    countKey: "totalAuctions",
+    iconName: "Gavel",
+  },
+  {
+    id: "active",
+    label: "المزادات النشطة",
+    countKey: "activeAuctions",
+    iconName: "Radio",
+  },
+  {
+    id: "completed",
+    label: "المزادات المكتملة",
+    countKey: "completedAuctions",
+    iconName: "CheckCircle2",
+  },
+  {
+    id: "stopped",
+    label: "المزادات المتوقفة",
+    countKey: "stoppedAuctions",
+    iconName: "Clock",
+  },
+];
+
+export const mockAuctionStats: AuctionStats = {
+  totalAuctions: 55,
+  activeAuctions: 35,
+  completedAuctions: 15,
+  stoppedAuctions: 5,
+};
 
 export const mockAuctionTableList: AuctionTableItem[] = [
   {
@@ -151,6 +187,28 @@ export const mockAuctionTableList: AuctionTableItem[] = [
 
 export const auctionsService = {
   /**
+   * Get Auction KPI Stats
+   */
+  getAuctionsStats: async (): Promise<ApiResponse<AuctionStats>> => {
+    return {
+      success: true,
+      data: mockAuctionStats,
+      message: "Auction stats loaded",
+    };
+  },
+
+  /**
+   * Get Stat Cards Config
+   */
+  getStatCardsConfig: async (): Promise<ApiResponse<AuctionStatCardItem[]>> => {
+    return {
+      success: true,
+      data: auctionStatCardsConfig,
+      message: "Auction stat cards config loaded",
+    };
+  },
+
+  /**
    * Get Auction Filter Tabs
    */
   getFilterTabs: async (): Promise<ApiResponse<AuctionFilterTabItem[]>> => {
@@ -232,5 +290,4 @@ export const auctionsService = {
   getAuctionById: async (id: string): Promise<ApiResponse<Auction>> => {
     return apiClient.get<Auction>(apiConfig.endpoints.auctions.details(id));
   },
-
 };

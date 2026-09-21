@@ -15,6 +15,20 @@ export interface AuctionTableItem {
   currentBid?: number;
 }
 
+export interface AuctionStats {
+  totalAuctions: number;
+  activeAuctions: number;
+  completedAuctions: number;
+  stoppedAuctions: number;
+}
+
+export interface AuctionStatCardItem {
+  id: string;
+  label: string;
+  countKey: keyof AuctionStats;
+  iconName: "Gavel" | "Radio" | "CheckCircle2" | "Clock";
+}
+
 export interface AuctionFilterTabItem {
   id: "all" | "active" | "completed";
   label: string;

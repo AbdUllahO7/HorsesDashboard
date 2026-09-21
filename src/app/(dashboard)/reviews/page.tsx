@@ -1,14 +1,20 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Eye } from "lucide-react";
-import { reviewsService } from "@/features/reviews/services";
+import { Eye, HelpCircle, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import {
+  reviewsService,
+  reviewFilterTabs,
+  reviewStatCardsConfig,
+} from "@/features/reviews/services";
 import {
   ComplaintReviewItem,
+  ReviewsStats,
+  ReviewStatCardItem,
   ReviewFilterTabItem,
 } from "@/features/reviews/types";
-import { reviewFilterTabs } from "@/features/reviews/services";
 import {
+  StatCard,
   StatusBadge,
   Pagination,
   ConfirmModal,
@@ -18,6 +24,13 @@ import {
   Column,
   TableToolbar,
 } from "@/components";
+
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  HelpCircle,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+};
 
 interface ConfirmDialogState {
   isOpen: boolean;
@@ -30,7 +43,9 @@ interface ConfirmDialogState {
 
 export default function ReviewsAndComplaintsPage() {
   // State
+  const [stats, setStats] = useState<ReviewsStats | null>(null);
   const [filterTabs, setFilterTabs] = useState<ReviewFilterTabItem[]>(reviewFilterTabs);
+  const [statCardsConfig, setStatCardsConfig] = useState<ReviewStatCardItem[]>(reviewStatCardsConfig);
   const [reviews, setReviews] = useState<ComplaintReviewItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
@@ -49,16 +64,20 @@ export default function ReviewsAndComplaintsPage() {
     onConfirm: () => {},
   });
 
-  // Load Filter Tabs from service
+  // Load KPI Stats, Filter Tabs, and Stat Cards from service
   useEffect(() => {
     async function loadMetadata() {
       try {
-        const tabsRes = await reviewsService.getFilterTabs();
-        if (tabsRes.success && tabsRes.data) {
-          setFilterTabs(tabsRes.data);
-        }
+        const [statsRes, tabsRes, cardsRes] = await Promise.all([
+          reviewsService.getReviewsStats(),
+          reviewsService.getFilterTabs(),
+          reviewsService.getStatCardsConfig(),
+        ]);
+        if (statsRes.success && statsRes.data) setStats(statsRes.data);
+        if (tabsRes.success && tabsRes.data) setFilterTabs(tabsRes.data);
+        if (cardsRes.success && cardsRes.data) setStatCardsConfig(cardsRes.data);
       } catch (err) {
-        console.error("Failed to load tabs metadata:", err);
+        console.error("Failed to load reviews metadata:", err);
       }
     }
     loadMetadata();
@@ -241,14 +260,37 @@ export default function ReviewsAndComplaintsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#1E1E2D]">قائمة الشكاوى والتقييمات</h1>
+      {/* 1. Breadcrumb Header */}
+      <div className="flex items-center justify-start text-xs text-[#8E8E93] font-medium gap-1.5">
+        <span className="text-[#1E1E2D] font-bold">الشكاوى والتقييمات</span>
+        <span>&gt;</span>
+        <span>لوحة التحكم</span>
       </div>
 
-      {/* Main Table Card */}
+      {/* 2. Top 4 Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCardsConfig.map((card) => {
+          const IconComponent = iconMap[card.iconName] || HelpCircle;
+          const count = stats ? stats[card.countKey] : 0;
+          return (
+            <StatCard
+              key={card.id}
+              title={card.label}
+              value={count}
+              icon={IconComponent}
+              loading={!stats}
+              variant="gold"
+            />
+          );
+        })}
+      </div>
+
+      {/* 3. Main Content Card */}
       <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6 shadow-2xs">
-        {/* Table Toolbar */}
+        {/* Card Title */}
+        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">قائمة الشكاوى والتقييمات</h2>
+
+        {/* Dynamic Table Toolbar */}
         <TableToolbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -278,6 +320,7 @@ export default function ReviewsAndComplaintsPage() {
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
+          className="mt-6 border-t border-[#EDEEF2] pt-4"
         />
       </div>
 

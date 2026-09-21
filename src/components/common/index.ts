@@ -13,6 +13,8 @@ export * from "./DataTable";
 export * from "./TableToolbar";
 export * from "./SuppliesSellerDetailsModal";
 export * from "./ComplaintDetailsModal";
+export * from "./CustomerDetailsModal";
+export * from "./AuctionDetailsModal";
 
 
 

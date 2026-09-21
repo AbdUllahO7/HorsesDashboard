@@ -405,7 +405,14 @@ export default function LivestockSellersPage() {
 
   return (
     <div className="space-y-6">
-      {/* 1. Top 4 Stat Cards from Service Config */}
+      {/* 1. Breadcrumb Header */}
+      <div className="flex items-center justify-start text-xs text-[#8E8E93] font-medium gap-1.5">
+        <span className="text-[#1E1E2D] font-bold">إدارة بائعي المواشي</span>
+        <span>&gt;</span>
+        <span>لوحة التحكم</span>
+      </div>
+
+      {/* 2. Top 4 Stat Cards from Service Config */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCardsConfig.map((card) => {
           const IconComponent = iconMap[card.iconName] || Users;

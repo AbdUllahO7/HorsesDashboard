@@ -18,6 +18,20 @@ export interface ComplaintReviewItem {
   description: string;
 }
 
+export interface ReviewsStats {
+  totalComplaints: number;
+  resolvedComplaints: number;
+  pendingComplaints: number;
+  waitingComplaints: number;
+}
+
+export interface ReviewStatCardItem {
+  id: string;
+  label: string;
+  countKey: keyof ReviewsStats;
+  iconName: "HelpCircle" | "CheckCircle2" | "Clock" | "AlertCircle";
+}
+
 export interface ReviewFilterTabItem {
   id: "all" | "review" | "complaint";
   label: string;
