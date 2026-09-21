@@ -32,7 +32,9 @@ export default function DashboardLayout({
 
         {/* Main Content View */}
         <main className="flex-1 overflow-y-auto p-5 md:p-6 bg-[#F4F5F9]">
-          {children}
+          <div className="animate-page">
+            {children}
+          </div>
         </main>
       </div>
     </div>
