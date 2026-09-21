@@ -16,6 +16,7 @@ export * from "./ComplaintDetailsModal";
 export * from "./CustomerDetailsModal";
 export * from "./AuctionDetailsModal";
 export * from "./Breadcrumb";
+export * from "./CategoryModal";
 
 
 
