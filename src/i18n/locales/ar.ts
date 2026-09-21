@@ -28,6 +28,7 @@ export const ar = {
     userAccounts: "حسابات المستخدمين",
     tickets: "البلاغات",
     ads: "الإعلانات",
+    accounting: "المحاسبة",
     settings: "إعدادات",
   },
   dashboard: {

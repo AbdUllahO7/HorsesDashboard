@@ -30,6 +30,7 @@ export const en: TranslationSchema = {
     userAccounts: "User Accounts",
     tickets: "Reports & Violations",
     ads: "Ads Management",
+    accounting: "Accounting & Finance",
     settings: "Settings",
   },
   dashboard: {

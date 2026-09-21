@@ -85,6 +85,13 @@ export const siteConfig = {
       iconName: "Megaphone",
     },
     {
+      id: "accounting",
+      title: "Accounting & Finance",
+      titleAr: "المحاسبة",
+      href: "/accounting",
+      iconName: "Calculator",
+    },
+    {
       id: "settings",
       title: "Settings",
       titleAr: "إعدادات",
