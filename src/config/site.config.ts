@@ -78,6 +78,13 @@ export const siteConfig = {
       iconName: "ShieldAlert",
     },
     {
+      id: "ads",
+      title: "Ads Management",
+      titleAr: "الإعلانات",
+      href: "/ads",
+      iconName: "Megaphone",
+    },
+    {
       id: "settings",
       title: "Settings",
       titleAr: "إعدادات",

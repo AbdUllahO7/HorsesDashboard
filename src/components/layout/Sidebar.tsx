@@ -20,6 +20,7 @@ import {
   Settings,
   UserCheck,
   ShieldAlert,
+  Megaphone,
   LogOut,
   X,
 } from "lucide-react";
@@ -35,6 +36,7 @@ const iconMap: Record<string, React.ReactNode> = {
   HelpCircle: <HelpCircle className="h-5 w-5" strokeWidth={1.8} />,
   UserCheck: <UserCheck className="h-5 w-5" strokeWidth={1.8} />,
   ShieldAlert: <ShieldAlert className="h-5 w-5" strokeWidth={1.8} />,
+  Megaphone: <Megaphone className="h-5 w-5" strokeWidth={1.8} />,
   Settings: <Settings className="h-5 w-5" strokeWidth={1.8} />,
 };
 
@@ -49,6 +51,7 @@ const navKeyMap: Record<string, TranslationKey> = {
   reviews: "nav.reviews",
   "user-accounts": "nav.userAccounts",
   tickets: "nav.tickets",
+  ads: "nav.ads",
   settings: "nav.settings",
 };
 

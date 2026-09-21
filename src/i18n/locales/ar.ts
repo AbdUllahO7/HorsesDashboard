@@ -27,6 +27,7 @@ export const ar = {
     reviews: "الشكاوى والتقييمات",
     userAccounts: "حسابات المستخدمين",
     tickets: "البلاغات",
+    ads: "الإعلانات",
     settings: "إعدادات",
   },
   dashboard: {
