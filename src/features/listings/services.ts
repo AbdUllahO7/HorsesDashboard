@@ -11,7 +11,9 @@ import {
   SellerStatus,
   SellerFilterTabItem,
   SellerStatCardItem,
+  SuppliesSeller,
 } from "./types";
+
 
 export const sellerFilterTabs: SellerFilterTabItem[] = [
   { id: "all", label: "كل البائعين" },
@@ -333,4 +335,211 @@ export const listingsService = {
       params: { type },
     });
   },
+
+  /**
+   * Get Supplies Sellers list (بائعي المستلزمات)
+   */
+  getSuppliesSellers: async (
+    params?: LivestockSellerFilterParams
+  ): Promise<ApiResponse<PaginatedData<SuppliesSeller>>> => {
+    try {
+      return await apiClient.get<PaginatedData<SuppliesSeller>>("/admin/sellers/supplies", {
+        params: params as Record<string, string | number | boolean | undefined>,
+      });
+    } catch {
+      let filtered = [...mockSuppliesSellersList];
+
+      if (params?.statusTab && params.statusTab !== "all") {
+        filtered = filtered.filter((s) => s.status === params.statusTab);
+      }
+
+      if (params?.search) {
+        const query = params.search.toLowerCase().trim();
+        filtered = filtered.filter(
+          (s) =>
+            s.name.toLowerCase().includes(query) ||
+            s.email.toLowerCase().includes(query) ||
+            s.phone.includes(query)
+        );
+      }
+
+      const page = params?.page || 1;
+      const limit = params?.limit || 10;
+      const totalPages = Math.ceil(40 / limit);
+
+      return {
+        success: true,
+        data: {
+          items: filtered,
+          pagination: {
+            currentPage: page,
+            totalPages: totalPages,
+            pageSize: limit,
+            totalItems: 40,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+          },
+        },
+        message: "Loaded from mock service",
+      };
+    }
+  },
+
+  /**
+   * Update supplies seller status
+   */
+  updateSuppliesSellerStatus: async (
+    id: string,
+    status: SellerStatus
+  ): Promise<ApiResponse<SuppliesSeller>> => {
+    try {
+      return await apiClient.patch<SuppliesSeller>(`/admin/sellers/supplies/${id}/status`, { status });
+    } catch {
+      const seller = mockSuppliesSellersList.find((s) => s.id === id) || mockSuppliesSellersList[0];
+      return {
+        success: true,
+        data: { ...seller, status },
+        message: "Status updated in mock service",
+      };
+    }
+  },
+
+  /**
+   * Delete supplies seller
+   */
+  deleteSuppliesSeller: async (id: string): Promise<ApiResponse<void>> => {
+    try {
+      return await apiClient.delete<void>(`/admin/sellers/supplies/${id}`);
+    } catch {
+      return {
+        success: true,
+        data: undefined as unknown as void,
+        message: "Deleted in mock service",
+      };
+    }
+  },
 };
+
+export const mockSuppliesSellersList: SuppliesSeller[] = [
+  {
+    id: "supplies-1",
+    name: "شركة مستلزمات الرعاة",
+    email: "user@gmail.com",
+    phone: "0595121088",
+    status: "active",
+    productsCount: 5,
+    joinedDate: "25-5-2025",
+    followersCount: 3458,
+    reviewsCount: 24,
+    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
+  },
+  {
+    id: "supplies-2",
+    name: "محمود احمد",
+    email: "user@gmail.com",
+    phone: "0595121088",
+    status: "blocked",
+    productsCount: 5,
+    joinedDate: "25-5-2025",
+    followersCount: 1200,
+    reviewsCount: 15,
+    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
+  },
+  {
+    id: "supplies-3",
+    name: "محمود احمد",
+    email: "user@gmail.com",
+    phone: "0595121088",
+    status: "active",
+    productsCount: 5,
+    joinedDate: "25-5-2025",
+    followersCount: 890,
+    reviewsCount: 19,
+    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
+  },
+  {
+    id: "supplies-4",
+    name: "محمود احمد",
+    email: "user@gmail.com",
+    phone: "0595121088",
+    status: "pending",
+    productsCount: 5,
+    joinedDate: "25-5-2025",
+    followersCount: 450,
+    reviewsCount: 5,
+    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
+  },
+  {
+    id: "supplies-5",
+    name: "محمود احمد",
+    email: "user@gmail.com",
+    phone: "0595121088",
+    status: "active",
+    productsCount: 5,
+    joinedDate: "25-5-2025",
+    followersCount: 2100,
+    reviewsCount: 32,
+    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
+  },
+  {
+    id: "supplies-6",
+    name: "محمود احمد",
+    email: "user@gmail.com",
+    phone: "0595121088",
+    status: "active",
+    productsCount: 5,
+    joinedDate: "25-5-2025",
+    followersCount: 650,
+    reviewsCount: 12,
+    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
+  },
+  {
+    id: "supplies-7",
+    name: "محمود احمد",
+    email: "user@gmail.com",
+    phone: "0595121088",
+    status: "active",
+    productsCount: 5,
+    joinedDate: "25-5-2025",
+    followersCount: 1780,
+    reviewsCount: 28,
+    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
+  },
+  {
+    id: "supplies-8",
+    name: "محمود احمد",
+    email: "user@gmail.com",
+    phone: "0595121088",
+    status: "active",
+    productsCount: 5,
+    joinedDate: "25-5-2025",
+    followersCount: 3100,
+    reviewsCount: 45,
+    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
+  },
+  {
+    id: "supplies-9",
+    name: "محمود احمد",
+    email: "user@gmail.com",
+    phone: "0595121088",
+    status: "active",
+    productsCount: 5,
+    joinedDate: "25-5-2025",
+    followersCount: 920,
+    reviewsCount: 16,
+    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
+  },
+  {
+    id: "supplies-10",
+    name: "محمود احمد",
+    email: "user@gmail.com",
+    phone: "0595121088",
+    status: "active",
+    productsCount: 5,
+    joinedDate: "25-5-2025",
+    followersCount: 1540,
+    reviewsCount: 22,
+    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
+  },
+];
+

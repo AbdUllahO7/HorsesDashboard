@@ -11,5 +11,7 @@ export * from "./ConfirmModal";
 export * from "./SellerDetailsModal";
 export * from "./DataTable";
 export * from "./TableToolbar";
+export * from "./SuppliesSellerDetailsModal";
+
 
 

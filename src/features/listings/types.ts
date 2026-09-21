@@ -16,6 +16,21 @@ export interface LivestockSeller {
   createdAt: string;
 }
 
+export interface SuppliesSeller {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: SellerStatus;
+  productsCount: number;
+  joinedDate: string;
+  followersCount?: number;
+  reviewsCount?: number;
+  address?: string;
+  createdAt?: string;
+}
+
+
 export interface SellersStats {
   totalSellers: number;
   activeSellers: number;

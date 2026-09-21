@@ -11,31 +11,32 @@ import {
   X,
   Trash2,
 } from "lucide-react";
-import { usersService } from "@/features/users/services";
+import { listingsService } from "@/features/listings/services";
 import {
-  CustomerUser,
-  CustomerStats,
-  CustomerStatus,
-  CustomerFilterTabItem,
-  CustomerStatCardItem,
-} from "@/features/users/types";
+  SuppliesSeller,
+  SellersStats,
+  SellerStatus,
+  SellerFilterTabItem,
+  SellerStatCardItem,
+} from "@/features/listings/types";
 import {
-  customerFilterTabs,
-  customerStatCardsConfig,
-} from "@/features/users/services";
+  sellerFilterTabs,
+  sellerStatCardsConfig,
+} from "@/features/listings/services";
 import { useTranslation } from "@/i18n";
 import {
   StatCard,
   StatusBadge,
   Pagination,
   ConfirmModal,
+  SuppliesSellerDetailsModal,
   ConfirmModalVariant,
   DataTable,
   Column,
   TableToolbar,
 } from "@/components";
 
-type StatusTab = "all" | CustomerStatus;
+type StatusTab = "all" | SellerStatus;
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Users,
@@ -53,14 +54,14 @@ interface ConfirmDialogState {
   onConfirm: () => Promise<void> | void;
 }
 
-export default function CustomersPage() {
+export default function SuppliesSellersPage() {
   const { t } = useTranslation();
 
   // State
-  const [stats, setStats] = useState<CustomerStats | null>(null);
-  const [filterTabs, setFilterTabs] = useState<CustomerFilterTabItem[]>(customerFilterTabs);
-  const [statCardsConfig, setStatCardsConfig] = useState<CustomerStatCardItem[]>(customerStatCardsConfig);
-  const [customers, setCustomers] = useState<CustomerUser[]>([]);
+  const [stats, setStats] = useState<SellersStats | null>(null);
+  const [filterTabs, setFilterTabs] = useState<SellerFilterTabItem[]>(sellerFilterTabs);
+  const [statCardsConfig, setStatCardsConfig] = useState<SellerStatCardItem[]>(sellerStatCardsConfig);
+  const [sellers, setSellers] = useState<SuppliesSeller[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<StatusTab>("all");
@@ -69,7 +70,7 @@ export default function CustomersPage() {
   const [totalPages, setTotalPages] = useState<number>(4);
 
   // Modals state
-  const [selectedCustomer, setSelectedCustomer] = useState<CustomerUser | null>(null);
+  const [selectedSeller, setSelectedSeller] = useState<SuppliesSeller | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
     isOpen: false,
     variant: "danger",
@@ -78,30 +79,30 @@ export default function CustomersPage() {
     onConfirm: () => {},
   });
 
-  // Load KPI Stats, Filter Tabs, and Stat Cards from service
+  // Load KPI Stats, Filter Tabs, and Stat Cards config from service
   useEffect(() => {
     async function loadMetadata() {
       try {
         const [statsRes, tabsRes, cardsRes] = await Promise.all([
-          usersService.getCustomersStats(),
-          usersService.getFilterTabs(),
-          usersService.getStatCardsConfig(),
+          listingsService.getLivestockSellersStats(),
+          listingsService.getFilterTabs(),
+          listingsService.getStatCardsConfig(),
         ]);
         if (statsRes.success && statsRes.data) setStats(statsRes.data);
         if (tabsRes.success && tabsRes.data) setFilterTabs(tabsRes.data);
         if (cardsRes.success && cardsRes.data) setStatCardsConfig(cardsRes.data);
       } catch (err) {
-        console.error("Failed to load customer metadata:", err);
+        console.error("Failed to load metadata:", err);
       }
     }
     loadMetadata();
   }, []);
 
-  // Load Customers Table Data from service
-  const loadCustomers = useCallback(async () => {
+  // Load Supplies Sellers Table Data from service
+  const loadSellers = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await usersService.getCustomers({
+      const res = await listingsService.getSuppliesSellers({
         page: currentPage,
         limit: 10,
         statusTab: activeTab,
@@ -109,38 +110,38 @@ export default function CustomersPage() {
       });
 
       if (res.success && res.data) {
-        setCustomers(res.data.items);
+        setSellers(res.data.items);
         setTotalPages(res.data.pagination.totalPages || 4);
       }
     } catch (err) {
-      console.error("Failed to load customers:", err);
+      console.error("Failed to load supplies sellers:", err);
     } finally {
       setLoading(false);
     }
   }, [activeTab, searchQuery, currentPage]);
 
   useEffect(() => {
-    loadCustomers();
-  }, [loadCustomers]);
+    loadSellers();
+  }, [loadSellers]);
 
-  // Handlers for Status and Actions
-  const handleStatusChange = (customer: CustomerUser, newStatus: CustomerStatus) => {
+  // Handlers for Actions
+  const handleStatusChange = (seller: SuppliesSeller, newStatus: SellerStatus) => {
     if (newStatus === "blocked") {
       setConfirmDialog({
         isOpen: true,
         variant: "warning",
         title: "تأكيد حظر المستخدم",
-        description: `هل أنت متأكد أنك تريد حظر المستخدم ${customer.name}؟ بمجرد الحظر، لن يتمكن المستخدم من الوصول إلى الحساب أو إجراء أي عمليات داخل النظام`,
+        description: `هل أنت متأكد أنك تريد حظر المستخدم ${seller.name}؟ بمجرد الحظر، لن يتمكن المستخدم من الوصول إلى الحساب أو إجراء أي عمليات داخل النظام`,
         confirmText: "تأكيد الحظر",
         onConfirm: async () => {
           setActionLoading(true);
           try {
-            await usersService.updateCustomerStatus(customer.id, "blocked");
-            setCustomers((prev) =>
-              prev.map((c) => (c.id === customer.id ? { ...c, status: "blocked" } : c))
+            await listingsService.updateSuppliesSellerStatus(seller.id, "blocked");
+            setSellers((prev) =>
+              prev.map((s) => (s.id === seller.id ? { ...s, status: "blocked" } : s))
             );
-            if (selectedCustomer?.id === customer.id) {
-              setSelectedCustomer((prev) => (prev ? { ...prev, status: "blocked" } : null));
+            if (selectedSeller?.id === seller.id) {
+              setSelectedSeller((prev) => (prev ? { ...prev, status: "blocked" } : null));
             }
           } finally {
             setActionLoading(false);
@@ -148,22 +149,22 @@ export default function CustomersPage() {
           }
         },
       });
-    } else if (newStatus === "active" && customer.status === "blocked") {
+    } else if (newStatus === "active" && seller.status === "blocked") {
       setConfirmDialog({
         isOpen: true,
         variant: "unban",
         title: "تأكيد رفع حظر المستخدم",
-        description: `هل تريد بالتأكيد رفع الحظر عن المستخدم ${customer.name}؟ سيتمكن المستخدم من الوصول إلى حسابه مجددًا فور رفع الحظر.`,
+        description: `هل تريد بالتأكيد رفع الحظر عن المستخدم ${seller.name}؟ سيتمكن المستخدم من الوصول إلى حسابه مجددًا فور رفع الحظر.`,
         confirmText: "تأكيد رفع الحظر",
         onConfirm: async () => {
           setActionLoading(true);
           try {
-            await usersService.updateCustomerStatus(customer.id, "active");
-            setCustomers((prev) =>
-              prev.map((c) => (c.id === customer.id ? { ...c, status: "active" } : c))
+            await listingsService.updateSuppliesSellerStatus(seller.id, "active");
+            setSellers((prev) =>
+              prev.map((s) => (s.id === seller.id ? { ...s, status: "active" } : s))
             );
-            if (selectedCustomer?.id === customer.id) {
-              setSelectedCustomer((prev) => (prev ? { ...prev, status: "active" } : null));
+            if (selectedSeller?.id === seller.id) {
+              setSelectedSeller((prev) => (prev ? { ...prev, status: "active" } : null));
             }
           } finally {
             setActionLoading(false);
@@ -172,30 +173,30 @@ export default function CustomersPage() {
         },
       });
     } else {
-      setCustomers((prev) =>
-        prev.map((c) => (c.id === customer.id ? { ...c, status: newStatus } : c))
+      setSellers((prev) =>
+        prev.map((s) => (s.id === seller.id ? { ...s, status: newStatus } : s))
       );
-      if (selectedCustomer?.id === customer.id) {
-        setSelectedCustomer((prev) => (prev ? { ...prev, status: newStatus } : null));
+      if (selectedSeller?.id === seller.id) {
+        setSelectedSeller((prev) => (prev ? { ...prev, status: newStatus } : null));
       }
-      usersService.updateCustomerStatus(customer.id, newStatus);
+      listingsService.updateSuppliesSellerStatus(seller.id, newStatus);
     }
   };
 
-  const handleDeleteCustomer = (customer: CustomerUser) => {
+  const handleDeleteSeller = (seller: SuppliesSeller) => {
     setConfirmDialog({
       isOpen: true,
       variant: "danger",
       title: "تأكيد حذف مستخدم",
-      description: `هل انت متاكد انك تريد حذف مستخدم ${customer.name} هذا الاجراء سيؤدي لحذف المستخدم بشكل نهائي`,
+      description: `هل انت متاكد انك تريد حذف مستخدم ${seller.name} هذا الاجراء سيؤدي لحذف المستخدم بشكل نهائي`,
       confirmText: "تأكيد الحذف",
       onConfirm: async () => {
         setActionLoading(true);
         try {
-          await usersService.deleteCustomer(customer.id);
-          setCustomers((prev) => prev.filter((c) => c.id !== customer.id));
-          if (selectedCustomer?.id === customer.id) {
-            setSelectedCustomer(null);
+          await listingsService.deleteSuppliesSeller(seller.id);
+          setSellers((prev) => prev.filter((s) => s.id !== seller.id));
+          if (selectedSeller?.id === seller.id) {
+            setSelectedSeller(null);
           }
         } finally {
           setActionLoading(false);
@@ -206,14 +207,14 @@ export default function CustomersPage() {
   };
 
   // Dynamic Columns Configuration for DataTable
-  const columns: Column<CustomerUser>[] = [
+  const columns: Column<SuppliesSeller>[] = [
     {
       key: "phone",
       header: "رقم الهاتف",
       sortable: true,
       align: "right",
-      render: (customer) => (
-        <span className="font-medium text-[#1E1E2D]">{customer.phone}</span>
+      render: (seller) => (
+        <span className="font-medium text-[#1E1E2D]">{seller.phone}</span>
       ),
     },
     {
@@ -221,23 +222,23 @@ export default function CustomersPage() {
       header: "بريد الكتروني",
       sortable: true,
       align: "right",
-      render: (customer) => (
-        <span className="text-[#4A4E5A]">{customer.email}</span>
+      render: (seller) => (
+        <span className="text-[#4A4E5A]">{seller.email}</span>
       ),
     },
     {
       key: "name",
-      header: "اسم العميل",
+      header: "اسم البائع",
       sortable: true,
       align: "right",
-      render: (customer) => (
+      render: (seller) => (
         <button
           type="button"
-          onClick={() => setSelectedCustomer(customer)}
+          onClick={() => setSelectedSeller(seller)}
           className="text-right font-bold text-[#1E1E2D] hover:text-[#B8860B] transition-colors cursor-pointer"
-          title="عرض تفاصيل العميل"
+          title="عرض تفاصيل البائع"
         >
-          {customer.name}
+          {seller.name}
         </button>
       ),
     },
@@ -246,15 +247,15 @@ export default function CustomersPage() {
       header: "الحالة",
       sortable: true,
       align: "center",
-      render: (customer) => <StatusBadge status={customer.status} />,
+      render: (seller) => <StatusBadge status={seller.status} />,
     },
     {
-      key: "interactionsCount",
-      header: "التفاعلات",
+      key: "productsCount",
+      header: "عدد المنتجات",
       sortable: true,
       align: "center",
-      render: (customer) => (
-        <span className="font-bold text-[#1E1E2D]">{customer.interactionsCount}</span>
+      render: (seller) => (
+        <span className="font-bold text-[#1E1E2D]">{seller.productsCount}</span>
       ),
     },
     {
@@ -262,15 +263,15 @@ export default function CustomersPage() {
       header: "تاريخ الانضمام",
       sortable: true,
       align: "center",
-      render: (customer) => (
-        <span className="text-[#4A4E5A]">{customer.joinedDate}</span>
+      render: (seller) => (
+        <span className="text-[#4A4E5A]">{seller.joinedDate}</span>
       ),
     },
     {
       key: "actions",
       header: "الاجراءات",
       align: "center",
-      render: (customer) => (
+      render: (seller) => (
         <div
           className="flex items-center justify-center gap-1.5"
           onClick={(e) => e.stopPropagation()}
@@ -280,9 +281,9 @@ export default function CustomersPage() {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              handleDeleteCustomer(customer);
+              handleDeleteSeller(seller);
             }}
-            title="حذف العميل"
+            title="حذف البائع"
             className="flex h-7 w-7 items-center justify-center rounded-full text-[#B8860B] hover:bg-[#FAF4E6] transition-colors cursor-pointer"
           >
             <Trash2 className="h-4 w-4" />
@@ -293,9 +294,9 @@ export default function CustomersPage() {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              handleStatusChange(customer, "blocked");
+              handleStatusChange(seller, "blocked");
             }}
-            title="حظر العميل"
+            title="حظر البائع"
             className="flex h-7 w-7 items-center justify-center rounded-full text-[#F59E0B] hover:bg-amber-50 transition-colors cursor-pointer"
           >
             <Ban className="h-4 w-4" />
@@ -306,7 +307,7 @@ export default function CustomersPage() {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              handleStatusChange(customer, "inactive");
+              handleStatusChange(seller, "inactive");
             }}
             title="تعطيل الحساب"
             className="flex h-7 w-7 items-center justify-center rounded-full text-[#EF4444] hover:bg-rose-50 transition-colors cursor-pointer"
@@ -319,9 +320,9 @@ export default function CustomersPage() {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              handleStatusChange(customer, "active");
+              handleStatusChange(seller, "active");
             }}
-            title="تفعيل العميل"
+            title="تفعيل البائع"
             className="flex h-7 w-7 items-center justify-center rounded-full text-[#10B981] hover:bg-emerald-50 transition-colors cursor-pointer"
           >
             <Check className="h-4 w-4" />
@@ -354,7 +355,7 @@ export default function CustomersPage() {
       {/* 2. Main Content Card */}
       <div className="rounded-2xl border border-[#EDEEF2] bg-white p-6 shadow-2xs">
         {/* Card Title */}
-        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">قائمة العملاء</h2>
+        <h2 className="text-lg font-bold text-[#1E1E2D] mb-6">قائمة البائعين</h2>
 
         {/* Dynamic Reusable Table Toolbar */}
         <TableToolbar<StatusTab>
@@ -373,12 +374,12 @@ export default function CustomersPage() {
         />
 
         {/* 3. Reusable Dynamic Data Table with onRowClick */}
-        <DataTable<CustomerUser>
+        <DataTable<SuppliesSeller>
           columns={columns}
-          data={customers}
+          data={sellers}
           loading={loading}
-          onRowClick={(customer) => setSelectedCustomer(customer)}
-          keyExtractor={(customer) => customer.id}
+          onRowClick={(seller) => setSelectedSeller(seller)}
+          keyExtractor={(seller) => seller.id}
         />
 
         {/* 4. Pagination Component */}
@@ -400,6 +401,17 @@ export default function CustomersPage() {
         variant={confirmDialog.variant}
         confirmText={confirmDialog.confirmText}
         loading={actionLoading}
+      />
+
+      {/* Dynamic Reusable Supplies Seller Details Modal */}
+      <SuppliesSellerDetailsModal
+        isOpen={Boolean(selectedSeller)}
+        onClose={() => setSelectedSeller(null)}
+        seller={selectedSeller}
+        onStatusChange={(id, status) => {
+          const s = sellers.find((x) => x.id === id);
+          if (s) handleStatusChange(s, status);
+        }}
       />
     </div>
   );

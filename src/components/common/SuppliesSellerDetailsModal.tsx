@@ -1,0 +1,145 @@
+"use client";
+
+import React, { useEffect } from "react";
+import { cn } from "@/core/utils/cn";
+import { useTranslation } from "@/i18n";
+import { SuppliesSeller, SellerStatus } from "@/features/listings/types";
+import { StatusBadge } from "./StatusBadge";
+import { X } from "lucide-react";
+
+export interface SuppliesSellerDetailsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  seller: SuppliesSeller | null;
+  onStatusChange?: (sellerId: string, status: SellerStatus) => void;
+  className?: string;
+}
+
+export function SuppliesSellerDetailsModal({
+  isOpen,
+  onClose,
+  seller,
+  onStatusChange,
+  className,
+}: SuppliesSellerDetailsModalProps) {
+  const { isRTL } = useTranslation();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !seller) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+
+      {/* Modal Card */}
+      <div
+        className={cn(
+          "relative z-10 w-full max-w-[680px] rounded-[28px] bg-white p-7 sm:p-8 shadow-2xl transition-all animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto",
+          className
+        )}
+      >
+        {/* Top Close Button */}
+        <button
+          onClick={onClose}
+          aria-label="إغلاق"
+          className={cn(
+            "absolute top-6 flex h-7 w-7 items-center justify-center rounded-full border border-[#1E1E2D] text-[#1E1E2D] hover:bg-stone-100 transition-colors cursor-pointer",
+            isRTL ? "left-6" : "right-6"
+          )}
+        >
+          <X className="h-4 w-4" strokeWidth={2.5} />
+        </button>
+
+        {/* 1. Header: Seller Title, Badge & Date */}
+        <div className="text-center mb-6 pt-1">
+          <div className="flex items-center justify-center gap-3">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#B8860B]">{seller.name}</h2>
+            <StatusBadge status={seller.status} />
+          </div>
+          <p className="text-xs text-[#8E8E93] mt-1.5 font-medium">
+            تاريخ الإنضمام ١٤٤٥/٨/٥ هـ
+          </p>
+        </div>
+
+        {/* 2. Top 3 Stat Cards in a row matching Image 2 */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5">
+          {/* Card 1: Products */}
+          <div className="rounded-2xl bg-[#EBF3FC] p-4 text-center">
+            <p className="text-xs text-[#4A4E5A] font-medium">منتجات</p>
+            <p className="text-2xl font-bold text-[#1E1E2D] mt-1">{seller.productsCount ?? 28}</p>
+          </div>
+
+          {/* Card 2: Followers */}
+          <div className="rounded-2xl bg-[#ECF6ED] p-4 text-center">
+            <p className="text-xs text-[#4A4E5A] font-medium">متابع</p>
+            <p className="text-2xl font-bold text-[#10B981] mt-1">{seller.followersCount ?? 3458}</p>
+          </div>
+
+          {/* Card 3: Reviews */}
+          <div className="rounded-2xl bg-[#FDF7EA] p-4 text-center">
+            <p className="text-xs text-[#4A4E5A] font-medium">التقييمات</p>
+            <p className="text-2xl font-bold text-[#B8860B] mt-1">{seller.reviewsCount ?? 24}</p>
+          </div>
+        </div>
+
+        {/* 3. Middle Section: Related Info & Actions */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+          {/* Right Box: Related Information (7 cols) */}
+          <div className="sm:col-span-7 rounded-2xl border border-[#EDEEF2] bg-white p-5 text-right flex flex-col justify-between">
+            <h3 className="text-sm font-bold text-[#1E1E2D] mb-3">المعلومات ذات الصلة</h3>
+            <div className="space-y-2.5 text-xs">
+              <div className="flex items-center justify-start gap-1">
+                <span className="text-[#8E8E93]">البريد الإلكتروني :</span>
+                <span className="font-semibold text-[#1E1E2D]">{seller.email || "info@shepherdsupply.com"}</span>
+              </div>
+              <div className="flex items-center justify-start gap-1">
+                <span className="text-[#8E8E93]">الهاتف :</span>
+                <span className="font-semibold text-[#1E1E2D]" dir="ltr">{seller.phone || "+966 50 111 2222"}</span>
+              </div>
+              <div className="leading-relaxed">
+                <span className="text-[#8E8E93] ml-1">العنوان :</span>
+                <span className="font-medium text-[#1E1E2D]">
+                  {seller.address || "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Left Box: Actions (5 cols) */}
+          <div className="sm:col-span-5 rounded-2xl border border-[#EDEEF2] bg-white p-5 flex flex-col justify-between">
+            <h3 className="text-sm font-bold text-[#1E1E2D] mb-3 text-right">الإجراءات</h3>
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                onClick={() => onStatusChange?.(seller.id, "inactive")}
+                className="w-full rounded-xl border border-[#F87171] bg-white py-2.5 px-4 text-xs font-bold text-[#EF4444] hover:bg-rose-50 transition-colors cursor-pointer"
+              >
+                تعطيل مؤقت
+              </button>
+              <button
+                type="button"
+                onClick={() => onStatusChange?.(seller.id, "blocked")}
+                className="w-full rounded-xl border border-[#EF4444] bg-white py-2.5 px-4 text-xs font-bold text-[#DC2626] hover:bg-rose-50 transition-colors cursor-pointer"
+              >
+                إيقاف نهائي
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

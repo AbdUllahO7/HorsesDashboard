@@ -36,7 +36,14 @@ const statusConfig: Record<
     text: "text-[#6B7280]",
     border: "border-[#E5E7EB]",
   },
+  completed: {
+    label: "مكتمل",
+    bg: "bg-[#F0F5FA]",
+    text: "text-[#64748B]",
+    border: "border-[#CBD5E1]",
+  },
 };
+
 
 export function StatusBadge({ status, customLabel, className }: StatusBadgeProps) {
   const config = statusConfig[status] || statusConfig.inactive;

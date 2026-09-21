@@ -1,6 +1,24 @@
 import { BaseFilterParams } from "@/types/api";
 
-export type AuctionStatus = "upcoming" | "active" | "ended" | "cancelled";
+export type AuctionStatus = "active" | "completed" | "upcoming" | "ended" | "cancelled";
+
+export interface AuctionTableItem {
+  id: string;
+  title: string;
+  sellerName: string;
+  category: string;
+  status: "active" | "completed";
+  totalBids: number;
+  createdAt: string;
+  isLiveEnabled: boolean;
+  startingPrice?: number;
+  currentBid?: number;
+}
+
+export interface AuctionFilterTabItem {
+  id: "all" | "active" | "completed";
+  label: string;
+}
 
 export interface AuctionHorse {
   id: string;
@@ -29,8 +47,12 @@ export interface Auction {
 }
 
 export interface AuctionFilterParams extends BaseFilterParams {
+  statusTab?: "all" | "active" | "completed";
   category?: string;
   sellerId?: string;
+  search?: string;
   minPrice?: number;
   maxPrice?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
