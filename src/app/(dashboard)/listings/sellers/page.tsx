@@ -351,11 +351,17 @@ export default function LivestockSellersPage() {
       header: "الاجراءات",
       align: "center",
       render: (seller) => (
-        <div className="flex items-center justify-center gap-1.5">
+        <div
+          className="flex items-center justify-center gap-1.5"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Delete Action (Red Trash Modal) */}
           <button
             type="button"
-            onClick={() => handleDeleteSeller(seller)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteSeller(seller);
+            }}
             title="حذف البائع"
             className="flex h-7 w-7 items-center justify-center rounded-full text-[#B8860B] hover:bg-[#FAF4E6] transition-colors cursor-pointer"
           >
@@ -365,7 +371,10 @@ export default function LivestockSellersPage() {
           {/* Reject / Block Action (Gold Ban Modal) */}
           <button
             type="button"
-            onClick={() => handleStatusChange(seller, "blocked")}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleStatusChange(seller, "blocked");
+            }}
             title="حظر البائع"
             className="flex h-7 w-7 items-center justify-center rounded-full text-[#F59E0B] hover:bg-amber-50 transition-colors cursor-pointer"
           >
@@ -375,7 +384,10 @@ export default function LivestockSellersPage() {
           {/* Cancel / Inactive Action */}
           <button
             type="button"
-            onClick={() => handleStatusChange(seller, "inactive")}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleStatusChange(seller, "inactive");
+            }}
             title="تعطيل الحساب"
             className="flex h-7 w-7 items-center justify-center rounded-full text-[#EF4444] hover:bg-rose-50 transition-colors cursor-pointer"
           >
@@ -385,7 +397,10 @@ export default function LivestockSellersPage() {
           {/* Approve / Activate Action */}
           <button
             type="button"
-            onClick={() => handleStatusChange(seller, "active")}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleStatusChange(seller, "active");
+            }}
             title="تفعيل البائع"
             className="flex h-7 w-7 items-center justify-center rounded-full text-[#10B981] hover:bg-emerald-50 transition-colors cursor-pointer"
           >
@@ -470,14 +485,15 @@ export default function LivestockSellersPage() {
           </div>
         </div>
 
-
-        {/* 3. Reusable Dynamic Data Table */}
+        {/* 3. Reusable Dynamic Data Table with onRowClick */}
         <DataTable<LivestockSeller>
           columns={columns}
           data={sellers}
           loading={loading}
+          onRowClick={(seller) => setSelectedSeller(seller)}
           keyExtractor={(seller) => seller.id}
         />
+
 
 
         {/* 4. Pagination Component */}
