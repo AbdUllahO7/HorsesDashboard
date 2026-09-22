@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { X, UploadCloud, XCircle } from "lucide-react";
 import { cn } from "@/core/utils/cn";
@@ -25,7 +26,12 @@ export function AdModal({
   className,
 }: AdModalProps) {
   const { isRTL } = useTranslation();
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [formData, setFormData] = useState<AdFormData>({
     title: "",
@@ -62,27 +68,27 @@ export function AdModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
-    await onSave(formData, ad?.id);
+    await onSave(formData, ad?.id !== undefined ? String(ad.id) : undefined);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
-      setFormData((prev) => ({ ...prev, imageUrl: url }));
+      setFormData((prev) => ({ ...prev, imageUrl: url, imageFile: file }));
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/50 transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
       />
 
@@ -130,12 +136,15 @@ export function AdModal({
             />
 
             {formData.imageUrl ? (
-              <div className="relative h-28 w-44 overflow-hidden rounded-xl border border-[#EDEEF2]">
-                <Image
+              <div className="relative h-28 w-44 overflow-hidden rounded-xl border border-[#EDEEF2] bg-[#FAF4E8] flex items-center justify-center">
+                <img
                   src={formData.imageUrl}
                   alt="معاينة الإعلان"
-                  fill
-                  className="object-cover"
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                  }}
                 />
                 <span className="absolute bottom-1 left-1/2 -translate-x-1/2 bg-black/60 text-[10px] text-white px-2 py-0.5 rounded-md">
                   انقر للتغيير
@@ -186,8 +195,6 @@ export function AdModal({
                 className="w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-xs text-[#1E1E2D] outline-none focus:border-[#B8860B] transition-colors cursor-pointer"
               >
                 <option value="popup">popup</option>
-                <option value="banner">Banner</option>
-                <option value="story">قصة / Story</option>
               </select>
             </div>
           </div>
@@ -213,6 +220,7 @@ export function AdModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

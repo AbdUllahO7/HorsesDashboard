@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/core/utils/cn";
 import { useTranslation } from "@/i18n";
 import { CustomerUser, CustomerStatus } from "@/features/users/types";
@@ -11,6 +12,7 @@ export interface CustomerDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   customer: CustomerUser | null;
+  loading?: boolean;
   onStatusChange?: (customer: CustomerUser, newStatus: CustomerStatus) => void;
   onDelete?: (customer: CustomerUser) => void;
   className?: string;
@@ -20,11 +22,17 @@ export function CustomerDetailsModal({
   isOpen,
   onClose,
   customer,
+  loading = false,
   onStatusChange,
   onDelete,
   className,
 }: CustomerDetailsModalProps) {
   const { isRTL } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -36,13 +44,13 @@ export function CustomerDetailsModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen || !customer) return null;
+  if (!isOpen || !customer || !mounted) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/50 transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
       />
 
@@ -74,28 +82,39 @@ export function CustomerDetailsModal({
             <StatusBadge status={customer.status} />
           </div>
           <p className="text-xs text-[#8E8E93] mt-1.5 font-medium">
-            تاريخ الإنضمام {customer.joinedDate || "١٤٤٥/٨/٥ هـ"}
+            تاريخ الإنضمام {customer.joinedDate ? (customer.joinedDate.includes("T") ? customer.joinedDate.split("T")[0] : customer.joinedDate) : "—"}
           </p>
         </div>
 
         {/* 2. Top Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <div className="rounded-2xl bg-[#FAF4E8] p-3.5 text-center border border-[#EADBBD]">
-            <p className="text-xs text-[#8E8E93] font-medium">التفاعلات</p>
-            <p className="text-xl font-bold text-[#A6883C] mt-1">{customer.interactionsCount}</p>
-          </div>
-          <div className="rounded-2xl bg-[#EBF3FC] p-3.5 text-center border border-[#CBD5E1]">
-            <p className="text-xs text-[#8E8E93] font-medium">المزايدات</p>
-            <p className="text-xl font-bold text-[#2563EB] mt-1">{customer.bidsCount ?? 14}</p>
-          </div>
-          <div className="rounded-2xl bg-[#ECF6ED] p-3.5 text-center border border-[#A7F3D0]">
-            <p className="text-xs text-[#8E8E93] font-medium">الطلبات</p>
-            <p className="text-xl font-bold text-[#10B981] mt-1">{customer.ordersCount ?? 8}</p>
-          </div>
-          <div className="rounded-2xl bg-[#FEF2F2] p-3.5 text-center border border-[#FECACA]">
-            <p className="text-xs text-[#8E8E93] font-medium">إجمالي المشتريات</p>
-            <p className="text-xl font-bold text-[#DC2626] mt-1">{customer.totalSpent ? `${customer.totalSpent} ر.س` : "٤٥,٠٠٠ ر.س"}</p>
-          </div>
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl bg-[#F3F4F6] p-3.5 text-center border border-[#E5E7EB] animate-pulse">
+                <div className="h-3 w-12 bg-gray-200 rounded mx-auto mb-2" />
+                <div className="h-6 w-8 bg-gray-300 rounded mx-auto" />
+              </div>
+            ))
+          ) : (
+            <>
+              <div className="rounded-2xl bg-[#FAF4E8] p-3.5 text-center border border-[#EADBBD]">
+                <p className="text-xs text-[#8E8E93] font-medium">التفاعلات</p>
+                <p className="text-xl font-bold text-[#A6883C] mt-1">{customer.interactionsCount}</p>
+              </div>
+              <div className="rounded-2xl bg-[#EBF3FC] p-3.5 text-center border border-[#CBD5E1]">
+                <p className="text-xs text-[#8E8E93] font-medium">المزايدات</p>
+                <p className="text-xl font-bold text-[#2563EB] mt-1">{customer.bidsCount ?? 0}</p>
+              </div>
+              <div className="rounded-2xl bg-[#ECF6ED] p-3.5 text-center border border-[#A7F3D0]">
+                <p className="text-xs text-[#8E8E93] font-medium">الطلبات</p>
+                <p className="text-xl font-bold text-[#10B981] mt-1">{customer.ordersCount ?? 0}</p>
+              </div>
+              <div className="rounded-2xl bg-[#FEF2F2] p-3.5 text-center border border-[#FECACA]">
+                <p className="text-xs text-[#8E8E93] font-medium">إجمالي المشتريات</p>
+                <p className="text-xl font-bold text-[#DC2626] mt-1">{customer.totalSpent ? `${customer.totalSpent.toLocaleString()}` : "0"}</p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* 3. Cards Container */}
@@ -154,6 +173,7 @@ export function CustomerDetailsModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

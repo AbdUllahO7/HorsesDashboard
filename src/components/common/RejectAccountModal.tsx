@@ -45,7 +45,7 @@ export function RejectAccountModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/50 transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
       />
 

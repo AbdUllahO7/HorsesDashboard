@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, CheckCircle, XCircle } from "lucide-react";
 import { cn } from "@/core/utils/cn";
 import { useTranslation } from "@/i18n";
@@ -24,6 +25,11 @@ export function CategoryModal({
   className,
 }: CategoryModalProps) {
   const { isRTL } = useTranslation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [formData, setFormData] = useState<CategoryFormData>({
     name: "",
@@ -57,7 +63,7 @@ export function CategoryModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,11 +71,11 @@ export function CategoryModal({
     await onSave(formData, category?.id);
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/50 transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
       />
 
@@ -177,6 +183,7 @@ export function CategoryModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { cn } from "@/core/utils/cn";
 import { useTranslation } from "@/i18n";
 import { ProductItem } from "@/features/listings/types";
-import { X, Tag, DollarSign, Calendar, User, MapPin, Trash2, Package } from "lucide-react";
+import { X, Tag, DollarSign, Calendar, User, Phone, MapPin, Trash2, Package } from "lucide-react";
 
 export interface ProductDetailsModalProps {
   isOpen: boolean;
@@ -39,7 +39,7 @@ export function ProductDetailsModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/50 transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
       />
 
@@ -77,7 +77,7 @@ export function ProductDetailsModal({
           <div className="rounded-2xl bg-[#ECF6ED] p-3.5 text-center border border-[#A7F3D0]">
             <p className="text-xs text-[#8E8E93] font-medium">السعر</p>
             <p className="text-xl font-bold text-[#10B981] mt-1">
-              {product.price.toLocaleString()} ر.س
+              {product.price.toLocaleString()} 
             </p>
           </div>
           <div className="rounded-2xl bg-[#FAF4E8] p-3.5 text-center border border-[#EADBBD]">
@@ -126,6 +126,15 @@ export function ProductDetailsModal({
               <span className="text-[#8E8E93]">اسم البائع / المتجر:</span>
               <span className="font-semibold text-[#1E1E2D]">{product.sellerName}</span>
             </div>
+            {product.sellerPhone && (
+              <div className="flex items-center gap-2">
+                <Phone className="h-3.5 w-3.5 text-[#A6883C]" />
+                <span className="text-[#8E8E93]">رقم الجوال:</span>
+                <span className="font-medium text-[#1E1E2D] dir-ltr text-right" dir="ltr">
+                  {product.sellerPhone}
+                </span>
+              </div>
+            )}
             {product.breedName && (
               <div className="flex items-center gap-2">
                 <Tag className="h-3.5 w-3.5 text-[#A6883C]" />

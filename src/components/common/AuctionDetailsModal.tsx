@@ -7,7 +7,7 @@ import { useTranslation } from "@/i18n";
 import { AuctionTableItem, AuctionDetailsData } from "@/features/auctions/types";
 import { auctionsService } from "@/features/auctions/services";
 import { StatusBadge } from "./StatusBadge";
-import { X, Gavel, Calendar, User, Radio, DollarSign, MapPin, History, Trash2, CheckCircle2, ShieldAlert } from "lucide-react";
+import { X, Gavel, Calendar, User, Phone, Radio, DollarSign, MapPin, History, Trash2, CheckCircle2, ShieldAlert } from "lucide-react";
 
 export interface AuctionDetailsModalProps {
   isOpen: boolean;
@@ -17,6 +17,8 @@ export interface AuctionDetailsModalProps {
   onStop?: (auction: AuctionTableItem) => void;
   onDelete?: (auction: AuctionTableItem) => void;
   onToggleLive?: (auction: AuctionTableItem) => void;
+  errorMessage?: string | null;
+  onClearError?: () => void;
   className?: string;
 }
 
@@ -28,6 +30,8 @@ export function AuctionDetailsModal({
   onStop,
   onDelete,
   onToggleLive,
+  errorMessage,
+  onClearError,
   className,
 }: AuctionDetailsModalProps) {
   const { isRTL } = useTranslation();
@@ -75,7 +79,7 @@ export function AuctionDetailsModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/50 transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
       />
 
@@ -111,6 +115,25 @@ export function AuctionDetailsModal({
           </p>
         </div>
 
+        {/* Error Alert Banner inside Modal */}
+        {errorMessage && (
+          <div className="flex items-center justify-between rounded-2xl bg-rose-50 border border-rose-200 p-4 mb-6 text-xs font-semibold text-rose-800 animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+            {onClearError && (
+              <button
+                type="button"
+                onClick={onClearError}
+                className="text-rose-500 hover:text-rose-700 font-bold px-2 py-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        )}
+
         {/* 2. Top Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <div className="rounded-2xl bg-[#FAF4E8] p-3.5 text-center border border-[#EADBBD]">
@@ -120,13 +143,13 @@ export function AuctionDetailsModal({
           <div className="rounded-2xl bg-[#ECF6ED] p-3.5 text-center border border-[#A7F3D0]">
             <p className="text-xs text-[#8E8E93] font-medium">أعلى سعر حالي</p>
             <p className="text-xl font-bold text-[#10B981] mt-1">
-              {activeData.currentBid?.toLocaleString() || "0"} ر.س
+              {activeData.currentBid?.toLocaleString() || "0"} 
             </p>
           </div>
           <div className="rounded-2xl bg-[#EBF3FC] p-3.5 text-center border border-[#CBD5E1]">
             <p className="text-xs text-[#8E8E93] font-medium">سعر البداية</p>
             <p className="text-xl font-bold text-[#2563EB] mt-1">
-              {activeData.startingPrice?.toLocaleString() || "0"} ر.س
+              {activeData.startingPrice?.toLocaleString() || "0"}
             </p>
           </div>
           <div className="rounded-2xl bg-[#FDF7EA] p-3.5 text-center border border-[#FDE68A]">
@@ -179,6 +202,15 @@ export function AuctionDetailsModal({
                 <span className="text-[#8E8E93]">اسم البائع:</span>
                 <span className="font-semibold text-[#1E1E2D]">{activeData.sellerName}</span>
               </div>
+              {activeData.sellerPhone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-3.5 w-3.5 text-[#A6883C]" />
+                  <span className="text-[#8E8E93]">رقم الجوال:</span>
+                  <span className="font-medium text-[#1E1E2D] dir-ltr text-right" dir="ltr">
+                    {activeData.sellerPhone}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Gavel className="h-3.5 w-3.5 text-[#A6883C]" />
                 <span className="text-[#8E8E93]">التصنيف:</span>
@@ -215,7 +247,7 @@ export function AuctionDetailsModal({
                       className="flex items-center justify-between bg-[#FAF4E8] px-3 py-2 rounded-xl text-xs"
                     >
                       <span className="font-bold text-[#1E1E2D]">{bid.bidderName}</span>
-                      <span className="font-bold text-[#10B981]">{bid.amount.toLocaleString()} ر.س</span>
+                      <span className="font-bold text-[#10B981]">{bid.amount.toLocaleString()} </span>
                       <span className="text-[#8E8E93] text-[11px]">{bid.createdAt}</span>
                     </div>
                   ))}

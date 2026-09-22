@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, XCircle } from "lucide-react";
 import { cn } from "@/core/utils/cn";
 import { useTranslation } from "@/i18n";
@@ -24,7 +25,12 @@ export function BreedModal({
   className,
 }: BreedModalProps) {
   const { isRTL } = useTranslation();
+  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState<string>("");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (breed) {
@@ -44,7 +50,7 @@ export function BreedModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,11 +58,11 @@ export function BreedModal({
     await onSave(name.trim(), breed?.id);
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/50 transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
       />
 
@@ -125,6 +131,7 @@ export function BreedModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

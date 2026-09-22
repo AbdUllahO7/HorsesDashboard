@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/core/utils/cn";
 import { useTranslation } from "@/i18n";
 import { Trash2, Ban, AlertCircle, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
@@ -60,10 +61,10 @@ const variantConfig: Record<
     defaultConfirmText: "تأكيد",
   },
   info: {
-    iconBg: "bg-[#3B82F6]",
+    iconBg: "bg-[#2563EB]",
     icon: <AlertTriangle className="h-10 w-10 text-white" strokeWidth={2} />,
-    confirmBtnClass: "bg-[#3B82F6] hover:bg-[#2563EB] text-white",
-    defaultConfirmText: "موافق",
+    confirmBtnClass: "bg-[#2563EB] hover:bg-[#1D4ED8] text-white",
+    defaultConfirmText: "تأكيد",
   },
 };
 
@@ -80,7 +81,12 @@ export function ConfirmModal({
   className,
 }: ConfirmModalProps) {
   const { isRTL } = useTranslation();
-  const config = variantConfig[variant] || variantConfig.danger;
+  const [mounted, setMounted] = useState(false);
+  const config = variantConfig[variant];
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Handle ESC key
   useEffect(() => {
@@ -93,13 +99,13 @@ export function ConfirmModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, loading, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/50 transition-opacity animate-in fade-in duration-200"
         onClick={() => !loading && onClose()}
       />
 
@@ -164,7 +170,8 @@ export function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
