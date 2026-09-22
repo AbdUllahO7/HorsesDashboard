@@ -153,7 +153,7 @@ export default function ListingsPage() {
       align: "center",
       render: (product) => (
         <span className="font-bold text-[#10B981]">
-          {product.price.toLocaleString()} ر.س
+          {product.price.toLocaleString()} 
         </span>
       ),
     },

@@ -45,66 +45,17 @@ export const auctionStatCardsConfig: AuctionStatCardItem[] = [
   },
 ];
 
-export const mockAuctionStats: AuctionStats = {
-  totalAuctions: 55,
-  activeAuctions: 35,
-  completedAuctions: 15,
-  stoppedAuctions: 5,
-};
-
-export const mockAuctionTableList: AuctionTableItem[] = [
-  {
-    id: "auc-1",
-    title: "مهر عربي أصيل - فئة النخبة",
-    sellerName: "إسطبل الأريج",
-    category: "خيول عربية",
-    status: "active",
-    statusLabel: "نشط",
-    totalBids: 12,
-    createdAt: "2025-05-25",
-    isLiveEnabled: true,
-    startingPrice: 50000,
-    currentBid: 78000,
-  },
-  {
-    id: "auc-2",
-    title: "فرس ثوروبريد سباق",
-    sellerName: "مربط الصافنات",
-    category: "خيول سباق",
-    status: "completed",
-    statusLabel: "مكتمل",
-    totalBids: 24,
-    createdAt: "2025-05-20",
-    isLiveEnabled: false,
-    startingPrice: 80000,
-    currentBid: 145000,
-  },
-  {
-    id: "auc-3",
-    title: "حصان أندلسي فحل",
-    sellerName: "إسطبل النخيل",
-    category: "خيول أصيلة",
-    status: "stopped",
-    statusLabel: "متوقف",
-    totalBids: 3,
-    createdAt: "2025-05-18",
-    isLiveEnabled: false,
-    startingPrice: 40000,
-    currentBid: 42000,
-  },
-];
-
 const parseImageUrl = (img?: unknown): string => {
   if (!img) return "/images/placeholder-horse.png";
   let str = "";
   if (typeof img === "object" && img !== null) {
     const o = img as Record<string, unknown>;
     str = String(
+      o.image_Name ||
+      o.imageName ||
       o.url ||
       o.imageUrl ||
       o.image_Url ||
-      o.imageName ||
-      o.image_Name ||
       o.path ||
       o.imagePath ||
       o.image ||
@@ -116,8 +67,94 @@ const parseImageUrl = (img?: unknown): string => {
   }
   if (!str) return "/images/placeholder-horse.png";
   if (str.startsWith("http://") || str.startsWith("https://") || str.startsWith("data:")) return str;
-  const cleanName = str.replace(/^\/?(auctionImg|storeImg|img)\//, "").replace(/^\//, "");
+  const cleanName = str.replace(/^\/?img\//, "").replace(/^\//, "");
   return `https://api.horses.market/img/${cleanName}`;
+};
+
+const isPhoneNumber = (val?: unknown): boolean => {
+  if (!val || typeof val !== "string") return false;
+  const trimmed = val.trim();
+  if (trimmed.startsWith("+")) return true;
+  return /^[0-9\s\-+()]{7,}$/.test(trimmed);
+};
+
+const sellerDetailsCache = new Map<string, { sellerName: string; sellerPhone?: string }>();
+
+const extractSellerInfo = (item: Record<string, unknown>): { sellerName: string; sellerPhone?: string } => {
+  let sellerName = "";
+  let sellerPhone = "";
+
+  const checkCandidate = (cand: unknown) => {
+    if (!cand || typeof cand !== "string") return;
+    const str = cand.trim();
+    if (!str) return;
+    if (isPhoneNumber(str)) {
+      if (!sellerPhone) sellerPhone = str;
+    } else {
+      if (!sellerName) sellerName = str;
+    }
+  };
+
+  // 1. Direct API fields
+  if (item.user_Name && typeof item.user_Name === "string") {
+    checkCandidate(item.user_Name);
+  }
+  if (item.userName && typeof item.userName === "string") {
+    checkCandidate(item.userName);
+  }
+  if (item.fullName && typeof item.fullName === "string") {
+    checkCandidate(item.fullName);
+  }
+  if (item.name && typeof item.name === "string" && item.name !== item.title) {
+    checkCandidate(item.name);
+  }
+  if (item.seller_Phone_Number && typeof item.seller_Phone_Number === "string") {
+    sellerPhone = item.seller_Phone_Number.trim();
+  }
+  if (item.seller_Name && typeof item.seller_Name === "string") {
+    checkCandidate(item.seller_Name);
+  }
+  if (item.sellerName && typeof item.sellerName === "string") {
+    checkCandidate(item.sellerName);
+  }
+
+  // 2. Check nested user or seller objects
+  if (item.user && typeof item.user === "object") {
+    const u = item.user as Record<string, unknown>;
+    checkCandidate(u.fullName);
+    checkCandidate(u.name);
+    checkCandidate(u.user_Name);
+    checkCandidate(u.userName);
+    checkCandidate(u.stableName);
+    checkCandidate(u.storeName);
+    if (u.phoneNumber && typeof u.phoneNumber === "string") sellerPhone = u.phoneNumber.trim();
+    if (u.phone && typeof u.phone === "string") sellerPhone = u.phone.trim();
+  }
+  if (item.seller && typeof item.seller === "object") {
+    const s = item.seller as Record<string, unknown>;
+    checkCandidate(s.fullName);
+    checkCandidate(s.name);
+    checkCandidate(s.userName);
+    checkCandidate(s.stableName);
+    checkCandidate(s.storeName);
+    if (s.phoneNumber && typeof s.phoneNumber === "string") sellerPhone = s.phoneNumber.trim();
+    if (s.phone && typeof s.phone === "string") sellerPhone = s.phone.trim();
+  }
+
+  if (!sellerPhone && isPhoneNumber(item.seller_Name)) {
+    sellerPhone = String(item.seller_Name).trim();
+  }
+  if (!sellerPhone && isPhoneNumber(item.sellerName)) {
+    sellerPhone = String(item.sellerName).trim();
+  }
+
+  if (!sellerName) {
+    if (sellerPhone) sellerName = `بائع (${sellerPhone})`;
+    else if (item.seller_Id || item.sellerId) sellerName = `بائع #${item.seller_Id || item.sellerId}`;
+    else sellerName = "بائع معتمد";
+  }
+
+  return { sellerName, sellerPhone: sellerPhone || undefined };
 };
 
 export const auctionsService = {
@@ -169,14 +206,24 @@ export const auctionsService = {
 
       return {
         success: true,
-        data: mockAuctionStats,
-        message: "Fallback stats loaded",
+        data: {
+          totalAuctions: 0,
+          activeAuctions: 0,
+          completedAuctions: 0,
+          stoppedAuctions: 0,
+        },
+        message: "Loaded stats",
       };
     } catch {
       return {
         success: true,
-        data: mockAuctionStats,
-        message: "Auction stats loaded from cache",
+        data: {
+          totalAuctions: 0,
+          activeAuctions: 0,
+          completedAuctions: 0,
+          stoppedAuctions: 0,
+        },
+        message: "Zero auction stats",
       };
     }
   },
@@ -257,93 +304,100 @@ export const auctionsService = {
         }
       }
 
-      const items: AuctionTableItem[] = rawList.map((item, index) => {
-        const id = String(item.id ?? item.auctionId ?? `auc-${index + 1}`);
-        const title = String(item.title ?? item.name ?? "مزاد خيل");
+      // Parallel fetch of seller names for items on current page
+      const items: AuctionTableItem[] = await Promise.all(
+        rawList.map(async (item, index) => {
+          const id = String(item.id ?? item.auctionId ?? `auc-${index + 1}`);
+          const title = String(item.title ?? item.name ?? "مزاد خيل");
 
-        let sellerName = "";
-        if (typeof item.seller === "object" && item.seller) {
-          const s = item.seller as Record<string, unknown>;
-          sellerName = String(s.name ?? s.fullName ?? s.userName ?? s.storeName ?? s.stableName ?? "");
-        }
-        if (!sellerName && typeof item.user === "object" && item.user) {
-          const u = item.user as Record<string, unknown>;
-          sellerName = String(u.name ?? u.fullName ?? u.userName ?? u.storeName ?? u.stableName ?? "");
-        }
-        if (!sellerName) {
-          sellerName = String(
-            item.sellerName ??
-            item.seller_Name ??
-            item.userName ??
-            item.user_Name ??
-            item.fullName ??
-            item.ownerName ??
-            item.stableName ??
-            ""
-          );
-        }
-        if (!sellerName && item.userId) sellerName = `مستخدم #${item.userId}`;
-        if (!sellerName) sellerName = "بائع معتمد";
+          let sellerInfo = extractSellerInfo(item);
 
-        let category = "خيول عربية";
-        if (typeof item.category === "object" && item.category) {
-          const c = item.category as Record<string, unknown>;
-          category = String(c.name ?? c.category_Name ?? "خيول");
-        } else if (item.categoryName || item.category_Name) {
-          category = String(item.categoryName ?? item.category_Name);
-        }
+          // If user_Name was not present directly in the list response, fetch from details or cache
+          if (!item.user_Name && !item.userName && id && !id.startsWith("auc-")) {
+            const cached = sellerDetailsCache.get(id);
+            if (cached) {
+              sellerInfo = cached;
+            } else {
+              try {
+                const detailRes = await apiClient.get<Record<string, unknown>>(
+                  apiConfig.endpoints.auctions.details(id)
+                );
+                const resData = (detailRes.data || detailRes) as Record<string, unknown>;
+                const detailData = (resData.data || resData.value || resData) as Record<string, unknown>;
+                if (detailData && typeof detailData === "object") {
+                  sellerInfo = extractSellerInfo(detailData);
+                  sellerDetailsCache.set(id, sellerInfo);
+                }
+              } catch {
+                // keep current sellerInfo
+              }
+            }
+          }
 
-        const rawStatus = item.status;
-        let status: AuctionStatus = "active";
-        let statusLabel = "نشط";
-        if (rawStatus === 3 || rawStatus === "completed") {
-          status = "completed";
-          statusLabel = "مكتمل";
-        } else if (rawStatus === 4 || rawStatus === "stopped" || rawStatus === "cancelled" || item.isActive === false) {
-          status = "stopped";
-          statusLabel = "متوقف";
-        } else if (rawStatus === 1 || rawStatus === "upcoming") {
-          status = "upcoming";
-          statusLabel = "قادم";
-        }
+          let category = "خيول عربية";
+          if (typeof item.category === "object" && item.category) {
+            const c = item.category as Record<string, unknown>;
+            category = String(c.name ?? c.category_Name ?? "خيول");
+          } else if (item.categoryName || item.category_Name) {
+            category = String(item.categoryName ?? item.category_Name);
+          }
 
-        const totalBids = Number(item.totalBids ?? item.bidsCount ?? item.bidCount ?? 0);
-        const startingPrice = Number(item.start_Price ?? item.startingPrice ?? item.price ?? 0);
-        const currentBid = Number(item.currentBid ?? item.highestBid ?? item.current_Price ?? startingPrice);
-        const isLiveEnabled = Boolean(item.isLive ?? item.isLiveEnabled ?? item.hasLiveStream ?? false);
-        const createdAt = item.createdAt
-          ? String(item.createdAt).split("T")[0]
-          : "2025-05-25";
+          const rawStatus = item.status;
+          let status: AuctionStatus = "active";
+          let statusLabel = "نشط";
+          if (rawStatus === 3 || rawStatus === "completed") {
+            status = "completed";
+            statusLabel = "مكتمل";
+          } else if (rawStatus === 4 || rawStatus === "stopped" || rawStatus === "cancelled" || item.isActive === false) {
+            status = "stopped";
+            statusLabel = "متوقف";
+          } else if (rawStatus === 1 || rawStatus === "upcoming") {
+            status = "upcoming";
+            statusLabel = "قادم";
+          }
 
-        let rawImages: unknown[] = [];
-        if (Array.isArray(item.images)) rawImages = item.images;
-        else if (Array.isArray(item.auctionImages)) rawImages = item.auctionImages;
-        else if (Array.isArray(item.auction_Images)) rawImages = item.auction_Images;
-        else if (item.imageUrl || item.image_Url || item.image || item.photo) {
-          rawImages = [item.imageUrl ?? item.image_Url ?? item.image ?? item.photo];
-        }
+          const totalBids = Number(item.bids_Count ?? item.totalBids ?? item.bidsCount ?? item.bidCount ?? 0);
+          const startingPrice = Number(item.start_Price ?? item.startingPrice ?? item.price ?? 0);
+          const currentBid = Number(item.current_Price ?? item.currentBid ?? item.highestBid ?? startingPrice);
+          const isLiveEnabled = Boolean(item.isLive ?? item.isLiveEnabled ?? item.hasLiveStream ?? false);
+          const createdAt = item.start_Time
+            ? String(item.start_Time).split("T")[0]
+            : item.createdAt
+            ? String(item.createdAt).split("T")[0]
+            : "2026-09-20";
 
-        const images = rawImages.map(parseImageUrl);
+          let rawImages: unknown[] = [];
+          if (item.image_Name) rawImages.push(item.image_Name);
+          if (Array.isArray(item.images)) rawImages.push(...item.images);
+          else if (Array.isArray(item.auctionImages)) rawImages.push(...item.auctionImages);
+          else if (Array.isArray(item.auction_Images)) rawImages.push(...item.auction_Images);
+          else if (item.imageUrl || item.image_Url || item.image || item.photo) {
+            rawImages.push(item.imageUrl ?? item.image_Url ?? item.image ?? item.photo);
+          }
 
-        return {
-          id,
-          title,
-          sellerName,
-          sellerId: item.userId ? String(item.userId) : undefined,
-          category,
-          status,
-          statusLabel,
-          totalBids,
-          createdAt,
-          isLiveEnabled,
-          startingPrice,
-          currentBid,
-          images,
-          description: item.description ? String(item.description) : undefined,
-          startDate: item.startDate ? String(item.startDate) : undefined,
-          endDate: item.endDate ? String(item.endDate) : undefined,
-        };
-      });
+          const images = rawImages.map(parseImageUrl);
+
+          return {
+            id,
+            title,
+            sellerName: sellerInfo.sellerName,
+            sellerPhone: sellerInfo.sellerPhone,
+            sellerId: item.seller_Id ? String(item.seller_Id) : (item.userId ? String(item.userId) : undefined),
+            category,
+            status,
+            statusLabel,
+            totalBids,
+            createdAt,
+            isLiveEnabled,
+            startingPrice,
+            currentBid,
+            images,
+            description: item.description ? String(item.description) : undefined,
+            startDate: item.start_Time ? String(item.start_Time) : undefined,
+            endDate: item.end_Time ? String(item.end_Time) : undefined,
+          };
+        })
+      );
 
       return {
         success: true,
@@ -365,17 +419,17 @@ export const auctionsService = {
       return {
         success: true,
         data: {
-          items: mockAuctionTableList,
+          items: [],
           pagination: {
             currentPage: params?.page || 1,
             totalPages: 1,
             pageSize: params?.limit || 10,
-            totalItems: mockAuctionTableList.length,
+            totalItems: 0,
             hasNextPage: false,
             hasPrevPage: false,
           },
         },
-        message: "Loaded from fallback mock",
+        message: "No auctions loaded",
       };
     }
   },
@@ -400,34 +454,8 @@ export const auctionsService = {
 
       const title = String(item.title ?? item.name ?? "مزاد خيل");
 
-      let sellerName = "";
-      if (typeof item.seller === "object" && item.seller) {
-        const s = item.seller as Record<string, unknown>;
-        sellerName = String(s.name ?? s.fullName ?? s.userName ?? s.storeName ?? s.stableName ?? "");
-      }
-      if (!sellerName && typeof item.user === "object" && item.user) {
-        const u = item.user as Record<string, unknown>;
-        sellerName = String(u.name ?? u.fullName ?? u.userName ?? u.storeName ?? u.stableName ?? "");
-      }
-      if (!sellerName && typeof item.stableOwner === "object" && item.stableOwner) {
-        const so = item.stableOwner as Record<string, unknown>;
-        sellerName = String(so.name ?? so.fullName ?? so.stableName ?? "");
-      }
-      if (!sellerName) {
-        sellerName = String(
-          item.sellerName ??
-          item.seller_Name ??
-          item.userName ??
-          item.user_Name ??
-          item.fullName ??
-          item.ownerName ??
-          item.stableName ??
-          item.storeName ??
-          ""
-        );
-      }
-      if (!sellerName && item.userId) sellerName = `مستخدم #${item.userId}`;
-      if (!sellerName) sellerName = "بائع معتمد";
+      const { sellerName, sellerPhone } = extractSellerInfo(item);
+      sellerDetailsCache.set(String(id), { sellerName, sellerPhone });
 
       let category = "خيول عربية";
       if (typeof item.category === "object" && item.category) {
@@ -449,12 +477,13 @@ export const auctionsService = {
       }
 
       let rawImages: unknown[] = [];
-      if (Array.isArray(item.images)) rawImages = item.images;
-      else if (Array.isArray(item.auctionImages)) rawImages = item.auctionImages;
-      else if (Array.isArray(item.auction_Images)) rawImages = item.auction_Images;
-      else if (Array.isArray(item.photos)) rawImages = item.photos;
+      if (item.image_Name) rawImages.push(item.image_Name);
+      if (Array.isArray(item.images)) rawImages.push(...item.images);
+      else if (Array.isArray(item.auctionImages)) rawImages.push(...item.auctionImages);
+      else if (Array.isArray(item.auction_Images)) rawImages.push(...item.auction_Images);
+      else if (Array.isArray(item.photos)) rawImages.push(...item.photos);
       else if (item.imageUrl || item.image_Url || item.image || item.photo) {
-        rawImages = [item.imageUrl ?? item.image_Url ?? item.image ?? item.photo];
+        rawImages.push(item.imageUrl ?? item.image_Url ?? item.image ?? item.photo);
       }
 
       const images = rawImages.map(parseImageUrl);
@@ -463,11 +492,20 @@ export const auctionsService = {
       if (Array.isArray(item.bids)) {
         bidsHistory = (item.bids as Record<string, unknown>[]).map((b, i) => ({
           id: b.id ? String(b.id) : i + 1,
-          bidderName: String(b.userName ?? b.bidderName ?? b.fullName ?? "مزايد"),
+          bidderName: String(b.customer_Name ?? b.customerName ?? b.userName ?? b.bidderName ?? b.fullName ?? "مزايد"),
           amount: Number(b.amount ?? b.price ?? 0),
-          createdAt: b.createdAt ? String(b.createdAt).split("T")[0] : "2025-05-25",
+          createdAt: b.created_At
+            ? String(b.created_At).replace("T", " ").substring(0, 16)
+            : b.createdAt
+            ? String(b.createdAt).replace("T", " ").substring(0, 16)
+            : "2026-09-20",
         }));
       }
+
+      const totalBids = Number(
+        item.bids_Count ??
+        (Array.isArray(item.bids) ? item.bids.length : 0)
+      );
 
       return {
         success: true,
@@ -475,15 +513,20 @@ export const auctionsService = {
           id: String(id),
           title,
           sellerName,
-          sellerId: item.userId ? String(item.userId) : undefined,
+          sellerPhone,
+          sellerId: item.seller_Id ? String(item.seller_Id) : (item.userId ? String(item.userId) : undefined),
           category,
           status,
           statusLabel,
-          totalBids: Number(item.totalBids ?? bidsHistory.length ?? 0),
-          createdAt: item.createdAt ? String(item.createdAt).split("T")[0] : "2025-05-25",
+          totalBids,
+          createdAt: item.start_Time
+            ? String(item.start_Time).split("T")[0]
+            : item.createdAt
+            ? String(item.createdAt).split("T")[0]
+            : "2026-09-20",
           isLiveEnabled: Boolean(item.isLive ?? item.isLiveEnabled ?? false),
           startingPrice: Number(item.start_Price ?? item.startingPrice ?? 0),
-          currentBid: Number(item.currentBid ?? item.highestBid ?? item.start_Price ?? 0),
+          currentBid: Number(item.current_Price ?? item.currentBid ?? item.highestBid ?? item.start_Price ?? 0),
           images,
           description: item.description ? String(item.description) : undefined,
           address: item.address ? String(item.address) : undefined,
@@ -493,17 +536,24 @@ export const auctionsService = {
       };
     } catch (error) {
       console.error("Failed to load auction details:", error);
-      const fallback = mockAuctionTableList.find((a) => a.id === String(id)) || mockAuctionTableList[0];
       return {
-        success: true,
+        success: false,
         data: {
-          ...fallback,
-          bidsHistory: [
-            { id: "1", bidderName: "أحمد السالم", amount: fallback.currentBid, createdAt: "2025-05-25 14:30" },
-            { id: "2", bidderName: "سعود الخالدي", amount: fallback.startingPrice + 5000, createdAt: "2025-05-25 12:00" },
-          ],
+          id: String(id),
+          title: `مزاد #${id}`,
+          sellerName: "غير محدد",
+          category: "خيول",
+          status: "stopped",
+          statusLabel: "غير متوفر",
+          totalBids: 0,
+          createdAt: "2026-09-20",
+          isLiveEnabled: false,
+          startingPrice: 0,
+          currentBid: 0,
+          images: [],
+          bidsHistory: [],
         },
-        message: "Loaded from fallback mock",
+        message: "تعذر تحميل تفاصيل المزاد",
       };
     }
   },
@@ -524,12 +574,14 @@ export const auctionsService = {
       };
     } catch (error: unknown) {
       console.error("Failed to accept auction:", error);
-      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      const err = error as { message?: string; statusCode?: number; response?: { status?: number; data?: { message?: string } } };
+      const rawMsg = err?.response?.data?.message || err?.message;
       const msg =
-        err?.response?.data?.message ||
-        (err?.response?.status === 403
-          ? "غير مصرح (403): هذا الإجراء مخصص لمالك المزاد (البائع) في نظام الـ Backend"
-          : "تعذر قبول المزاد");
+        rawMsg && rawMsg !== "Error" && !rawMsg.includes("HTTP Error")
+          ? `حدث خطأ ما: ${rawMsg}`
+          : (err?.statusCode === 403 || err?.response?.status === 403
+            ? "حدث خطأ ما: غير مصرح بهذا الإجراء (403 Forbidden) - قبول المزاد مخصص لمالك المزاد أو بحاجة لصلاحية الإدارة في السيرفر"
+            : "حدث خطأ ما أثناء قبول المزاد، يرجى المحاولة مرة أخرى");
       return {
         success: false,
         data: undefined as unknown as void,
@@ -554,12 +606,14 @@ export const auctionsService = {
       };
     } catch (error: unknown) {
       console.error("Failed to stop auction:", error);
-      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      const err = error as { message?: string; statusCode?: number; response?: { status?: number; data?: { message?: string } } };
+      const rawMsg = err?.response?.data?.message || err?.message;
       const msg =
-        err?.response?.data?.message ||
-        (err?.response?.status === 403
-          ? "غير مصرح (403): لا تملك الصلاحية لإيقاف هذا المزاد"
-          : "تعذر إيقاف المزاد");
+        rawMsg && rawMsg !== "Error" && !rawMsg.includes("HTTP Error")
+          ? `حدث خطأ ما: ${rawMsg}`
+          : (err?.statusCode === 403 || err?.response?.status === 403
+            ? "حدث خطأ ما: غير مصرح بهذا الإجراء (403 Forbidden)"
+            : "حدث خطأ ما أثناء إيقاف المزاد، يرجى المحاولة مرة أخرى");
       return {
         success: false,
         data: undefined as unknown as void,
@@ -584,12 +638,14 @@ export const auctionsService = {
       };
     } catch (error: unknown) {
       console.error("Failed to delete auction:", error);
-      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      const err = error as { message?: string; statusCode?: number; response?: { status?: number; data?: { message?: string } } };
+      const rawMsg = err?.response?.data?.message || err?.message;
       const msg =
-        err?.response?.data?.message ||
-        (err?.response?.status === 403
-          ? "غير مصرح (403): حذف المزاد متاح فقط لمالك المزاد الأصلي (البائع)"
-          : "تعذر حذف المزاد");
+        rawMsg && rawMsg !== "Error" && !rawMsg.includes("HTTP Error")
+          ? `حدث خطأ ما: ${rawMsg}`
+          : (err?.statusCode === 403 || err?.response?.status === 403
+            ? "حدث خطأ ما: غير مصرح بهذا الإجراء (403 Forbidden) - حذف المزاد متاح فقط لمالك المزاد (البائع)"
+            : "حدث خطأ ما أثناء حذف المزاد، يرجى المحاولة مرة أخرى");
       return {
         success: false,
         data: undefined as unknown as void,

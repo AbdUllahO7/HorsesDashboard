@@ -18,53 +18,18 @@ export const reportReasonsMap: Record<number, string> = {
   8: "أسباب أخرى",
 };
 
-export const mockReportsList: ReportTicketItem[] = [
-  {
-    id: "rep-1",
-    liveStreamId: 101,
-    reporterName: "محمود أحمد",
-    reporterPhone: "0595121088",
-    reporterEmail: "reporter@gmail.com",
-    reportedUserName: "إسطبل الأريج",
-    reportedUserPhone: "0595121099",
-    reportedUserEmail: "reported@gmail.com",
-    reason: "قام البائع بتقديم معلومات مضللة بخصوص حالة المزاد وعدم الالتزام بوثائق الفحص المعتمدة.",
-    reasonLabel: "احتيال في المزاد",
-    category: "احتيال في المزاد",
-    status: "pending",
-    statusLabel: "قيد المراجعة",
-    createdAt: "2025-05-25",
-  },
-  {
-    id: "rep-2",
-    liveStreamId: 102,
-    reporterName: "سعد القحطاني",
-    reporterPhone: "0595121088",
-    reporterEmail: "reporter@gmail.com",
-    reportedUserName: "مربط الصافنات",
-    reportedUserPhone: "0595121099",
-    reportedUserEmail: "reported@gmail.com",
-    reason: "إرسال رسائل غير لائقة عبر المحادثة المباشرة أثناء البث.",
-    reasonLabel: "سلوك غير لائق",
-    category: "سلوك غير لائق",
-    status: "pending",
-    statusLabel: "قيد المراجعة",
-    createdAt: "2025-05-25",
-  },
-];
-
 class ReportsService {
   /**
-   * Get Reports and Live Violations list
+   * Get Reports and Live Violations list from API
    * Endpoint: GET /api/LiveRepots/GetRepotsLive
    */
   async getReports(
     params: ReportFilterParams = {}
   ): Promise<ApiResponse<ReportsPaginationResponse>> {
-    try {
-      const page = params.page || 1;
-      const limit = params.limit || 10;
+    const page = params.page || 1;
+    const limit = params.limit || 10;
 
+    try {
       const queryParams: Record<string, string | number | boolean | undefined> = {
         PageNumber: page,
         PageSize: limit,
@@ -93,6 +58,7 @@ class ReportsService {
           const obj = response.data as Record<string, unknown>;
           if (Array.isArray(obj.items)) rawList = obj.items as Record<string, unknown>[];
           else if (Array.isArray(obj.data)) rawList = obj.data as Record<string, unknown>[];
+          else if (Array.isArray(obj.reports)) rawList = obj.reports as Record<string, unknown>[];
 
           if (obj.pagination && typeof obj.pagination === "object") {
             const p = obj.pagination as Record<string, number>;
@@ -108,44 +74,72 @@ class ReportsService {
       const items: ReportTicketItem[] = rawList.map((item, index) => {
         const id = (item.id as string | number) ?? index + 1;
         const liveStreamId = item.liveStream_Id ? Number(item.liveStream_Id) : (item.liveStreamId ? Number(item.liveStreamId) : undefined);
-        const reasonNum = item.reason ? Number(item.reason) : 1;
+        const reasonNum = item.reason ? Number(item.reason) : (item.reason_Id ? Number(item.reason_Id) : 1);
         const reasonLabel = reportReasonsMap[reasonNum] || "مخالفة في البث";
-        const notes = String(item.notes ?? item.reasonText ?? item.description ?? "");
+        const notes = String(item.notes ?? item.reasonText ?? item.description ?? item.message ?? "");
         const reason = notes || reasonLabel;
 
-        let reporterName = "مستخدم";
-        let reporterPhone = "0595121088";
-        let reporterEmail = "user@gmail.com";
+        const isPhoneNumber = (val?: unknown): boolean => {
+          if (!val || typeof val !== "string") return false;
+          const trimmed = val.trim();
+          return trimmed.startsWith("+") || /^[0-9\s\-+()]{7,}$/.test(trimmed);
+        };
+
+        let reporterName = "";
+        let reporterPhone = "";
+        let reporterEmail = "";
         if (typeof item.user === "object" && item.user) {
           const u = item.user as Record<string, unknown>;
-          reporterName = String(u.name ?? u.fullName ?? "مستخدم");
-          reporterPhone = String(u.phoneNumber ?? u.phone ?? reporterPhone);
-          reporterEmail = String(u.email ?? reporterEmail);
-        } else if (item.userName) {
-          reporterName = String(item.userName);
+          reporterName = String(u.fullName ?? u.name ?? u.user_Name ?? u.userName ?? "");
+          reporterPhone = String(u.phoneNumber ?? u.phone ?? u.mobile ?? "");
+          reporterEmail = String(u.email ?? "");
         }
+        if (!reporterName) {
+          const cand = String(item.user_Name ?? item.userName ?? item.customer_Name ?? item.reporterName ?? "");
+          if (isPhoneNumber(cand)) {
+            if (!reporterPhone) reporterPhone = cand;
+            reporterName = "مستخدم المنصة";
+          } else if (cand) {
+            reporterName = cand;
+          }
+        }
+        if (!reporterName) reporterName = "مستخدم";
+        if (!reporterPhone && item.phone) reporterPhone = String(item.phone);
+        if (!reporterPhone && item.phoneNumber) reporterPhone = String(item.phoneNumber);
+        if (!reporterEmail && item.email) reporterEmail = String(item.email);
 
-        let reportedUserName = "البائع / صاحب البث";
-        let reportedUserPhone = "0595121099";
-        let reportedUserEmail = "reported@gmail.com";
+        let reportedUserName = "";
+        let reportedUserPhone = "";
+        let reportedUserEmail = "";
         if (typeof item.liveStream === "object" && item.liveStream) {
           const ls = item.liveStream as Record<string, unknown>;
-          reportedUserName = String(ls.title ?? ls.sellerName ?? "بث مباشر");
-        } else if (item.reportedUserName) {
-          reportedUserName = String(item.reportedUserName);
+          reportedUserName = String(ls.title ?? ls.sellerName ?? ls.seller_Name ?? ls.userName ?? "بث مباشر");
+          reportedUserPhone = String(ls.phone ?? ls.phoneNumber ?? ls.sellerPhone ?? "");
+        } else if (typeof item.reportedUser === "object" && item.reportedUser) {
+          const ru = item.reportedUser as Record<string, unknown>;
+          reportedUserName = String(ru.fullName ?? ru.name ?? ru.userName ?? "");
+          reportedUserPhone = String(ru.phoneNumber ?? ru.phone ?? "");
+          reportedUserEmail = String(ru.email ?? "");
+        } else if (item.reported_User_Name || item.reportedUserName || item.seller_Name || item.sellerName) {
+          reportedUserName = String(item.reported_User_Name ?? item.reportedUserName ?? item.seller_Name ?? item.sellerName);
         }
+        if (!reportedUserName) reportedUserName = "البائع / صاحب البث";
 
-        const createdAt = item.createdAt ? String(item.createdAt).split("T")[0] : "2025-05-25";
+        const createdAt = item.created_At
+          ? String(item.created_At).split("T")[0]
+          : item.createdAt
+          ? String(item.createdAt).split("T")[0]
+          : new Date().toISOString().split("T")[0];
 
         return {
           id,
           liveStreamId,
           reporterName,
-          reporterPhone,
-          reporterEmail,
+          reporterPhone: reporterPhone || undefined,
+          reporterEmail: reporterEmail || undefined,
           reportedUserName,
-          reportedUserPhone,
-          reportedUserEmail,
+          reportedUserPhone: reportedUserPhone || undefined,
+          reportedUserEmail: reportedUserEmail || undefined,
           reason,
           reasonLabel,
           category: reasonLabel,
@@ -159,9 +153,9 @@ class ReportsService {
       return {
         success: true,
         data: {
-          items: items.length > 0 ? items : mockReportsList,
+          items,
           pagination: {
-            total: total || items.length || mockReportsList.length,
+            total: total || items.length,
             page,
             limit,
             totalPages: totalPages || 1,
@@ -172,45 +166,49 @@ class ReportsService {
     } catch (error) {
       console.error("Failed to load reports from API:", error);
       return {
-        success: true,
+        success: false,
         data: {
-          items: mockReportsList,
+          items: [],
           pagination: {
-            total: mockReportsList.length,
+            total: 0,
             page: 1,
             limit: 10,
             totalPages: 1,
           },
         },
-        message: "Loaded from fallback mock",
+        message: "فشل تحميل البلاغات من الخادم",
       };
     }
   }
 
   /**
    * Accept / Resolve Report and End Live Stream if applicable
-   * Endpoint: POST /api/LiveStreams/End?liveStreamId={id}
    */
   async resolveReport(report: ReportTicketItem): Promise<ApiResponse<ReportTicketItem>> {
-    try {
-      if (report.liveStreamId) {
-        await apiClient.post<void>("/LiveStreams/End", null, {
-          params: { liveStreamId: report.liveStreamId },
-        });
+    if (report.liveStreamId) {
+      try {
+        const res = await apiClient.post<void>(`/LiveStreams/End?liveStreamId=${report.liveStreamId}`);
+        return {
+          success: true,
+          data: { ...report, status: "resolved", statusLabel: "تم الحل" },
+          message: res.message || "تم قبول البلاغ وإيقاف البث المخالف بنجاح",
+        };
+      } catch (err: unknown) {
+        const errorObj = err as { message?: string; statusCode?: number };
+        const apiMsg = errorObj?.message || "حدث خطأ أثناء محاولة إيقاف البث";
+        return {
+          success: false,
+          data: report,
+          message: apiMsg,
+        };
       }
-      return {
-        success: true,
-        data: { ...report, status: "resolved", statusLabel: "تم الحل" },
-        message: "تم قبول البلاغ وإيقاف البث المخالف بنجاح",
-      };
-    } catch (error) {
-      console.error("Failed to resolve report:", error);
-      return {
-        success: true,
-        data: { ...report, status: "resolved", statusLabel: "تم الحل" },
-        message: "تم قبول البلاغ في وضع الاحتياط",
-      };
     }
+
+    return {
+      success: true,
+      data: { ...report, status: "resolved", statusLabel: "تم الحل" },
+      message: "تم قبول البلاغ بنجاح",
+    };
   }
 
   /**

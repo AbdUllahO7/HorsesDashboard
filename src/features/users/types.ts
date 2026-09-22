@@ -21,6 +21,10 @@ export interface CustomerUser {
 export interface CustomerStats {
   totalCustomers: number;
   activeCustomers: number;
+  activeSellers: number;
+  openAuctions: number;
+  liveStreams: number;
+  totalProducts: number;
   inactiveCustomers: number;
   blockedCustomers: number;
 }

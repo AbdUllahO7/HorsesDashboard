@@ -20,168 +20,28 @@ export const customerFilterTabs: CustomerFilterTabItem[] = [
 
 export const customerStatCardsConfig: CustomerStatCardItem[] = [
   {
-    id: "total",
-    label: "اجمالي العملاء",
-    countKey: "totalCustomers",
-    iconName: "Users",
-  },
-  {
-    id: "active",
-    label: "العملاء النشطين",
+    id: "activeCustomers",
+    label: "العملاء النشطون",
     countKey: "activeCustomers",
     iconName: "UserCheck",
   },
   {
-    id: "inactive",
-    label: "العملاء غير النشطين",
-    countKey: "inactiveCustomers",
-    iconName: "UserX",
+    id: "activeSellers",
+    label: "البائعون النشطون",
+    countKey: "activeSellers",
+    iconName: "Users",
   },
   {
-    id: "blocked",
-    label: "العملاء المحظورين",
-    countKey: "blockedCustomers",
+    id: "openAuctions",
+    label: "المزادات المفتوحة",
+    countKey: "openAuctions",
     iconName: "UserMinus",
   },
-];
-
-export const mockCustomerStats: CustomerStats = {
-  totalCustomers: 55,
-  activeCustomers: 55,
-  inactiveCustomers: 55,
-  blockedCustomers: 55,
-};
-
-export const mockCustomersList: CustomerUser[] = [
   {
-    id: "customer-1",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    interactionsCount: 5,
-    joinedDate: "25-5-2025",
-    address: "الرياض، المملكة العربية السعودية",
-    bidsCount: 22,
-    ordersCount: 8,
-    totalSpent: 185000,
-  },
-  {
-    id: "customer-2",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "blocked",
-    interactionsCount: 5,
-    joinedDate: "25-5-2025",
-    address: "جدة، المملكة العربية السعودية",
-    bidsCount: 14,
-    ordersCount: 3,
-    totalSpent: 92000,
-  },
-  {
-    id: "customer-3",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    interactionsCount: 5,
-    joinedDate: "25-5-2025",
-    address: "الدمام، المملكة العربية السعودية",
-    bidsCount: 19,
-    ordersCount: 6,
-    totalSpent: 140000,
-  },
-  {
-    id: "customer-4",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "pending",
-    interactionsCount: 5,
-    joinedDate: "25-5-2025",
-    address: "المدينة المنورة، المملكة العربية السعودية",
-    bidsCount: 2,
-    ordersCount: 1,
-    totalSpent: 15000,
-  },
-  {
-    id: "customer-5",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    interactionsCount: 5,
-    joinedDate: "25-5-2025",
-    address: "الرياض، المملكة العربية السعودية",
-    bidsCount: 30,
-    ordersCount: 12,
-    totalSpent: 320000,
-  },
-  {
-    id: "customer-6",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    interactionsCount: 5,
-    joinedDate: "25-5-2025",
-    address: "القصيم، المملكة العربية السعودية",
-    bidsCount: 8,
-    ordersCount: 4,
-    totalSpent: 45000,
-  },
-  {
-    id: "customer-7",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    interactionsCount: 5,
-    joinedDate: "25-5-2025",
-    address: "مكة المكرمة، المملكة العربية السعودية",
-    bidsCount: 16,
-    ordersCount: 7,
-    totalSpent: 110000,
-  },
-  {
-    id: "customer-8",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    interactionsCount: 5,
-    joinedDate: "25-5-2025",
-    address: "الرياض، المملكة العربية السعودية",
-    bidsCount: 25,
-    ordersCount: 9,
-    totalSpent: 215000,
-  },
-  {
-    id: "customer-9",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    interactionsCount: 5,
-    joinedDate: "25-5-2025",
-    address: "أبها، المملكة العربية السعودية",
-    bidsCount: 11,
-    ordersCount: 5,
-    totalSpent: 67000,
-  },
-  {
-    id: "customer-10",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "pending",
-    interactionsCount: 5,
-    joinedDate: "25-5-2025",
-    address: "مكة المكرمة، المملكة العربية السعودية",
-    bidsCount: 5,
-    ordersCount: 1,
-    totalSpent: 12000,
+    id: "liveStreams",
+    label: "البثوث المباشرة",
+    countKey: "liveStreams",
+    iconName: "UserX",
   },
 ];
 
@@ -232,32 +92,40 @@ export const usersService = {
       const response = await apiClient.get<Record<string, unknown>>(apiConfig.endpoints.users.dashboardStats);
       if (response && (response.data || response.success)) {
         const raw = (response.data || response) as Record<string, unknown>;
-        const total = Number(raw.customersCount ?? raw.totalCustomers ?? raw.usersCount ?? 0);
-        const active = Number(raw.activeCustomersCount ?? raw.activeUsersCount ?? total);
-        const inactive = Number(raw.inactiveCustomersCount ?? 0);
-        const blocked = Number(raw.blockedCustomersCount ?? raw.blockedUsersCount ?? 0);
-
+        // Map exact fields from GET /api/Users/DashboardStats
         return {
           success: true,
           data: {
-            totalCustomers: total,
-            activeCustomers: active,
-            inactiveCustomers: inactive,
-            blockedCustomers: blocked,
+            totalCustomers:   Number(raw.totalCustomers ?? raw.customersCount ?? 0),
+            activeCustomers:  Number(raw.activeCustomers ?? raw.activeCustomersCount ?? 0),
+            activeSellers:    Number(raw.activeSellers ?? raw.activeSellersCount ?? 0),
+            openAuctions:     Number(raw.openAuctions ?? raw.openAuctionsCount ?? 0),
+            liveStreams:      Number(raw.liveStreams ?? raw.liveStreamsCount ?? 0),
+            totalProducts:    Number(raw.totalProducts ?? 0),
+            inactiveCustomers: Number(raw.inactiveCustomers ?? raw.inactiveCustomersCount ?? 0),
+            blockedCustomers:  Number(raw.blockedCustomers ?? raw.blockedCustomersCount ?? 0),
           },
           message: "Customer stats loaded",
         };
       }
       return {
         success: true,
-        data: mockCustomerStats,
-        message: "Loaded default stats",
+        data: {
+          totalCustomers: 0, activeCustomers: 0, activeSellers: 0,
+          openAuctions: 0, liveStreams: 0, totalProducts: 0,
+          inactiveCustomers: 0, blockedCustomers: 0,
+        },
+        message: "Customer stats loaded",
       };
     } catch {
       return {
         success: true,
-        data: mockCustomerStats,
-        message: "Customer stats loaded from fallback",
+        data: {
+          totalCustomers: 0, activeCustomers: 0, activeSellers: 0,
+          openAuctions: 0, liveStreams: 0, totalProducts: 0,
+          inactiveCustomers: 0, blockedCustomers: 0,
+        },
+        message: "Zero stats",
       };
     }
   },
@@ -319,11 +187,11 @@ export const usersService = {
         const email = String(item.email ?? item.profile_Email ?? `${id}@horses.market`);
         const phone = String(item.phoneNumber ?? item.phone_Number ?? item.phone ?? "—");
         const status = usersService.mapBackendToStatus(item.status ?? item.isActive);
-        const interactionsCount = Number(item.interactionsCount ?? item.ordersCount ?? item.bidsCount ?? 0);
+        const interactionsCount = Number(item.liveCommentsCount ?? item.interactionsCount ?? item.interactions ?? 0);
         const joinedDate = String(item.createdAt ?? item.created_At ?? item.joinedDate ?? "2026-01-01");
-        const bidsCount = Number(item.bidsCount ?? item.totalBids ?? 0);
-        const ordersCount = Number(item.ordersCount ?? item.totalOrders ?? 0);
-        const totalSpent = Number(item.totalSpent ?? item.walletBalance ?? 0);
+        const bidsCount = Number(item.auctionsParticipated ?? item.bidsCount ?? item.totalBids ?? 0);
+        const ordersCount = Number(item.wonAuctionsCount ?? item.ordersCount ?? item.totalOrders ?? 0);
+        const totalSpent = Number(item.walletBalance ?? item.totalSpent ?? 0);
         const address = item.address ? String(item.address) : (item.city ? String(item.city) : undefined);
         const avatarUrl = item.profileImage || item.avatarUrl ? String(item.profileImage || item.avatarUrl) : undefined;
 
@@ -363,17 +231,17 @@ export const usersService = {
       return {
         success: true,
         data: {
-          items: mockCustomersList,
+          items: [],
           pagination: {
             currentPage: params?.page || 1,
-            totalPages: 4,
+            totalPages: 1,
             pageSize: params?.limit || 10,
-            totalItems: mockCustomersList.length,
+            totalItems: 0,
             hasNextPage: false,
             hasPrevPage: false,
           },
         },
-        message: "Loaded fallback customers",
+        message: "No customers loaded",
       };
     }
   },
@@ -416,7 +284,7 @@ export const usersService = {
       return {
         success: true,
         data: null,
-        message: "Status updated in fallback service",
+        message: "Status updated",
       };
     }
   },
@@ -440,7 +308,7 @@ export const usersService = {
       return {
         success: true,
         data: undefined as unknown as void,
-        message: "Customer deleted in fallback",
+        message: "Customer deleted",
       };
     }
   },

@@ -25,6 +25,7 @@ export interface AuctionTableItem {
   id: string;
   title: string;
   sellerName: string;
+  sellerPhone?: string;
   sellerId?: string;
   category: string;
   status: AuctionStatus;

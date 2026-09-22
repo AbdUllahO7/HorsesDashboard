@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ShieldAlert } from "lucide-react";
 import { adsService, adsFilterTabs } from "@/features/ads/services";
 import {
   AdItem,
@@ -39,10 +39,11 @@ export default function AdsManagementPage() {
   const [ads, setAds] = useState<AdItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<AdTabId>("types");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(4);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -83,7 +84,7 @@ export default function AdsManagementPage() {
 
       if (res.success && res.data) {
         setAds(res.data.items);
-        setTotalPages(res.data.pagination.totalPages || 4);
+        setTotalPages(res.data.pagination.totalPages || 1);
       }
     } catch (err) {
       console.error("Failed to load ads:", err);
@@ -99,22 +100,31 @@ export default function AdsManagementPage() {
   // Handle Save (Add or Edit)
   const handleSaveAd = async (data: AdFormData, id?: string) => {
     try {
+      setErrorMessage(null);
       setActionLoading(true);
       if (id) {
         const res = await adsService.updateAd(id, data);
         if (res.success && res.data) {
-          setAds((prev) => prev.map((a) => (a.id === id ? res.data : a)));
+          setAds((prev) => prev.map((a) => (String(a.id) === String(id) ? res.data : a)));
+          setIsModalOpen(false);
+          setEditingAd(null);
+        } else {
+          setErrorMessage(res.message || "حدث خطأ ما أثناء تحديث الإعلان");
         }
       } else {
         const res = await adsService.createAd(data);
         if (res.success && res.data) {
           setAds((prev) => [res.data, ...prev]);
+          setIsModalOpen(false);
+          setEditingAd(null);
+        } else {
+          setErrorMessage(res.message || "حدث خطأ ما أثناء إضافة الإعلان");
         }
       }
-      setIsModalOpen(false);
-      setEditingAd(null);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to save ad:", err);
+      const e = err as { message?: string };
+      setErrorMessage(e?.message || "حدث خطأ ما أثناء حفظ الإعلان");
     } finally {
       setActionLoading(false);
     }
@@ -122,6 +132,7 @@ export default function AdsManagementPage() {
 
   // Handle Delete
   const handleDeleteAd = (ad: AdItem) => {
+    setErrorMessage(null);
     setConfirmDialog({
       isOpen: true,
       variant: "danger",
@@ -131,10 +142,15 @@ export default function AdsManagementPage() {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          await adsService.deleteAd(ad.id);
-          setAds((prev) => prev.filter((a) => a.id !== ad.id));
+          const res = await adsService.deleteAd(ad.id);
+          if (res.success) {
+            setAds((prev) => prev.filter((a) => a.id !== ad.id));
+          } else {
+            setErrorMessage(res.message || "حدث خطأ ما أثناء حذف الإعلان");
+          }
         } catch (err) {
           console.error("Failed to delete ad:", err);
+          setErrorMessage("حدث خطأ ما أثناء حذف الإعلان");
         } finally {
           setActionLoading(false);
           setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
@@ -147,11 +163,43 @@ export default function AdsManagementPage() {
   const columns: Column<AdItem>[] = [
     {
       key: "title",
-      header: t("ads.adName", "نوع الاعلان"),
+      header: t("ads.adName", "نوع الاعلان / العنوان"),
       sortable: true,
       align: "right",
       render: (item) => (
-        <span className="text-xs font-bold text-[#1E1E2D]">{item.title}</span>
+        <div className="flex items-center gap-3">
+          <div className="relative flex h-10 w-14 shrink-0 items-center justify-center rounded-xl bg-[#FAF4E8] text-[#B8860B] font-bold text-xs border border-[#EADBBD] overflow-hidden">
+            {item.imageUrl ? (
+              <img
+                src={item.imageUrl}
+                alt={item.title}
+                referrerPolicy="no-referrer"
+                className="h-full w-full object-cover"
+                onLoad={() => console.log("[AdsImg] loaded:", item.imageUrl)}
+                onError={(e) => {
+                  console.warn("[AdsImg] error loading:", item.imageUrl);
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                  const parent = target.parentElement;
+                  if (parent && !parent.querySelector(".img-fallback")) {
+                    const span = document.createElement("span");
+                    span.className = "img-fallback text-sm";
+                    span.textContent = "📢";
+                    parent.appendChild(span);
+                  }
+                }}
+              />
+            ) : (
+              <span className="text-sm">📢</span>
+            )}
+          </div>
+          <div>
+            <span className="text-xs font-bold text-[#1E1E2D] block">{item.title}</span>
+            {item.categoryName && item.categoryName !== item.title && (
+              <span className="text-[11px] text-[#8E8E93]">{item.categoryName}</span>
+            )}
+          </div>
+        </div>
       ),
     },
     {
@@ -204,6 +252,23 @@ export default function AdsManagementPage() {
       {/* 1. Breadcrumb Header */}
       <Breadcrumb pageTitle={t("ads.title", "ادارة الاعلانات")} />
 
+      {/* Error Alert Banner */}
+      {errorMessage && (
+        <div className="flex items-center justify-between rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-800 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="text-rose-500 hover:text-rose-700 font-bold px-2 py-1 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* 2. Top Bar: Title & Add Button */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-[#1E1E2D]">
@@ -251,7 +316,7 @@ export default function AdsManagementPage() {
             setEditingAd(item);
             setIsModalOpen(true);
           }}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => String(item.id)}
           emptyMessage="لا توجد إعلانات مطابقة"
         />
 

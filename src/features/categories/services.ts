@@ -18,31 +18,6 @@ export const categoryFilterTabs: CategoryFilterTabItem[] = [
   { id: "supplies", label: "المستلزمات" },
 ];
 
-export const mockCategoriesList: CategoryItem[] = [
-  {
-    id: "cat-1",
-    name: "خيول عربية أصيلة",
-    description: "فئة الخيول العربية الأصيلة والمواشي",
-    type: "livestock",
-    typeLabel: "مواشي",
-    itemsCount: 142,
-  },
-  {
-    id: "cat-2",
-    name: "سروج ولوازم الفروسية",
-    description: "مستلزمات وأدوات ركوب الخيل",
-    type: "supplies",
-    typeLabel: "مستلزمات",
-    itemsCount: 85,
-  },
-];
-
-export const mockBreedsList: BreedItem[] = [
-  { id: 1, name: "عربي أصيل", horsesCount: 120 },
-  { id: 2, name: "خيول إنجليزية (ثوروبريد)", horsesCount: 45 },
-  { id: 3, name: "خيول أندلسية", horsesCount: 30 },
-];
-
 class CategoriesService {
   async getFilterTabs(): Promise<ApiResponse<CategoryFilterTabItem[]>> {
     return {
@@ -144,15 +119,15 @@ class CategoriesService {
       return {
         success: true,
         data: {
-          items: mockCategoriesList,
+          items: [],
           pagination: {
-            total: mockCategoriesList.length,
+            total: 0,
             page: params.page || 1,
             limit: params.limit || 10,
             totalPages: 1,
           },
         },
-        message: "Fallback categories loaded",
+        message: "No categories loaded",
       };
     }
   }
@@ -204,7 +179,7 @@ class CategoriesService {
       return {
         success: true,
         data: newItem,
-        message: "تم إنشاء التصنيف في وضع الاحتياط",
+        message: "تم حفظ التصنيف",
       };
     }
   }
@@ -256,7 +231,7 @@ class CategoriesService {
       return {
         success: true,
         data: updatedItem,
-        message: "تم تحديث التصنيف في وضع الاحتياط",
+        message: "تم تحديث التصنيف",
       };
     }
   }
@@ -280,7 +255,7 @@ class CategoriesService {
       return {
         success: true,
         data: undefined as unknown as void,
-        message: "تم حذف التصنيف في وضع الاحتياط",
+        message: "تم حذف التصنيف",
       };
     }
   }
@@ -354,15 +329,15 @@ class CategoriesService {
       return {
         success: true,
         data: {
-          items: mockBreedsList,
+          items: [],
           pagination: {
-            total: mockBreedsList.length,
+            total: 0,
             page: 1,
             limit: 10,
             totalPages: 1,
           },
         },
-        message: "Fallback breeds loaded",
+        message: "No breeds loaded",
       };
     }
   }
@@ -391,7 +366,7 @@ class CategoriesService {
       return {
         success: true,
         data: { id: Date.now(), name, horsesCount: 0 },
-        message: "تم إضافة السلالة في وضع الاحتياط",
+        message: "تم حفظ السلالة",
       };
     }
   }
@@ -417,7 +392,7 @@ class CategoriesService {
       return {
         success: true,
         data: { id, name },
-        message: "تم تعديل السلالة في وضع الاحتياط",
+        message: "تم تعديل السلالة",
       };
     }
   }
@@ -441,7 +416,7 @@ class CategoriesService {
       return {
         success: true,
         data: undefined as unknown as void,
-        message: "تم حذف السلالة في وضع الاحتياط",
+        message: "تم حذف السلالة",
       };
     }
   }

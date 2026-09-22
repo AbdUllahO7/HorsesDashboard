@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Eye, Check, X } from "lucide-react";
+import { Eye, Check, X, ShieldAlert } from "lucide-react";
 import { reportsService } from "@/features/reports/services";
 import { ReportTicketItem } from "@/features/reports/types";
 import {
@@ -32,9 +32,10 @@ export default function ReportsAndTicketsPage() {
   const [reports, setReports] = useState<ReportTicketItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(4);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   // Modals state
   const [selectedReport, setSelectedReport] = useState<ReportTicketItem | null>(null);
@@ -45,6 +46,13 @@ export default function ReportsAndTicketsPage() {
     description: "",
     onConfirm: () => {},
   });
+
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   // Load Reports Data
   const loadReports = useCallback(async () => {
@@ -86,9 +94,17 @@ export default function ReportsAndTicketsPage() {
           if (res.success) {
             setReports((prev) => prev.filter((r) => r.id !== report.id));
             if (selectedReport?.id === report.id) setSelectedReport(null);
+            showToast(res.message || "تم قبول البلاغ بنجاح", "success");
+          } else {
+            showToast(res.message || "فشل قبول البلاغ", "error");
+            setErrorMessage(res.message || "فشل قبول البلاغ");
           }
-        } catch (err) {
+        } catch (err: unknown) {
           console.error("Failed to resolve report:", err);
+          const e = err as { message?: string };
+          const msg = e?.message || "حدث خطأ أثناء تنفيذ الإجراء";
+          showToast(msg, "error");
+          setErrorMessage(msg);
         } finally {
           setActionLoading(false);
           setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
@@ -112,9 +128,17 @@ export default function ReportsAndTicketsPage() {
           if (res.success) {
             setReports((prev) => prev.filter((r) => r.id !== report.id));
             if (selectedReport?.id === report.id) setSelectedReport(null);
+            showToast(res.message || "تم رفض البلاغ بنجاح", "success");
+          } else {
+            showToast(res.message || "فشل رفض البلاغ", "error");
+            setErrorMessage(res.message || "فشل رفض البلاغ");
           }
-        } catch (err) {
+        } catch (err: unknown) {
           console.error("Failed to dismiss report:", err);
+          const e = err as { message?: string };
+          const msg = e?.message || "حدث خطأ أثناء تنفيذ الإجراء";
+          showToast(msg, "error");
+          setErrorMessage(msg);
         } finally {
           setActionLoading(false);
           setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
@@ -198,6 +222,39 @@ export default function ReportsAndTicketsPage() {
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
       <Breadcrumb pageTitle={t("tickets.title", "البلاغات")} />
+
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 rounded-xl px-5 py-3 text-xs font-bold text-white shadow-lg animate-fade-in flex items-center gap-2 ${
+            toast.type === "success" ? "bg-[#10B981]" : "bg-[#EF4444]"
+          }`}
+        >
+          {toast.type === "success" ? (
+            <Check className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+          ) : (
+            <ShieldAlert className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
+      {/* Error Alert Banner */}
+      {errorMessage && (
+        <div className="flex items-center justify-between rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-800 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="text-rose-500 hover:text-rose-700 font-bold px-2 py-1 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* 2. Page Header Title */}
       <div className="flex items-center justify-between">

@@ -94,6 +94,7 @@ export interface ProductItem {
   breedName?: string;
   sellerId?: string;
   sellerName?: string;
+  sellerPhone?: string;
   age?: number;
   weight?: number;
   address?: string;
@@ -109,6 +110,7 @@ export interface ListingItem {
   price: number;
   sellerId: string;
   sellerName: string;
+  sellerPhone?: string;
   status: "active" | "draft" | "sold" | "archived";
   viewsCount: number;
   createdAt: string;

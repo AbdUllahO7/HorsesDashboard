@@ -23,31 +23,6 @@ export const mapBackendVerificationStatus = (val: unknown): AccountVerificationS
   return "pending";
 };
 
-export const mockUserAccountsList: UserAccountItem[] = [
-  {
-    id: "acc-1",
-    name: "محمود احمد",
-    phone: "0595121088",
-    email: "user@gmail.com",
-    idFrontUrl: "/images/id-front.jpg",
-    idBackUrl: "/images/id-back.jpg",
-    selfieWithIdUrl: "/images/selfie-id.jpg",
-    status: "pending",
-    createdAt: "2025-05-25",
-  },
-  {
-    id: "acc-2",
-    name: "سعد القحطاني",
-    phone: "0501234567",
-    email: "saad@gmail.com",
-    idFrontUrl: "/images/id-front.jpg",
-    idBackUrl: "/images/id-back.jpg",
-    selfieWithIdUrl: "/images/selfie-id.jpg",
-    status: "pending",
-    createdAt: "2025-05-25",
-  },
-];
-
 class AccountsService {
   /**
    * Get verification requests list
@@ -65,15 +40,26 @@ class AccountsService {
       else if (params.status === "approved") statusEnum = 2;
       else if (params.status === "rejected") statusEnum = 3;
 
-      const bodyPayload = {
+      const bodyPayload: Record<string, unknown> = {
         pageNumber: page,
         pageSize: limit,
-        search: params.search || undefined,
-        status: statusEnum,
-        roleName: params.roleName || undefined,
-        sortBy: params.sortBy || undefined,
-        sortDirection: params.sortOrder || undefined,
       };
+
+      if (params.search) {
+        bodyPayload.search = params.search;
+      }
+      if (statusEnum !== undefined) {
+        bodyPayload.status = statusEnum;
+      }
+      if (params.roleName) {
+        bodyPayload.roleName = params.roleName;
+      }
+      if (params.sortBy) {
+        bodyPayload.sortBy = params.sortBy;
+      }
+      if (params.sortOrder) {
+        bodyPayload.sortDirection = params.sortOrder;
+      }
 
       const response = await apiClient.post<unknown>(
         apiConfig.endpoints.users.verificationRequests,
@@ -159,15 +145,15 @@ class AccountsService {
       return {
         success: true,
         data: {
-          items: mockUserAccountsList,
+          items: [],
           pagination: {
-            total: mockUserAccountsList.length,
+            total: 0,
             page: params.page || 1,
             limit: params.limit || 10,
             totalPages: 1,
           },
         },
-        message: "Fallback verification requests loaded",
+        message: "No verification requests loaded",
       };
     }
   }
@@ -193,9 +179,9 @@ class AccountsService {
     } catch (error) {
       console.error("Failed to approve verification:", error);
       return {
-        success: true,
+        success: false,
         data: null,
-        message: "تم تفعيل الحساب في وضع الاحتياط",
+        message: "فشل في اعتماد التوثيق",
       };
     }
   }
@@ -221,9 +207,9 @@ class AccountsService {
     } catch (error) {
       console.error("Failed to reject verification:", error);
       return {
-        success: true,
+        success: false,
         data: null,
-        message: "تم رفض الطلب في وضع الاحتياط",
+        message: "فشل في رفض الطلب",
       };
     }
   }

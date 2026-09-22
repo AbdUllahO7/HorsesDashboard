@@ -217,12 +217,16 @@ export default function AuctionsPage() {
     const nextState = !auction.isLiveEnabled;
     try {
       setActionLoading(true);
-      await auctionsService.toggleAuctionLive(auction.id, nextState);
-      setAuctions((prev) =>
-        prev.map((a) => (a.id === auction.id ? { ...a, isLiveEnabled: nextState } : a))
-      );
-      if (selectedAuction?.id === auction.id) {
-        setSelectedAuction((prev) => (prev ? { ...prev, isLiveEnabled: nextState } : null));
+      const res = await auctionsService.toggleAuctionLive(auction.id, nextState);
+      if (res.success) {
+        setAuctions((prev) =>
+          prev.map((a) => (a.id === auction.id ? { ...a, isLiveEnabled: nextState } : a))
+        );
+        if (selectedAuction?.id === auction.id) {
+          setSelectedAuction((prev) => (prev ? { ...prev, isLiveEnabled: nextState } : null));
+        }
+      } else {
+        setErrorMessage(res.message || "حدث خطأ ما أثناء تعديل حالة البث المباشر للمزاد");
       }
     } finally {
       setActionLoading(false);
@@ -238,12 +242,25 @@ export default function AuctionsPage() {
       align: "right",
       render: (auction) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF4E8] text-[#B8860B] font-bold text-xs border border-[#EADBBD]">
-            🐎
+          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FAF4E8] text-[#B8860B] font-bold text-xs border border-[#EADBBD] overflow-hidden">
+            {auction.images && auction.images.length > 0 && !auction.images[0].includes("placeholder") ? (
+              <img
+                src={auction.images[0]}
+                alt={auction.title}
+                referrerPolicy="no-referrer"
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                }}
+              />
+            ) : (
+              <span>🐎</span>
+            )}
           </div>
           <div>
             <span className="font-bold text-[#1E1E2D] block">{auction.title}</span>
-            <span className="text-[11px] text-[#8E8E93]">سعر البداية: {auction.startingPrice?.toLocaleString()} ر.س</span>
+            <span className="text-[11px] text-[#8E8E93]">سعر البداية: {auction.startingPrice?.toLocaleString()}</span>
           </div>
         </div>
       ),
@@ -280,7 +297,7 @@ export default function AuctionsPage() {
       align: "center",
       render: (auction) => (
         <span className="font-bold text-[#10B981]">
-          {auction.currentBid ? `${auction.currentBid.toLocaleString()} ر.س` : "-"}
+          {auction.currentBid ? `${auction.currentBid.toLocaleString()} ` : "-"}
         </span>
       ),
     },
@@ -435,11 +452,16 @@ export default function AuctionsPage() {
       <AuctionDetailsModal
         isOpen={Boolean(selectedAuction)}
         auction={selectedAuction}
-        onClose={() => setSelectedAuction(null)}
+        onClose={() => {
+          setSelectedAuction(null);
+          setErrorMessage(null);
+        }}
         onAccept={handleAcceptAuction}
         onStop={handleStopAuction}
         onDelete={handleDeleteAuction}
         onToggleLive={handleToggleAuctionLive}
+        errorMessage={errorMessage}
+        onClearError={() => setErrorMessage(null)}
       />
 
       {/* Dynamic Reusable Confirm Modal */}

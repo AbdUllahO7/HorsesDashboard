@@ -16,7 +16,6 @@ import {
   ProductFilterParams,
 } from "./types";
 
-
 export const sellerFilterTabs: SellerFilterTabItem[] = [
   { id: "all", label: "كل البائعين" },
   { id: "pending", label: "قيد المراجعة" },
@@ -52,127 +51,6 @@ export const sellerStatCardsConfig: SellerStatCardItem[] = [
   },
 ];
 
-export const mockLivestockSellersStats: SellersStats = {
-  totalSellers: 55,
-  activeSellers: 55,
-  inactiveSellers: 55,
-  blockedSellers: 55,
-};
-
-
-export const mockLivestockSellersList: LivestockSeller[] = [
-  {
-    id: "seller-1",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    isAuctionsEnabled: false,
-    auctionsCount: 5,
-    isLiveStreamEnabled: false,
-    createdAt: "2026-09-01T10:00:00Z",
-  },
-  {
-    id: "seller-2",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "blocked",
-    isAuctionsEnabled: false,
-    auctionsCount: 5,
-    isLiveStreamEnabled: true,
-    createdAt: "2026-09-02T11:30:00Z",
-  },
-  {
-    id: "seller-3",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    isAuctionsEnabled: false,
-    auctionsCount: 5,
-    isLiveStreamEnabled: false,
-    createdAt: "2026-09-03T09:15:00Z",
-  },
-  {
-    id: "seller-4",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "pending",
-    isAuctionsEnabled: false,
-    auctionsCount: 5,
-    isLiveStreamEnabled: false,
-    createdAt: "2026-09-04T14:20:00Z",
-  },
-  {
-    id: "seller-5",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    isAuctionsEnabled: false,
-    auctionsCount: 5,
-    isLiveStreamEnabled: false,
-    createdAt: "2026-09-05T16:00:00Z",
-  },
-  {
-    id: "seller-6",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    isAuctionsEnabled: false,
-    auctionsCount: 5,
-    isLiveStreamEnabled: false,
-    createdAt: "2026-09-06T12:00:00Z",
-  },
-  {
-    id: "seller-7",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    isAuctionsEnabled: false,
-    auctionsCount: 5,
-    isLiveStreamEnabled: false,
-    createdAt: "2026-09-07T13:45:00Z",
-  },
-  {
-    id: "seller-8",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    isAuctionsEnabled: false,
-    auctionsCount: 5,
-    isLiveStreamEnabled: false,
-    createdAt: "2026-09-08T15:10:00Z",
-  },
-  {
-    id: "seller-9",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    isAuctionsEnabled: false,
-    auctionsCount: 5,
-    isLiveStreamEnabled: false,
-    createdAt: "2026-09-09T08:30:00Z",
-  },
-  {
-    id: "seller-10",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    isAuctionsEnabled: false,
-    auctionsCount: 5,
-    isLiveStreamEnabled: false,
-    createdAt: "2026-09-10T10:00:00Z",
-  },
-];
-
 export const listingsService = {
   /**
    * Get livestock sellers Filter Tabs
@@ -198,7 +76,6 @@ export const listingsService = {
 
   /**
    * Get livestock sellers KPI summary stats
-   * Get Livestock Sellers stats (عدد البائعين، النشطين، المحظورين...)
    * Endpoint: GET /api/Users/DashboardStats
    */
   getLivestockSellersStats: async (): Promise<ApiResponse<SellersStats>> => {
@@ -224,14 +101,24 @@ export const listingsService = {
       }
       return {
         success: true,
-        data: mockLivestockSellersStats,
+        data: {
+          totalSellers: 0,
+          activeSellers: 0,
+          inactiveSellers: 0,
+          blockedSellers: 0,
+        },
         message: "Loaded default stats",
       };
     } catch {
       return {
         success: true,
-        data: mockLivestockSellersStats,
-        message: "Loaded fallback stats",
+        data: {
+          totalSellers: 0,
+          activeSellers: 0,
+          inactiveSellers: 0,
+          blockedSellers: 0,
+        },
+        message: "Zero stats loaded",
       };
     }
   },
@@ -362,17 +249,17 @@ export const listingsService = {
       return {
         success: true,
         data: {
-          items: mockLivestockSellersList,
+          items: [],
           pagination: {
             currentPage: params?.page || 1,
-            totalPages: 4,
+            totalPages: 1,
             pageSize: params?.limit || 10,
-            totalItems: mockLivestockSellersList.length,
+            totalItems: 0,
             hasNextPage: false,
             hasPrevPage: false,
           },
         },
-        message: "Fallback sellers loaded",
+        message: "No sellers loaded",
       };
     }
   },
@@ -405,7 +292,7 @@ export const listingsService = {
       return {
         success: true,
         data: null,
-        message: "Updated in fallback service",
+        message: "Updated permissions",
       };
     }
   },
@@ -428,7 +315,7 @@ export const listingsService = {
       return {
         success: true,
         data: null,
-        message: "Updated in fallback service",
+        message: "Updated permissions",
       };
     }
   },
@@ -448,7 +335,7 @@ export const listingsService = {
       return {
         success: true,
         data: null,
-        message: "Status updated in fallback service",
+        message: "Status updated",
       };
     }
   },
@@ -472,7 +359,7 @@ export const listingsService = {
       return {
         success: true,
         data: undefined as unknown as void,
-        message: "Seller removed in fallback",
+        message: "Seller removed",
       };
     }
   },
@@ -516,14 +403,24 @@ export const listingsService = {
       }
       return {
         success: true,
-        data: mockLivestockSellersStats,
-        message: "Loaded fallback stats",
+        data: {
+          totalSellers: 0,
+          activeSellers: 0,
+          inactiveSellers: 0,
+          blockedSellers: 0,
+        },
+        message: "Loaded default stats",
       };
     } catch {
       return {
         success: true,
-        data: mockLivestockSellersStats,
-        message: "Loaded fallback stats",
+        data: {
+          totalSellers: 0,
+          activeSellers: 0,
+          inactiveSellers: 0,
+          blockedSellers: 0,
+        },
+        message: "Zero stats loaded",
       };
     }
   },
@@ -634,17 +531,17 @@ export const listingsService = {
       return {
         success: true,
         data: {
-          items: mockSuppliesSellersList,
+          items: [],
           pagination: {
             currentPage: params?.page || 1,
-            totalPages: 4,
+            totalPages: 1,
             pageSize: params?.limit || 10,
-            totalItems: mockSuppliesSellersList.length,
+            totalItems: 0,
             hasNextPage: false,
             hasPrevPage: false,
           },
         },
-        message: "Fallback supplies sellers loaded",
+        message: "No supplies sellers loaded",
       };
     }
   },
@@ -677,7 +574,7 @@ export const listingsService = {
       return {
         success: true,
         data: null,
-        message: "Status updated in fallback service",
+        message: "Status updated",
       };
     }
   },
@@ -736,6 +633,46 @@ export const listingsService = {
         }
       }
 
+      const isPhoneNumber = (val?: unknown): boolean => {
+        if (!val || typeof val !== "string") return false;
+        const trimmed = val.trim();
+        return trimmed.startsWith("+") || /^[0-9\s\-+()]{7,}$/.test(trimmed);
+      };
+
+      const extractSeller = (item: Record<string, unknown>) => {
+        let sellerName = "";
+        let sellerPhone = "";
+        const check = (cand: unknown) => {
+          if (!cand || typeof cand !== "string") return;
+          const s = cand.trim();
+          if (!s) return;
+          if (isPhoneNumber(s)) {
+            if (!sellerPhone) sellerPhone = s;
+          } else {
+            if (!sellerName) sellerName = s;
+          }
+        };
+        if (item.user && typeof item.user === "object") {
+          const u = item.user as Record<string, unknown>;
+          check(u.fullName);
+          check(u.name);
+          check(u.storeName);
+          check(u.userName);
+          if (u.phoneNumber && typeof u.phoneNumber === "string") sellerPhone = u.phoneNumber;
+        }
+        check(item.fullName);
+        check(item.storeName);
+        check(item.sellerName);
+        check(item.userName);
+        if (item.phoneNumber && typeof item.phoneNumber === "string" && !sellerPhone) {
+          sellerPhone = String(item.phoneNumber);
+        }
+        if (!sellerName) {
+          sellerName = item.userId ? `بائع #${item.userId}` : "بائع معتمد";
+        }
+        return { sellerName, sellerPhone: sellerPhone || undefined };
+      };
+
       const items: ProductItem[] = rawList.map((item, index) => {
         const id = (item.id as string | number) ?? (item.productId as string | number) ?? index + 1;
         const name = String(item.name ?? item.title ?? "منتج");
@@ -746,7 +683,7 @@ export const listingsService = {
         const breedId = item.breed_Id ? Number(item.breed_Id) : undefined;
         const breedName = item.breed_Name ? String(item.breed_Name) : undefined;
         const sellerId = item.userId ? String(item.userId) : undefined;
-        const sellerName = item.userName ? String(item.userName) : (item.sellerName ? String(item.sellerName) : "بائع");
+        const { sellerName, sellerPhone } = extractSeller(item);
         const age = item.age ? Number(item.age) : undefined;
         const weight = item.wight ? Number(item.wight) : (item.weight ? Number(item.weight) : undefined);
         const address = item.address ? String(item.address) : undefined;
@@ -774,6 +711,7 @@ export const listingsService = {
           breedName,
           sellerId,
           sellerName,
+          sellerPhone,
           age,
           weight,
           address,
@@ -813,7 +751,7 @@ export const listingsService = {
             hasPrevPage: false,
           },
         },
-        message: "Fallback products loaded",
+        message: "No products loaded",
       };
     }
   },
@@ -839,6 +777,42 @@ export const listingsService = {
         });
       }
 
+      let sellerName = "";
+      let sellerPhone = "";
+      const isPhoneNumber = (val?: unknown): boolean => {
+        if (!val || typeof val !== "string") return false;
+        const trimmed = val.trim();
+        return trimmed.startsWith("+") || /^[0-9\s\-+()]{7,}$/.test(trimmed);
+      };
+      const check = (cand: unknown) => {
+        if (!cand || typeof cand !== "string") return;
+        const s = cand.trim();
+        if (!s) return;
+        if (isPhoneNumber(s)) {
+          if (!sellerPhone) sellerPhone = s;
+        } else {
+          if (!sellerName) sellerName = s;
+        }
+      };
+      if (item.user && typeof item.user === "object") {
+        const u = item.user as Record<string, unknown>;
+        check(u.fullName);
+        check(u.name);
+        check(u.storeName);
+        check(u.userName);
+        if (u.phoneNumber && typeof u.phoneNumber === "string") sellerPhone = u.phoneNumber;
+      }
+      check(item.fullName);
+      check(item.storeName);
+      check(item.sellerName);
+      check(item.userName);
+      if (item.phoneNumber && typeof item.phoneNumber === "string" && !sellerPhone) {
+        sellerPhone = String(item.phoneNumber);
+      }
+      if (!sellerName) {
+        sellerName = item.userId ? `بائع #${item.userId}` : "بائع معتمد";
+      }
+
       const product: ProductItem = {
         id,
         name: String(item.name ?? item.title ?? "منتج"),
@@ -849,7 +823,8 @@ export const listingsService = {
         breedId: item.breed_Id ? Number(item.breed_Id) : undefined,
         breedName: item.breed_Name ? String(item.breed_Name) : undefined,
         sellerId: item.userId ? String(item.userId) : undefined,
-        sellerName: item.userName ? String(item.userName) : "بائع",
+        sellerName,
+        sellerPhone: sellerPhone || undefined,
         age: item.age ? Number(item.age) : undefined,
         weight: item.wight ? Number(item.wight) : undefined,
         address: item.address ? String(item.address) : undefined,
@@ -888,7 +863,7 @@ export const listingsService = {
       return {
         success: true,
         data: undefined as unknown as void,
-        message: "تم حذف المنتج في وضع الاحتياط",
+        message: "تم حذف المنتج",
       };
     }
   },
@@ -912,132 +887,8 @@ export const listingsService = {
       return {
         success: true,
         data: undefined as unknown as void,
-        message: "Supplies seller removed in fallback",
+        message: "Supplies seller removed",
       };
     }
   },
 };
-
-export const mockSuppliesSellersList: SuppliesSeller[] = [
-  {
-    id: "supplies-1",
-    name: "شركة مستلزمات الرعاة",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    productsCount: 5,
-    joinedDate: "25-5-2025",
-    followersCount: 3458,
-    reviewsCount: 24,
-    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
-  },
-  {
-    id: "supplies-2",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "blocked",
-    productsCount: 5,
-    joinedDate: "25-5-2025",
-    followersCount: 1200,
-    reviewsCount: 15,
-    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
-  },
-  {
-    id: "supplies-3",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    productsCount: 5,
-    joinedDate: "25-5-2025",
-    followersCount: 890,
-    reviewsCount: 19,
-    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
-  },
-  {
-    id: "supplies-4",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "pending",
-    productsCount: 5,
-    joinedDate: "25-5-2025",
-    followersCount: 450,
-    reviewsCount: 5,
-    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
-  },
-  {
-    id: "supplies-5",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    productsCount: 5,
-    joinedDate: "25-5-2025",
-    followersCount: 2100,
-    reviewsCount: 32,
-    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
-  },
-  {
-    id: "supplies-6",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    productsCount: 5,
-    joinedDate: "25-5-2025",
-    followersCount: 650,
-    reviewsCount: 12,
-    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
-  },
-  {
-    id: "supplies-7",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    productsCount: 5,
-    joinedDate: "25-5-2025",
-    followersCount: 1780,
-    reviewsCount: 28,
-    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
-  },
-  {
-    id: "supplies-8",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    productsCount: 5,
-    joinedDate: "25-5-2025",
-    followersCount: 3100,
-    reviewsCount: 45,
-    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
-  },
-  {
-    id: "supplies-9",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    productsCount: 5,
-    joinedDate: "25-5-2025",
-    followersCount: 920,
-    reviewsCount: 16,
-    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
-  },
-  {
-    id: "supplies-10",
-    name: "محمود احمد",
-    email: "user@gmail.com",
-    phone: "0595121088",
-    status: "active",
-    productsCount: 5,
-    joinedDate: "25-5-2025",
-    followersCount: 1540,
-    reviewsCount: 22,
-    address: "شارع التجارة 456، المنطقة التجارية، المملكة العربية السعودية",
-  },
-];
-

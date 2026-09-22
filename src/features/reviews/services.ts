@@ -44,46 +44,6 @@ export const reviewStatCardsConfig: ReviewStatCardItem[] = [
   },
 ];
 
-export const mockReviewsStats: ReviewsStats = {
-  totalComplaints: 55,
-  resolvedComplaints: 42,
-  pendingComplaints: 8,
-  waitingComplaints: 5,
-};
-
-export const mockComplaintsList: ComplaintReviewItem[] = [
-  {
-    id: "REV-101",
-    type: "complaint",
-    typeLabel: "شكوى",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "إسطبل الأريج",
-    sellerStore: "متجر العتيبي للماشية",
-    customerName: "جمال أحمد",
-    customerPhone: "+966500000000",
-    status: "resolved",
-    statusLabel: "تم الحل",
-    rating: null,
-    joinedDate: "2025-05-25",
-    description: "كان يذكر إعلان المزاد أن عمر الخيل عامين، ولكن عند الفحص بدت الحالة مختلفة.",
-  },
-  {
-    id: "REV-102",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "تقييم خدمة المتجر",
-    sellerName: "مربط الأصالة",
-    sellerStore: "مربط الأصالة للخيل",
-    customerName: "سعد القحطاني",
-    customerPhone: "+966511112233",
-    status: "resolved",
-    statusLabel: "تم النشر",
-    rating: 5,
-    joinedDate: "2025-05-24",
-    description: "تعامل راقي جداً وسرعة في تجهيز أوراق الخيل والتسليم في الموعد المحدد.",
-  },
-];
-
 class ReviewsService {
   /**
    * Get KPI Stats
@@ -117,18 +77,23 @@ class ReviewsService {
       return {
         success: true,
         data: {
-          totalComplaints: total || mockReviewsStats.totalComplaints,
-          resolvedComplaints: resolved || mockReviewsStats.resolvedComplaints,
-          pendingComplaints: pending || mockReviewsStats.pendingComplaints,
-          waitingComplaints: waiting || mockReviewsStats.waitingComplaints,
+          totalComplaints: total,
+          resolvedComplaints: resolved,
+          pendingComplaints: pending,
+          waitingComplaints: waiting,
         },
         message: "Complaints stats loaded",
       };
     } catch {
       return {
         success: true,
-        data: mockReviewsStats,
-        message: "Fallback stats loaded",
+        data: {
+          totalComplaints: 0,
+          resolvedComplaints: 0,
+          pendingComplaints: 0,
+          waitingComplaints: 0,
+        },
+        message: "Stats initialized",
       };
     }
   }
@@ -148,7 +113,7 @@ class ReviewsService {
   }
 
   /**
-   * Get Reviews & Complaints Table
+   * Get Reviews & Complaints Table from API
    * Endpoints: GET /api/Complaints/GetAll & GET /api/Reviews/GetAllReviews
    */
   async getReviewsTable(
@@ -226,41 +191,41 @@ class ReviewsService {
           }
 
           let customerName = "عميل";
-          let customerPhone = "+966500000000";
+          let customerPhone = "";
           if (typeof c.user === "object" && c.user) {
             const u = c.user as Record<string, unknown>;
             customerName = String(u.name ?? u.fullName ?? "عميل");
-            customerPhone = String(u.phoneNumber ?? u.phone ?? customerPhone);
+            customerPhone = String(u.phoneNumber ?? u.phone ?? "");
           } else if (c.userName) {
             customerName = String(c.userName);
           }
 
-          const joinedDate = c.createdAt ? String(c.createdAt).split("T")[0] : "2025-05-25";
+          const joinedDate = c.createdAt ? String(c.createdAt).split("T")[0] : new Date().toISOString().split("T")[0];
 
           return {
             id,
             type: "complaint",
             typeLabel: "شكوى",
             subject,
-            description,
             sellerName,
+            sellerStore: c.sellerStore ? String(c.sellerStore) : undefined,
             customerName,
             customerPhone,
             status,
             statusLabel,
             rating: null,
             joinedDate,
-            createdAt: joinedDate,
+            description,
           };
         });
 
-        combinedItems = [...combinedItems, ...mappedComplaints];
+        combinedItems.push(...mappedComplaints);
       }
 
       // Parse reviews
-      const reviewResultIndex = shouldFetchComplaints ? 1 : 0;
-      if (shouldFetchReviews && results[reviewResultIndex]) {
-        const revRes = results[reviewResultIndex] as { data?: unknown };
+      const revIdx = shouldFetchComplaints ? 1 : 0;
+      if (shouldFetchReviews && results[revIdx]) {
+        const revRes = results[revIdx] as { data?: unknown };
         let revList: Record<string, unknown>[] = [];
         if (revRes && revRes.data) {
           if (Array.isArray(revRes.data)) revList = revRes.data as Record<string, unknown>[];
@@ -273,58 +238,76 @@ class ReviewsService {
 
         const mappedReviews: ComplaintReviewItem[] = revList.map((r, i) => {
           const id = String(r.id ?? r.reviewId ?? `REV-${i + 1}`);
-          const rating = Number(r.rate ?? r.rating ?? 5);
-          const description = String(r.comment ?? r.description ?? r.content ?? "تقييم ممتاز");
-          const subject = `تقييم ${rating} نجوم`;
-          const sellerName = String(r.sellerName ?? r.storeName ?? "بائع");
-          const customerName = String(r.userName ?? r.customerName ?? "مشتري");
-          const joinedDate = r.createdAt ? String(r.createdAt).split("T")[0] : "2025-05-25";
+          const rating = Number(r.rate ?? r.rating ?? r.stars ?? 5);
+          const comment = String(r.comment ?? r.review ?? r.content ?? "تقييم ممتاز");
+          const subject = String(r.title ?? r.subject ?? `تقييم خدمة ${rating} نجوم`);
+
+          let sellerName = "بائع";
+          if (typeof r.seller === "object" && r.seller) {
+            const s = r.seller as Record<string, unknown>;
+            sellerName = String(s.name ?? s.fullName ?? "بائع");
+          } else if (r.sellerName) {
+            sellerName = String(r.sellerName);
+          }
+
+          let customerName = "عميل";
+          let customerPhone = "";
+          if (typeof r.user === "object" && r.user) {
+            const u = r.user as Record<string, unknown>;
+            customerName = String(u.name ?? u.fullName ?? "عميل");
+            customerPhone = String(u.phoneNumber ?? u.phone ?? "");
+          } else if (r.userName) {
+            customerName = String(r.userName);
+          }
+
+          const joinedDate = r.createdAt ? String(r.createdAt).split("T")[0] : new Date().toISOString().split("T")[0];
 
           return {
             id,
             type: "review",
             typeLabel: "تقييم",
             subject,
-            description,
             sellerName,
+            sellerStore: r.sellerStore ? String(r.sellerStore) : undefined,
             customerName,
-            customerPhone: r.phoneNumber ? String(r.phoneNumber) : undefined,
+            customerPhone,
             status: "resolved",
-            statusLabel: "منشور",
+            statusLabel: "تم النشر",
             rating,
             joinedDate,
-            createdAt: joinedDate,
+            description: comment,
           };
         });
 
-        combinedItems = [...combinedItems, ...mappedReviews];
+        combinedItems.push(...mappedReviews);
       }
 
-      // Local filter & search
-      if (params.search && params.search.trim()) {
-        const q = params.search.trim().toLowerCase();
+      // Filter by search query if provided
+      if (params.search) {
+        const q = params.search.toLowerCase();
         combinedItems = combinedItems.filter(
           (item) =>
             item.subject.toLowerCase().includes(q) ||
             item.sellerName.toLowerCase().includes(q) ||
             item.customerName.toLowerCase().includes(q) ||
-            item.description.toLowerCase().includes(q)
+            item.description?.toLowerCase().includes(q)
         );
       }
 
-      if (combinedItems.length === 0) {
-        combinedItems = [...mockComplaintsList];
+      // Filter by status if provided
+      if (params.status && params.status !== "all") {
+        combinedItems = combinedItems.filter((item) => item.status === params.status);
       }
 
       const total = combinedItems.length;
       const totalPages = Math.ceil(total / limit) || 1;
-      const startIndex = (page - 1) * limit;
-      const items = combinedItems.slice(startIndex, startIndex + limit);
+      const start = (page - 1) * limit;
+      const paginatedItems = combinedItems.slice(start, start + limit);
 
       return {
         success: true,
         data: {
-          items,
+          items: paginatedItems,
           pagination: {
             total,
             page,
@@ -332,94 +315,84 @@ class ReviewsService {
             totalPages,
           },
         },
-        message: "Reviews and complaints loaded",
+        message: "Data loaded from API",
       };
     } catch (error) {
-      console.error("Failed to load reviews from API:", error);
+      console.error("Failed to load reviews/complaints:", error);
       return {
-        success: true,
+        success: false,
         data: {
-          items: mockComplaintsList,
+          items: [],
           pagination: {
-            total: mockComplaintsList.length,
+            total: 0,
             page: 1,
             limit: 10,
             totalPages: 1,
           },
         },
-        message: "Fallback loaded",
+        message: "حدث خطأ ما أثناء جلب البيانات",
       };
     }
   }
 
   /**
-   * Resolve complaint
-   * Endpoint: POST /api/Complaints/UpdateStatus?id={id}&status=3
+   * Update Complaint Status
+   * Endpoint: POST /api/Complaints/UpdateStatus?id={id}&status={status}
    */
+  async updateComplaintStatus(
+    id: string | number,
+    status: number | string
+  ): Promise<ApiResponse<void>> {
+    try {
+      const statusCode = typeof status === "number" ? status : status === "resolved" ? 3 : status === "rejected" ? 4 : 2;
+      await apiClient.post<void>(apiConfig.endpoints.complaints.updateStatus, null, {
+        params: { id, status: statusCode },
+      });
+      return {
+        success: true,
+        data: undefined as unknown as void,
+        message: "تم تحديث حالة الشكوى بنجاح",
+      };
+    } catch (error: unknown) {
+      console.error("Failed to update complaint status:", error);
+      const err = error as { message?: string };
+      return {
+        success: false,
+        data: undefined as unknown as void,
+        message: err?.message ? `حدث خطأ ما: ${err.message}` : "حدث خطأ ما أثناء تحديث حالة الشكوى",
+      };
+    }
+  }
+
   async resolveComplaint(id: string | number): Promise<ApiResponse<void>> {
-    try {
-      await apiClient.post<void>(apiConfig.endpoints.complaints.updateStatus, null, {
-        params: { id, status: 3 }, // 3 = Resolved
-      });
-      return {
-        success: true,
-        data: undefined as unknown as void,
-        message: "تم حل الشكوى بنجاح",
-      };
-    } catch (error) {
-      console.error("Failed to resolve complaint:", error);
-      return {
-        success: true,
-        data: undefined as unknown as void,
-        message: "تم تحديث الشكوى في وضع الاحتياط",
-      };
-    }
+    return this.updateComplaintStatus(id, 3);
   }
 
-  /**
-   * Reject complaint
-   * Endpoint: POST /api/Complaints/UpdateStatus?id={id}&status=4
-   */
   async rejectComplaint(id: string | number): Promise<ApiResponse<void>> {
-    try {
-      await apiClient.post<void>(apiConfig.endpoints.complaints.updateStatus, null, {
-        params: { id, status: 4 }, // 4 = Rejected
-      });
-      return {
-        success: true,
-        data: undefined as unknown as void,
-        message: "تم رفض الشكوى بنجاح",
-      };
-    } catch (error) {
-      console.error("Failed to reject complaint:", error);
-      return {
-        success: true,
-        data: undefined as unknown as void,
-        message: "تم رفض الشكوى في وضع الاحتياط",
-      };
-    }
+    return this.updateComplaintStatus(id, 4);
   }
 
   /**
-   * Delete review
+   * Delete Review
    * Endpoint: POST /api/Reviews/Delete?id={id}
    */
-  async deleteReview(id: string | number): Promise<ApiResponse<void>> {
+  async deleteReview(id: string | number): Promise<ApiResponse<boolean>> {
     try {
       await apiClient.post<void>(apiConfig.endpoints.reviews.delete, null, {
         params: { id },
       });
       return {
         success: true,
-        data: undefined as unknown as void,
+        data: true,
         message: "تم حذف التقييم بنجاح",
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to delete review:", error);
+      const err = error as { message?: string };
       return {
-        success: true,
-        data: undefined as unknown as void,
-        message: "تم حذف التقييم في وضع الاحتياط",
+        success: false,
+        data: false,
+        message: err?.message ? `حدث خطأ ما: ${err.message}` : "حدث خطأ ما أثناء حذف التقييم",
       };
     }
   }
