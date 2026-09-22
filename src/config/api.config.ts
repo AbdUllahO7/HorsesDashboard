@@ -111,6 +111,11 @@ export const apiConfig = {
     analytics: {
       overview: "/Users/DashboardStats",
     },
+    notifications: {
+      list: "/Notifications/Get",
+      markAsRead: "/Notifications/MarkAsRead",
+      // Note: GetUnreadCount, MarkAllAsRead, SendNotification, Delete do NOT exist in the API
+    },
   },
   cookieNames: {
     auth: process.env.NEXT_PUBLIC_AUTH_COOKIE_NAME || "horses_admin_token",

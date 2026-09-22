@@ -99,6 +99,13 @@ export const siteConfig = {
       iconName: "Receipt",
     },
     {
+      id: "notifications",
+      title: "Notifications",
+      titleAr: "الإشعارات والتنبيهات",
+      href: "/notifications",
+      iconName: "Bell",
+    },
+    {
       id: "settings",
       title: "Settings",
       titleAr: "إعدادات",

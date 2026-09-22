@@ -3,7 +3,6 @@
  */
 
 /**
- * Format numeric value to Arabic formatted currency (SAR / ر.س)
  */
 export function formatCurrency(amount: number, currency: string = "SAR"): string {
   const formattedNumber = new Intl.NumberFormat("ar-SA", {
@@ -11,7 +10,7 @@ export function formatCurrency(amount: number, currency: string = "SAR"): string
     minimumFractionDigits: 0,
   }).format(amount);
 
-  return `${formattedNumber} ${currency === "SAR" ? "ر.س" : currency}`;
+  return `${formattedNumber} ${currency === "" ? "" : currency}`;
 }
 
 /**

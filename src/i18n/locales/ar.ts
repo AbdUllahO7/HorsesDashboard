@@ -50,6 +50,7 @@ export const ar = {
     ads: "الإعلانات",
     accounting: "المحاسبة",
     invoices: "الفواتير",
+    notifications: "الإشعارات",
     settings: "إعدادات",
   },
   dashboard: {
