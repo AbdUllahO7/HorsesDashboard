@@ -458,12 +458,18 @@ export const auctionsService = {
         data: undefined as unknown as void,
         message: "تم قبول واعتماد المزاد بنجاح",
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to accept auction:", error);
+      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      const msg =
+        err?.response?.data?.message ||
+        (err?.response?.status === 403
+          ? "غير مصرح (403): هذا الإجراء مخصص لمالك المزاد (البائع) في نظام الـ Backend"
+          : "تعذر قبول المزاد");
       return {
-        success: true,
+        success: false,
         data: undefined as unknown as void,
-        message: "تم اعتماد المزاد في وضع الاحتياط",
+        message: msg,
       };
     }
   },
@@ -482,12 +488,18 @@ export const auctionsService = {
         data: undefined as unknown as void,
         message: "تم إيقاف المزاد بنجاح",
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to stop auction:", error);
+      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      const msg =
+        err?.response?.data?.message ||
+        (err?.response?.status === 403
+          ? "غير مصرح (403): لا تملك الصلاحية لإيقاف هذا المزاد"
+          : "تعذر إيقاف المزاد");
       return {
-        success: true,
+        success: false,
         data: undefined as unknown as void,
-        message: "تم إيقاف المزاد في وضع الاحتياط",
+        message: msg,
       };
     }
   },
@@ -506,12 +518,18 @@ export const auctionsService = {
         data: undefined as unknown as void,
         message: "تم حذف المزاد بنجاح",
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Failed to delete auction:", error);
+      const err = error as { response?: { status?: number; data?: { message?: string } } };
+      const msg =
+        err?.response?.data?.message ||
+        (err?.response?.status === 403
+          ? "غير مصرح (403): حذف المزاد متاح فقط لمالك المزاد الأصلي (البائع)"
+          : "تعذر حذف المزاد");
       return {
-        success: true,
+        success: false,
         data: undefined as unknown as void,
-        message: "تم حذف المزاد في وضع الاحتياط",
+        message: msg,
       };
     }
   },

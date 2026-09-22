@@ -117,8 +117,12 @@ export default function AuctionsPage() {
     loadAuctions();
   }, [loadAuctions]);
 
+  // Error / Success Message
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   // Handle Accept / Approve Auction
   const handleAcceptAuction = (auction: AuctionTableItem) => {
+    setErrorMessage(null);
     setConfirmDialog({
       isOpen: true,
       variant: "gold",
@@ -128,14 +132,18 @@ export default function AuctionsPage() {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          await auctionsService.acceptAuction(auction.id);
-          setAuctions((prev) =>
-            prev.map((a) => (a.id === auction.id ? { ...a, status: "active", statusLabel: "نشط" } : a))
-          );
-          if (selectedAuction?.id === auction.id) {
-            setSelectedAuction((prev) => (prev ? { ...prev, status: "active", statusLabel: "نشط" } : null));
+          const res = await auctionsService.acceptAuction(auction.id);
+          if (res.success) {
+            setAuctions((prev) =>
+              prev.map((a) => (a.id === auction.id ? { ...a, status: "active", statusLabel: "نشط" } : a))
+            );
+            if (selectedAuction?.id === auction.id) {
+              setSelectedAuction((prev) => (prev ? { ...prev, status: "active", statusLabel: "نشط" } : null));
+            }
+            loadMetadata();
+          } else {
+            setErrorMessage(res.message || "تعذر قبول المزاد (403 Forbidden)");
           }
-          loadMetadata();
         } finally {
           setActionLoading(false);
           setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
@@ -146,6 +154,7 @@ export default function AuctionsPage() {
 
   // Handle Stop Auction
   const handleStopAuction = (auction: AuctionTableItem) => {
+    setErrorMessage(null);
     setConfirmDialog({
       isOpen: true,
       variant: "danger",
@@ -155,14 +164,18 @@ export default function AuctionsPage() {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          await auctionsService.stopAuction(auction.id);
-          setAuctions((prev) =>
-            prev.map((a) => (a.id === auction.id ? { ...a, status: "stopped", statusLabel: "متوقف" } : a))
-          );
-          if (selectedAuction?.id === auction.id) {
-            setSelectedAuction((prev) => (prev ? { ...prev, status: "stopped", statusLabel: "متوقف" } : null));
+          const res = await auctionsService.stopAuction(auction.id);
+          if (res.success) {
+            setAuctions((prev) =>
+              prev.map((a) => (a.id === auction.id ? { ...a, status: "stopped", statusLabel: "متوقف" } : a))
+            );
+            if (selectedAuction?.id === auction.id) {
+              setSelectedAuction((prev) => (prev ? { ...prev, status: "stopped", statusLabel: "متوقف" } : null));
+            }
+            loadMetadata();
+          } else {
+            setErrorMessage(res.message || "تعذر إيقاف المزاد");
           }
-          loadMetadata();
         } finally {
           setActionLoading(false);
           setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
@@ -173,6 +186,7 @@ export default function AuctionsPage() {
 
   // Handle Delete Auction
   const handleDeleteAuction = (auction: AuctionTableItem) => {
+    setErrorMessage(null);
     setConfirmDialog({
       isOpen: true,
       variant: "danger",
@@ -182,10 +196,14 @@ export default function AuctionsPage() {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          await auctionsService.deleteAuction(auction.id);
-          setAuctions((prev) => prev.filter((a) => a.id !== auction.id));
-          setSelectedAuction(null);
-          loadMetadata();
+          const res = await auctionsService.deleteAuction(auction.id);
+          if (res.success) {
+            setAuctions((prev) => prev.filter((a) => a.id !== auction.id));
+            setSelectedAuction(null);
+            loadMetadata();
+          } else {
+            setErrorMessage(res.message || "تعذر حذف المزاد (403 Forbidden)");
+          }
         } finally {
           setActionLoading(false);
           setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
@@ -336,6 +354,23 @@ export default function AuctionsPage() {
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
       <Breadcrumb pageTitle={t("auctions.title", "إدارة المزادات")} />
+
+      {/* Error Alert Banner */}
+      {errorMessage && (
+        <div className="flex items-center justify-between rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-800 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="text-rose-500 hover:text-rose-700 font-bold px-2 py-1 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* 2. Top 4 Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
