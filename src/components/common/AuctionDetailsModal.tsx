@@ -152,8 +152,14 @@ export function AuctionDetailsModal({
                     alt={`Auction ${i + 1}`}
                     className="h-full w-full object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        "https://placehold.co/200x200/F5F1E8/B59E5F?text=Horse";
+                      const target = e.target as HTMLImageElement;
+                      if (target.src.includes("/img/")) {
+                        target.src = target.src.replace("/img/", "/auctionImg/");
+                      } else if (target.src.includes("/auctionImg/")) {
+                        target.src = target.src.replace("/auctionImg/", "/");
+                      } else {
+                        target.src = "https://placehold.co/300x300/F5F1E8/B59E5F?text=Horse";
+                      }
                     }}
                   />
                 </div>

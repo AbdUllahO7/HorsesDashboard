@@ -95,9 +95,28 @@ export const mockAuctionTableList: AuctionTableItem[] = [
 ];
 
 const parseImageUrl = (img?: unknown): string => {
-  if (!img || typeof img !== "string") return "/images/placeholder-horse.png";
-  if (img.startsWith("http://") || img.startsWith("https://")) return img;
-  const cleanName = img.replace(/^\/?(auctionImg|storeImg|img)\//, "").replace(/^\//, "");
+  if (!img) return "/images/placeholder-horse.png";
+  let str = "";
+  if (typeof img === "object" && img !== null) {
+    const o = img as Record<string, unknown>;
+    str = String(
+      o.url ||
+      o.imageUrl ||
+      o.image_Url ||
+      o.imageName ||
+      o.image_Name ||
+      o.path ||
+      o.imagePath ||
+      o.image ||
+      o.photo ||
+      ""
+    );
+  } else if (typeof img === "string") {
+    str = img;
+  }
+  if (!str) return "/images/placeholder-horse.png";
+  if (str.startsWith("http://") || str.startsWith("https://") || str.startsWith("data:")) return str;
+  const cleanName = str.replace(/^\/?(auctionImg|storeImg|img)\//, "").replace(/^\//, "");
   return `https://api.horses.market/img/${cleanName}`;
 };
 
@@ -107,7 +126,6 @@ export const auctionsService = {
    */
   getAuctionsStats: async (): Promise<ApiResponse<AuctionStats>> => {
     try {
-      // Calculate stats by fetching counts from API or return computed summary
       const response = await apiClient.get<unknown>(apiConfig.endpoints.auctions.list, {
         params: { PageNumber: 1, PageSize: 100 },
       });
@@ -242,25 +260,37 @@ export const auctionsService = {
       const items: AuctionTableItem[] = rawList.map((item, index) => {
         const id = String(item.id ?? item.auctionId ?? `auc-${index + 1}`);
         const title = String(item.title ?? item.name ?? "مزاد خيل");
-        
-        let sellerName = "غير محدد";
+
+        let sellerName = "";
         if (typeof item.seller === "object" && item.seller) {
           const s = item.seller as Record<string, unknown>;
-          sellerName = String(s.name ?? s.fullName ?? s.userName ?? "بائع");
-        } else if (item.sellerName) {
-          sellerName = String(item.sellerName);
-        } else if (item.userName) {
-          sellerName = String(item.userName);
+          sellerName = String(s.name ?? s.fullName ?? s.userName ?? s.storeName ?? s.stableName ?? "");
         }
+        if (!sellerName && typeof item.user === "object" && item.user) {
+          const u = item.user as Record<string, unknown>;
+          sellerName = String(u.name ?? u.fullName ?? u.userName ?? u.storeName ?? u.stableName ?? "");
+        }
+        if (!sellerName) {
+          sellerName = String(
+            item.sellerName ??
+            item.seller_Name ??
+            item.userName ??
+            item.user_Name ??
+            item.fullName ??
+            item.ownerName ??
+            item.stableName ??
+            ""
+          );
+        }
+        if (!sellerName && item.userId) sellerName = `مستخدم #${item.userId}`;
+        if (!sellerName) sellerName = "بائع معتمد";
 
         let category = "خيول عربية";
         if (typeof item.category === "object" && item.category) {
           const c = item.category as Record<string, unknown>;
           category = String(c.name ?? c.category_Name ?? "خيول");
-        } else if (item.categoryName) {
-          category = String(item.categoryName);
-        } else if (item.category_Name) {
-          category = String(item.category_Name);
+        } else if (item.categoryName || item.category_Name) {
+          category = String(item.categoryName ?? item.category_Name);
         }
 
         const rawStatus = item.status;
@@ -269,7 +299,7 @@ export const auctionsService = {
         if (rawStatus === 3 || rawStatus === "completed") {
           status = "completed";
           statusLabel = "مكتمل";
-        } else if (rawStatus === 4 || rawStatus === "stopped" || rawStatus === "cancelled") {
+        } else if (rawStatus === 4 || rawStatus === "stopped" || rawStatus === "cancelled" || item.isActive === false) {
           status = "stopped";
           statusLabel = "متوقف";
         } else if (rawStatus === 1 || rawStatus === "upcoming") {
@@ -285,12 +315,15 @@ export const auctionsService = {
           ? String(item.createdAt).split("T")[0]
           : "2025-05-25";
 
-        let images: string[] = [];
-        if (Array.isArray(item.images)) {
-          images = (item.images as unknown[]).map(parseImageUrl);
-        } else if (typeof item.imageUrl === "string") {
-          images = [parseImageUrl(item.imageUrl)];
+        let rawImages: unknown[] = [];
+        if (Array.isArray(item.images)) rawImages = item.images;
+        else if (Array.isArray(item.auctionImages)) rawImages = item.auctionImages;
+        else if (Array.isArray(item.auction_Images)) rawImages = item.auction_Images;
+        else if (item.imageUrl || item.image_Url || item.image || item.photo) {
+          rawImages = [item.imageUrl ?? item.image_Url ?? item.image ?? item.photo];
         }
+
+        const images = rawImages.map(parseImageUrl);
 
         return {
           id,
@@ -358,23 +391,50 @@ export const auctionsService = {
       );
 
       const resData = (response.data || response) as Record<string, unknown>;
-      const item = resData;
+      let item = resData;
+      if (resData && typeof resData === "object") {
+        if (resData.data && typeof resData.data === "object") item = resData.data as Record<string, unknown>;
+        else if (resData.value && typeof resData.value === "object") item = resData.value as Record<string, unknown>;
+        else if (resData.result && typeof resData.result === "object") item = resData.result as Record<string, unknown>;
+      }
 
       const title = String(item.title ?? item.name ?? "مزاد خيل");
-      let sellerName = "غير محدد";
+
+      let sellerName = "";
       if (typeof item.seller === "object" && item.seller) {
         const s = item.seller as Record<string, unknown>;
-        sellerName = String(s.name ?? s.fullName ?? s.userName ?? "بائع");
-      } else if (item.sellerName) {
-        sellerName = String(item.sellerName);
+        sellerName = String(s.name ?? s.fullName ?? s.userName ?? s.storeName ?? s.stableName ?? "");
       }
+      if (!sellerName && typeof item.user === "object" && item.user) {
+        const u = item.user as Record<string, unknown>;
+        sellerName = String(u.name ?? u.fullName ?? u.userName ?? u.storeName ?? u.stableName ?? "");
+      }
+      if (!sellerName && typeof item.stableOwner === "object" && item.stableOwner) {
+        const so = item.stableOwner as Record<string, unknown>;
+        sellerName = String(so.name ?? so.fullName ?? so.stableName ?? "");
+      }
+      if (!sellerName) {
+        sellerName = String(
+          item.sellerName ??
+          item.seller_Name ??
+          item.userName ??
+          item.user_Name ??
+          item.fullName ??
+          item.ownerName ??
+          item.stableName ??
+          item.storeName ??
+          ""
+        );
+      }
+      if (!sellerName && item.userId) sellerName = `مستخدم #${item.userId}`;
+      if (!sellerName) sellerName = "بائع معتمد";
 
       let category = "خيول عربية";
       if (typeof item.category === "object" && item.category) {
         const c = item.category as Record<string, unknown>;
         category = String(c.name ?? c.category_Name ?? "خيول");
-      } else if (item.categoryName) {
-        category = String(item.categoryName);
+      } else if (item.categoryName || item.category_Name) {
+        category = String(item.categoryName ?? item.category_Name);
       }
 
       const rawStatus = item.status;
@@ -383,23 +443,27 @@ export const auctionsService = {
       if (rawStatus === 3 || rawStatus === "completed") {
         status = "completed";
         statusLabel = "مكتمل";
-      } else if (rawStatus === 4 || rawStatus === "stopped" || rawStatus === "cancelled") {
+      } else if (rawStatus === 4 || rawStatus === "stopped" || rawStatus === "cancelled" || item.isActive === false) {
         status = "stopped";
         statusLabel = "متوقف";
       }
 
-      let images: string[] = [];
-      if (Array.isArray(item.images)) {
-        images = (item.images as unknown[]).map(parseImageUrl);
-      } else if (typeof item.imageUrl === "string") {
-        images = [parseImageUrl(item.imageUrl)];
+      let rawImages: unknown[] = [];
+      if (Array.isArray(item.images)) rawImages = item.images;
+      else if (Array.isArray(item.auctionImages)) rawImages = item.auctionImages;
+      else if (Array.isArray(item.auction_Images)) rawImages = item.auction_Images;
+      else if (Array.isArray(item.photos)) rawImages = item.photos;
+      else if (item.imageUrl || item.image_Url || item.image || item.photo) {
+        rawImages = [item.imageUrl ?? item.image_Url ?? item.image ?? item.photo];
       }
+
+      const images = rawImages.map(parseImageUrl);
 
       let bidsHistory: AuctionDetailsData["bidsHistory"] = [];
       if (Array.isArray(item.bids)) {
         bidsHistory = (item.bids as Record<string, unknown>[]).map((b, i) => ({
           id: b.id ? String(b.id) : i + 1,
-          bidderName: String(b.userName ?? b.bidderName ?? "مزايد"),
+          bidderName: String(b.userName ?? b.bidderName ?? b.fullName ?? "مزايد"),
           amount: Number(b.amount ?? b.price ?? 0),
           createdAt: b.createdAt ? String(b.createdAt).split("T")[0] : "2025-05-25",
         }));
