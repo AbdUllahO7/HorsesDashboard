@@ -60,6 +60,8 @@ export class ApiClient {
     const requestHeaders: Record<string, string> = {
       "Content-Type": "application/json",
       Accept: "application/json",
+      "Accept-Language": "ar",
+      lang: "ar",
       ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       ...(headers as Record<string, string>),
     };
@@ -72,19 +74,30 @@ export class ApiClient {
         ...customConfig,
         headers: requestHeaders,
         signal: controller.signal,
-        body: body ? JSON.stringify(body) : undefined,
+        body: body ? (body instanceof FormData ? body : JSON.stringify(body)) : undefined,
       });
 
       clearTimeout(timeoutId);
 
-      // Handle 401 Unauthorized / Token Expiration
+      // Handle 401 Unauthorized
       if (response.status === 401 && typeof window !== "undefined") {
-        // Clear token cookie & dispatch custom event or redirect
         document.cookie = `${apiConfig.cookieNames.auth}=; Max-Age=0; path=/;`;
         window.dispatchEvent(new CustomEvent("admin:unauthorized"));
       }
 
       const responseData = await response.json().catch(() => null);
+
+      // Check for 405 session termination inside response body as per backend contract
+      if (responseData && (responseData.statusCode === 405 || responseData.status === 405)) {
+        if (typeof window !== "undefined") {
+          document.cookie = `${apiConfig.cookieNames.auth}=; Max-Age=0; path=/;`;
+          window.dispatchEvent(new CustomEvent("admin:unauthorized"));
+        }
+        throw new ApiError(
+          responseData.message || "انتهت الجلسة، يرجى إعادة تسجيل الدخول",
+          405
+        );
+      }
 
       if (!response.ok) {
         const errorData = responseData as ApiErrorResponse | null;
@@ -93,6 +106,17 @@ export class ApiClient {
           response.status,
           errorData?.errors
         );
+      }
+
+      // If backend returns { statusCode: 200, data: ..., message: ... }, normalize response
+      if (responseData && typeof responseData === "object" && ("statusCode" in responseData || "data" in responseData)) {
+        const isSuccess = responseData.statusCode ? responseData.statusCode >= 200 && responseData.statusCode < 300 : true;
+        return {
+          success: isSuccess,
+          message: responseData.message,
+          data: (responseData.data !== undefined ? responseData.data : responseData) as T,
+          ...responseData,
+        } as ApiResponse<T>;
       }
 
       return responseData as ApiResponse<T>;

@@ -38,12 +38,12 @@ export const analyticsStatCardsConfig: AnalyticsStatCardItem[] = [
 ];
 
 export const mockOverviewStats: DashboardOverviewStats = {
-  livestockSellersCount: 55,
-  suppliesSellersCount: 55,
-  customersCount: 55,
-  activeAuctionsCount: 55,
-  totalRevenue: 245000,
-  activeListingsCount: 140,
+  livestockSellersCount: 0,
+  suppliesSellersCount: 0,
+  customersCount: 0,
+  activeAuctionsCount: 0,
+  totalRevenue: 0,
+  activeListingsCount: 0,
 };
 
 export const mockPlatformGrowthData: PlatformGrowthDataPoint[] = [
@@ -68,18 +68,6 @@ export const mockAuctionTrendsData: AuctionCompletionTrendPoint[] = [
   { year: "2023", value: 85 },
 ];
 
-export const mockTopAuctions: TopAuctionItem[] = [
-  { id: "1", name: "غنم نعيم أصيل", sellerName: "محمد السالمي", viewsCount: 24, bidsCount: 14 },
-  { id: "2", name: "غنم نعيم أصيل", sellerName: "محمد السالمي", viewsCount: 24, bidsCount: 14 },
-  { id: "3", name: "غنم نعيم أصيل", sellerName: "محمد السالمي", viewsCount: 24, bidsCount: 14 },
-];
-
-export const mockTopLiveStreams: TopLiveStreamItem[] = [
-  { id: "1", name: "غنم نعيم أصيل", sellerName: "محمد السالمي", viewsCount: 24, isLive: true },
-  { id: "2", name: "غنم نعيم أصيل", sellerName: "محمد السالمي", viewsCount: 24, isLive: true },
-  { id: "3", name: "غنم نعيم أصيل", sellerName: "محمد السالمي", viewsCount: 24, isLive: true },
-];
-
 export const analyticsService = {
   getStatCardsConfig: async (): Promise<ApiResponse<AnalyticsStatCardItem[]>> => {
     return {
@@ -89,21 +77,175 @@ export const analyticsService = {
     };
   },
 
+  /**
+   * Fetch Dashboard Overview Stats from GET /api/Users/DashboardStats
+   */
   getOverviewStats: async (): Promise<ApiResponse<DashboardOverviewStats>> => {
     try {
-      const response = await apiClient.get<DashboardOverviewStats>(apiConfig.endpoints.analytics.overview);
-      return response;
-    } catch {
+      const response = await apiClient.get<Record<string, unknown>>(apiConfig.endpoints.users.dashboardStats);
+      
+      if (response && (response.data || response.success)) {
+        const raw = (response.data || response) as Record<string, unknown>;
+        
+        const normalizedStats: DashboardOverviewStats = {
+          livestockSellersCount: Number(
+            raw.livestockSellersCount ?? raw.stableOwnersCount ?? raw.stablesCount ?? raw.livestockCount ?? 0
+          ),
+          suppliesSellersCount: Number(
+            raw.suppliesSellersCount ?? raw.storeOwnersCount ?? raw.storesCount ?? raw.suppliesCount ?? 0
+          ),
+          customersCount: Number(
+            raw.customersCount ?? raw.usersCount ?? raw.totalUsers ?? raw.clientsCount ?? 0
+          ),
+          activeAuctionsCount: Number(
+            raw.activeAuctionsCount ?? raw.auctionsCount ?? raw.totalAuctions ?? 0
+          ),
+          totalRevenue: raw.totalRevenue ? Number(raw.totalRevenue) : 0,
+          activeListingsCount: raw.activeListingsCount ? Number(raw.activeListingsCount) : 0,
+        };
+
+        return {
+          success: true,
+          data: normalizedStats,
+          message: response.message || "Stats loaded successfully",
+        };
+      }
+
       return {
         success: true,
         data: mockOverviewStats,
-        message: "Loaded from mock service",
+        message: "Loaded fallback stats",
+      };
+    } catch (error) {
+      console.error("Failed to fetch dashboard stats from API:", error);
+      return {
+        success: true,
+        data: mockOverviewStats,
+        message: "Fallback stats loaded",
+      };
+    }
+  },
+
+  /**
+   * Fetch Top / Recent Auctions from GET /api/Auctions/GetAuctions
+   */
+  getTopAuctions: async (): Promise<ApiResponse<TopAuctionItem[]>> => {
+    try {
+      const response = await apiClient.get<unknown>(apiConfig.endpoints.auctions.list, {
+        params: {
+          PageNumber: 1,
+          PageSize: 5,
+          SortBy: "CreatedDate",
+          SortDirection: "desc",
+        },
+      });
+
+      let rawList: Record<string, unknown>[] = [];
+
+      if (response && response.data) {
+        if (Array.isArray(response.data)) {
+          rawList = response.data as Record<string, unknown>[];
+        } else if (typeof response.data === "object") {
+          const obj = response.data as { items?: Record<string, unknown>[]; data?: Record<string, unknown>[] };
+          if (Array.isArray(obj.items)) rawList = obj.items;
+          else if (Array.isArray(obj.data)) rawList = obj.data;
+        }
+      }
+
+      const items: TopAuctionItem[] = rawList.map((item, index) => {
+        const id = String(item.id ?? item.auctionId ?? `auction-${index + 1}`);
+        const name = String(item.title ?? item.name ?? item.productName ?? `مزاد #${id}`);
+        const sellerName = String(
+          item.sellerName ?? item.userName ?? item.ownerName ?? item.storeName ?? "بائع معتمد"
+        );
+        const viewsCount = Number(item.viewsCount ?? item.viewCount ?? item.bidsCount ?? 0);
+        const bidsCount = Number(item.bidsCount ?? item.totalBids ?? 0);
+        const imageUrl = item.image || item.imageUrl || (Array.isArray(item.images) ? item.images[0] : undefined);
+
+        return {
+          id,
+          name,
+          sellerName,
+          viewsCount,
+          bidsCount,
+          imageUrl: typeof imageUrl === "string" ? imageUrl : undefined,
+        };
+      });
+
+      return {
+        success: true,
+        data: items,
+        message: "Top auctions loaded",
+      };
+    } catch (error) {
+      console.error("Failed to fetch top auctions:", error);
+      return {
+        success: true,
+        data: [],
+        message: "Fallback top auctions loaded",
+      };
+    }
+  },
+
+  /**
+   * Fetch Top / Active Live Streams from GET /api/LiveStreams/GetLives
+   */
+  getTopLiveStreams: async (): Promise<ApiResponse<TopLiveStreamItem[]>> => {
+    try {
+      const response = await apiClient.get<unknown>("/LiveStreams/GetLives", {
+        params: {
+          PageNumber: 1,
+          PageSize: 5,
+          IsActive: true,
+        },
+      });
+
+      let rawList: Record<string, unknown>[] = [];
+
+      if (response && response.data) {
+        if (Array.isArray(response.data)) {
+          rawList = response.data as Record<string, unknown>[];
+        } else if (typeof response.data === "object") {
+          const obj = response.data as { items?: Record<string, unknown>[]; data?: Record<string, unknown>[] };
+          if (Array.isArray(obj.items)) rawList = obj.items;
+          else if (Array.isArray(obj.data)) rawList = obj.data;
+        }
+      }
+
+      const items: TopLiveStreamItem[] = rawList.map((item, index) => {
+        const id = String(item.id ?? item.liveStreamId ?? `live-${index + 1}`);
+        const name = String(item.live_Name ?? item.name ?? item.title ?? `بث مباشر #${id}`);
+        const sellerName = String(
+          item.sellerName ?? item.userName ?? item.streamerName ?? "مقدم البث"
+        );
+        const viewsCount = Number(item.viewsCount ?? item.viewerCount ?? item.viewers ?? 0);
+        const isLive = item.isActive !== undefined ? Boolean(item.isActive) : true;
+
+        return {
+          id,
+          name,
+          sellerName,
+          viewsCount,
+          isLive,
+        };
+      });
+
+      return {
+        success: true,
+        data: items,
+        message: "Top live streams loaded",
+      };
+    } catch (error) {
+      console.error("Failed to fetch live streams:", error);
+      return {
+        success: true,
+        data: [],
+        message: "Fallback live streams loaded",
       };
     }
   },
 
   getPlatformGrowth: async (): Promise<ApiResponse<PlatformGrowthDataPoint[]>> => {
-    await new Promise((resolve) => setTimeout(resolve, 60));
     return {
       success: true,
       data: mockPlatformGrowthData,
@@ -111,38 +253,11 @@ export const analyticsService = {
     };
   },
 
-  getAuctionTrends: async (timeframe = "yearly"): Promise<ApiResponse<AuctionCompletionTrendPoint[]>> => {
-    await new Promise((resolve) => setTimeout(resolve, 60));
+  getAuctionTrends: async (timeframe?: string): Promise<ApiResponse<AuctionCompletionTrendPoint[]>> => {
     return {
       success: true,
       data: mockAuctionTrendsData,
-      message: "Loaded auction trends data",
+      message: `Loaded auction trends data (${timeframe || "all"})`,
     };
-  },
-
-  getTopAuctions: async (): Promise<ApiResponse<TopAuctionItem[]>> => {
-    try {
-      const response = await apiClient.get<TopAuctionItem[]>(apiConfig.endpoints.analytics.auctionsReport);
-      return response;
-    } catch {
-      return {
-        success: true,
-        data: mockTopAuctions,
-        message: "Loaded from mock service",
-      };
-    }
-  },
-
-  getTopLiveStreams: async (): Promise<ApiResponse<TopLiveStreamItem[]>> => {
-    try {
-      const response = await apiClient.get<TopLiveStreamItem[]>("/admin/analytics/live-streams");
-      return response;
-    } catch {
-      return {
-        success: true,
-        data: mockTopLiveStreams,
-        message: "Loaded from mock service",
-      };
-    }
   },
 };

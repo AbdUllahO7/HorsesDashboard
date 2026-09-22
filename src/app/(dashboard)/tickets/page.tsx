@@ -82,7 +82,7 @@ export default function ReportsAndTicketsPage() {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          const res = await reportsService.resolveReport(report.id);
+          const res = await reportsService.resolveReport(report);
           if (res.success) {
             setReports((prev) => prev.filter((r) => r.id !== report.id));
             if (selectedReport?.id === report.id) setSelectedReport(null);
@@ -108,7 +108,7 @@ export default function ReportsAndTicketsPage() {
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          const res = await reportsService.dismissReport(report.id);
+          const res = await reportsService.dismissReport(report);
           if (res.success) {
             setReports((prev) => prev.filter((r) => r.id !== report.id));
             if (selectedReport?.id === report.id) setSelectedReport(null);
@@ -226,7 +226,7 @@ export default function ReportsAndTicketsPage() {
           data={reports}
           loading={loading}
           onRowClick={(item) => setSelectedReport(item)}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => String(item.id)}
           emptyMessage="لا توجد بلاغات حالياً"
         />
 

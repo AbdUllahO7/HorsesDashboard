@@ -495,7 +495,7 @@ export default function LivestockSellersPage() {
           setSelectedSeller((prev) =>
             prev && prev.id === id ? { ...prev, isAuctionsEnabled: val } : prev
           );
-          listingsService.toggleSellerAuctions(id, val);
+          listingsService.toggleSellerAuctions(id, val, selectedSeller?.businessProfileId);
         }}
         onToggleLiveStream={(id, val) => {
           setSellers((prev) =>
@@ -504,7 +504,7 @@ export default function LivestockSellersPage() {
           setSelectedSeller((prev) =>
             prev && prev.id === id ? { ...prev, isLiveStreamEnabled: val } : prev
           );
-          listingsService.toggleSellerLiveStream(id, val);
+          listingsService.toggleSellerLiveStream(id, val, selectedSeller?.businessProfileId);
         }}
         onStatusChange={(id, status) => {
           const s = sellers.find((x) => x.id === id);

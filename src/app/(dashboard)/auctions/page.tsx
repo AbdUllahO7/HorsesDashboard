@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Eye, Gavel, Radio, CheckCircle2, Clock } from "lucide-react";
+import { Eye, Gavel, Radio, CheckCircle2, Clock, Trash2, ShieldAlert } from "lucide-react";
 import {
   auctionsService,
   auctionFilterTabs,
@@ -28,7 +28,7 @@ import {
   Breadcrumb,
 } from "@/components";
 
-type StatusTab = "all" | "active" | "completed";
+type StatusTab = "all" | "active" | "completed" | "stopped";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Gavel,
@@ -59,7 +59,7 @@ export default function AuctionsPage() {
   const [activeTab, setActiveTab] = useState<StatusTab>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(4);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   // Modals state
   const [selectedAuction, setSelectedAuction] = useState<AuctionTableItem | null>(null);
@@ -72,23 +72,24 @@ export default function AuctionsPage() {
   });
 
   // Load KPI Stats, Filter Tabs, and Stat Cards from service
-  useEffect(() => {
-    async function loadMetadata() {
-      try {
-        const [statsRes, tabsRes, cardsRes] = await Promise.all([
-          auctionsService.getAuctionsStats(),
-          auctionsService.getFilterTabs(),
-          auctionsService.getStatCardsConfig(),
-        ]);
-        if (statsRes.success && statsRes.data) setStats(statsRes.data);
-        if (tabsRes.success && tabsRes.data) setFilterTabs(tabsRes.data);
-        if (cardsRes.success && cardsRes.data) setStatCardsConfig(cardsRes.data);
-      } catch (err) {
-        console.error("Failed to load auction metadata:", err);
-      }
+  const loadMetadata = useCallback(async () => {
+    try {
+      const [statsRes, tabsRes, cardsRes] = await Promise.all([
+        auctionsService.getAuctionsStats(),
+        auctionsService.getFilterTabs(),
+        auctionsService.getStatCardsConfig(),
+      ]);
+      if (statsRes.success && statsRes.data) setStats(statsRes.data);
+      if (tabsRes.success && tabsRes.data) setFilterTabs(tabsRes.data);
+      if (cardsRes.success && cardsRes.data) setStatCardsConfig(cardsRes.data);
+    } catch (err) {
+      console.error("Failed to load auction metadata:", err);
     }
-    loadMetadata();
   }, []);
+
+  useEffect(() => {
+    loadMetadata();
+  }, [loadMetadata]);
 
   // Load Auctions Table Data from service
   const loadAuctions = useCallback(async () => {
@@ -103,7 +104,7 @@ export default function AuctionsPage() {
 
       if (res.success && res.data) {
         setAuctions(res.data.items);
-        setTotalPages(res.data.pagination.totalPages || 4);
+        setTotalPages(res.data.pagination.totalPages || 1);
       }
     } catch (err) {
       console.error("Failed to load auctions table:", err);
@@ -116,43 +117,101 @@ export default function AuctionsPage() {
     loadAuctions();
   }, [loadAuctions]);
 
-  // Handle Toggle Live Stream / Auction feature
-  const handleToggleAuctionLive = (auction: AuctionTableItem) => {
-    if (!auction.isLiveEnabled) {
-      setConfirmDialog({
-        isOpen: true,
-        variant: "gold",
-        title: "تأكيد تفعيل المزادات",
-        description: `هل تريد تفعيل ميزة المزادات لهذا المزاد (${auction.title})؟ سيتمكن المستخدمون من المزايدة الفورية.`,
-        confirmText: "تفعيل",
-        onConfirm: async () => {
+  // Handle Accept / Approve Auction
+  const handleAcceptAuction = (auction: AuctionTableItem) => {
+    setConfirmDialog({
+      isOpen: true,
+      variant: "gold",
+      title: "قبول واعتماد المزاد",
+      description: `هل أنت متأكد من قبول ونشر المزاد "${auction.title}"؟`,
+      confirmText: "قبول واعتماد",
+      onConfirm: async () => {
+        try {
           setActionLoading(true);
-          try {
-            await auctionsService.toggleAuctionLive(auction.id, true);
-            setAuctions((prev) =>
-              prev.map((a) => (a.id === auction.id ? { ...a, isLiveEnabled: true } : a))
-            );
-            if (selectedAuction?.id === auction.id) {
-              setSelectedAuction((prev) => (prev ? { ...prev, isLiveEnabled: true } : null));
-            }
-          } finally {
-            setActionLoading(false);
-            setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+          await auctionsService.acceptAuction(auction.id);
+          setAuctions((prev) =>
+            prev.map((a) => (a.id === auction.id ? { ...a, status: "active", statusLabel: "نشط" } : a))
+          );
+          if (selectedAuction?.id === auction.id) {
+            setSelectedAuction((prev) => (prev ? { ...prev, status: "active", statusLabel: "نشط" } : null));
           }
-        },
-      });
-    } else {
+          loadMetadata();
+        } finally {
+          setActionLoading(false);
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        }
+      },
+    });
+  };
+
+  // Handle Stop Auction
+  const handleStopAuction = (auction: AuctionTableItem) => {
+    setConfirmDialog({
+      isOpen: true,
+      variant: "danger",
+      title: "إيقاف المزاد",
+      description: `هل تريد إيقاف المزاد "${auction.title}"؟ لن يتمكن المشترون من تقديم مزايدات جديدة.`,
+      confirmText: "إيقاف المزاد",
+      onConfirm: async () => {
+        try {
+          setActionLoading(true);
+          await auctionsService.stopAuction(auction.id);
+          setAuctions((prev) =>
+            prev.map((a) => (a.id === auction.id ? { ...a, status: "stopped", statusLabel: "متوقف" } : a))
+          );
+          if (selectedAuction?.id === auction.id) {
+            setSelectedAuction((prev) => (prev ? { ...prev, status: "stopped", statusLabel: "متوقف" } : null));
+          }
+          loadMetadata();
+        } finally {
+          setActionLoading(false);
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        }
+      },
+    });
+  };
+
+  // Handle Delete Auction
+  const handleDeleteAuction = (auction: AuctionTableItem) => {
+    setConfirmDialog({
+      isOpen: true,
+      variant: "danger",
+      title: "تأكيد حذف المزاد",
+      description: `هل أنت متأكد من حذف المزاد "${auction.title}" بشكل نهائي؟`,
+      confirmText: "تأكيد الحذف",
+      onConfirm: async () => {
+        try {
+          setActionLoading(true);
+          await auctionsService.deleteAuction(auction.id);
+          setAuctions((prev) => prev.filter((a) => a.id !== auction.id));
+          setSelectedAuction(null);
+          loadMetadata();
+        } finally {
+          setActionLoading(false);
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        }
+      },
+    });
+  };
+
+  // Handle Toggle Live Stream
+  const handleToggleAuctionLive = async (auction: AuctionTableItem) => {
+    const nextState = !auction.isLiveEnabled;
+    try {
+      setActionLoading(true);
+      await auctionsService.toggleAuctionLive(auction.id, nextState);
       setAuctions((prev) =>
-        prev.map((a) => (a.id === auction.id ? { ...a, isLiveEnabled: false } : a))
+        prev.map((a) => (a.id === auction.id ? { ...a, isLiveEnabled: nextState } : a))
       );
       if (selectedAuction?.id === auction.id) {
-        setSelectedAuction((prev) => (prev ? { ...prev, isLiveEnabled: false } : null));
+        setSelectedAuction((prev) => (prev ? { ...prev, isLiveEnabled: nextState } : null));
       }
-      auctionsService.toggleAuctionLive(auction.id, false);
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  // Dynamic Columns Configuration for DataTable matching Image 4
+  // Dynamic Columns Configuration for DataTable
   const columns: Column<AuctionTableItem>[] = [
     {
       key: "title",
@@ -160,7 +219,15 @@ export default function AuctionsPage() {
       sortable: true,
       align: "right",
       render: (auction) => (
-        <span className="font-bold text-[#1E1E2D]">{auction.title}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#FAF4E8] text-[#B8860B] font-bold text-xs border border-[#EADBBD]">
+            🐎
+          </div>
+          <div>
+            <span className="font-bold text-[#1E1E2D] block">{auction.title}</span>
+            <span className="text-[11px] text-[#8E8E93]">سعر البداية: {auction.startingPrice?.toLocaleString()} ر.س</span>
+          </div>
+        </div>
       ),
     },
     {
@@ -189,30 +256,43 @@ export default function AuctionsPage() {
       render: (auction) => <StatusBadge status={auction.status} />,
     },
     {
-      key: "totalBids",
-      header: t("auctions.bidsCount", "اجمالي المزايدات"),
+      key: "currentBid",
+      header: "أعلى مزايدة",
       sortable: true,
       align: "center",
       render: (auction) => (
-        <span className="font-bold text-[#1E1E2D]">{auction.totalBids}</span>
+        <span className="font-bold text-[#10B981]">
+          {auction.currentBid ? `${auction.currentBid.toLocaleString()} ر.س` : "-"}
+        </span>
+      ),
+    },
+    {
+      key: "totalBids",
+      header: t("auctions.bidsCount", "إجمالي المزايدات"),
+      sortable: true,
+      align: "center",
+      render: (auction) => (
+        <span className="font-bold text-[#1E1E2D] bg-[#F8F9FA] px-2.5 py-1 rounded-lg">
+          {auction.totalBids}
+        </span>
       ),
     },
     {
       key: "createdAt",
-      header: t("categories.createdAt", "تاريخ الانشاء"),
+      header: t("categories.createdAt", "تاريخ الإنشاء"),
       sortable: true,
       align: "center",
       render: (auction) => (
-        <span className="text-[#4A4E5A]">{auction.createdAt}</span>
+        <span className="text-[#4A4E5A] text-xs">{auction.createdAt}</span>
       ),
     },
     {
       key: "actions",
-      header: t("common.actions", "الاجراءات"),
+      header: t("common.actions", "الإجراءات"),
       align: "center",
       render: (auction) => (
         <div
-          className="flex items-center justify-center gap-3"
+          className="flex items-center justify-center gap-2"
           onClick={(e) => e.stopPropagation()}
         >
           {/* View Details Eye Icon */}
@@ -223,9 +303,22 @@ export default function AuctionsPage() {
               setSelectedAuction(auction);
             }}
             title="عرض التفاصيل"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-[#B8860B] hover:bg-[#FAF4E6] transition-colors cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FAF4E8] text-[#B8860B] hover:bg-[#F3E7C4] transition-colors cursor-pointer"
           >
             <Eye className="h-4 w-4" />
+          </button>
+
+          {/* Delete Action Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteAuction(auction);
+            }}
+            title="حذف المزاد"
+            className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FEF2F2] text-[#EF4444] hover:bg-[#FEE2E2] transition-colors cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" />
           </button>
 
           {/* Live / Activation Toggle */}
@@ -276,7 +369,7 @@ export default function AuctionsPage() {
             setSearchQuery(query);
             setCurrentPage(1);
           }}
-          searchPlaceholder="ابحث هنا"
+          searchPlaceholder="ابحث باسم المزاد، البائع، أو التصنيف..."
           tabs={filterTabs}
           activeTab={activeTab}
           onTabChange={(tabId) => {
@@ -308,6 +401,9 @@ export default function AuctionsPage() {
         isOpen={Boolean(selectedAuction)}
         auction={selectedAuction}
         onClose={() => setSelectedAuction(null)}
+        onAccept={handleAcceptAuction}
+        onStop={handleStopAuction}
+        onDelete={handleDeleteAuction}
         onToggleLive={handleToggleAuctionLive}
       />
 

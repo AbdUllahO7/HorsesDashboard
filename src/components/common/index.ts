@@ -23,6 +23,8 @@ export * from "./DocumentPreviewModal";
 export * from "./ReportDetailsModal";
 export * from "./AdModal";
 export * from "./InvoiceDetailsModal";
+export * from "./BreedModal";
+export * from "./ProductDetailsModal";
 
 
 

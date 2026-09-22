@@ -1,18 +1,43 @@
 import { BaseFilterParams } from "@/types/api";
 
-export type AuctionStatus = "active" | "completed" | "upcoming" | "ended" | "cancelled";
+export type AuctionStatus = "active" | "completed" | "upcoming" | "ended" | "cancelled" | "stopped";
+
+export interface AuctionBid {
+  id: string | number;
+  bidderId?: string;
+  bidderName: string;
+  amount: number;
+  createdAt: string;
+}
+
+export interface AuctionHorse {
+  id: string;
+  name: string;
+  breed: string;
+  age?: number;
+  gender?: "stallion" | "mare" | "gelding" | string;
+  imageUrl?: string;
+  images?: string[];
+  origin?: string;
+}
 
 export interface AuctionTableItem {
   id: string;
   title: string;
   sellerName: string;
+  sellerId?: string;
   category: string;
-  status: "active" | "completed";
+  status: AuctionStatus;
+  statusLabel?: string;
   totalBids: number;
   createdAt: string;
   isLiveEnabled: boolean;
-  startingPrice?: number;
-  currentBid?: number;
+  startingPrice: number;
+  currentBid: number;
+  startDate?: string;
+  endDate?: string;
+  images?: string[];
+  description?: string;
 }
 
 export interface AuctionStats {
@@ -30,38 +55,19 @@ export interface AuctionStatCardItem {
 }
 
 export interface AuctionFilterTabItem {
-  id: "all" | "active" | "completed";
+  id: "all" | "active" | "completed" | "stopped";
   label: string;
 }
 
-export interface AuctionHorse {
-  id: string;
-  name: string;
-  breed: string;
-  age: number;
-  gender: "stallion" | "mare" | "gelding";
-  imageUrl?: string;
-  origin?: string;
-}
-
-export interface Auction {
-  id: string;
-  title: string;
-  horse: AuctionHorse;
-  sellerId: string;
-  sellerName: string;
-  startingPrice: number;
-  currentBid: number;
-  bidCount: number;
-  viewsCount: number;
-  status: AuctionStatus;
-  startDate: string;
-  endDate: string;
-  isFeatured?: boolean;
+export interface AuctionDetailsData extends AuctionTableItem {
+  bidsHistory?: AuctionBid[];
+  horseDetails?: AuctionHorse;
+  address?: string;
+  featurePlanName?: string;
 }
 
 export interface AuctionFilterParams extends BaseFilterParams {
-  statusTab?: "all" | "active" | "completed";
+  statusTab?: "all" | "active" | "completed" | "stopped";
   category?: string;
   sellerId?: string;
   search?: string;

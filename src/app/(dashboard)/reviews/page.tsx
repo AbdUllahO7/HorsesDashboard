@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Eye, HelpCircle, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { Eye, HelpCircle, CheckCircle2, Clock, AlertCircle, Trash2, Star } from "lucide-react";
 import {
   reviewsService,
   reviewFilterTabs,
@@ -56,7 +56,7 @@ export default function ReviewsAndComplaintsPage() {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(4);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   // Modals state
   const [selectedComplaint, setSelectedComplaint] = useState<ComplaintReviewItem | null>(null);
@@ -69,23 +69,24 @@ export default function ReviewsAndComplaintsPage() {
   });
 
   // Load KPI Stats, Filter Tabs, and Stat Cards from service
-  useEffect(() => {
-    async function loadMetadata() {
-      try {
-        const [statsRes, tabsRes, cardsRes] = await Promise.all([
-          reviewsService.getReviewsStats(),
-          reviewsService.getFilterTabs(),
-          reviewsService.getStatCardsConfig(),
-        ]);
-        if (statsRes.success && statsRes.data) setStats(statsRes.data);
-        if (tabsRes.success && tabsRes.data) setFilterTabs(tabsRes.data);
-        if (cardsRes.success && cardsRes.data) setStatCardsConfig(cardsRes.data);
-      } catch (err) {
-        console.error("Failed to load reviews metadata:", err);
-      }
+  const loadMetadata = useCallback(async () => {
+    try {
+      const [statsRes, tabsRes, cardsRes] = await Promise.all([
+        reviewsService.getReviewsStats(),
+        reviewsService.getFilterTabs(),
+        reviewsService.getStatCardsConfig(),
+      ]);
+      if (statsRes.success && statsRes.data) setStats(statsRes.data);
+      if (tabsRes.success && tabsRes.data) setFilterTabs(tabsRes.data);
+      if (cardsRes.success && cardsRes.data) setStatCardsConfig(cardsRes.data);
+    } catch (err) {
+      console.error("Failed to load reviews metadata:", err);
     }
-    loadMetadata();
   }, []);
+
+  useEffect(() => {
+    loadMetadata();
+  }, [loadMetadata]);
 
   // Load Table Data
   const loadReviews = useCallback(async () => {
@@ -93,14 +94,14 @@ export default function ReviewsAndComplaintsPage() {
       setLoading(true);
       const res = await reviewsService.getReviewsTable({
         page: currentPage,
-        limit: 11,
+        limit: 10,
         tab: activeTab as any,
         search: searchQuery,
       });
 
       if (res.success && res.data) {
         setReviews(res.data.items);
-        setTotalPages(res.data.pagination.totalPages || 4);
+        setTotalPages(res.data.pagination.totalPages || 1);
       }
     } catch (err) {
       console.error("Failed to load reviews:", err);
@@ -113,21 +114,22 @@ export default function ReviewsAndComplaintsPage() {
     loadReviews();
   }, [loadReviews]);
 
-  // Actions
-  const handleResolve = async (id: string) => {
+  // Handle Resolve Complaint
+  const handleResolve = async (id: string | number) => {
     try {
       setActionLoading(true);
-      const res = await reviewsService.resolveComplaint(id);
-      if (res.success && res.data) {
-        setReviews((prev) =>
-          prev.map((item) => (item.id === id ? { ...item, status: "resolved", statusLabel: "تم الحل" } : item))
+      await reviewsService.resolveComplaint(id);
+      setReviews((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, status: "resolved", statusLabel: "تم الحل" } : item
+        )
+      );
+      if (selectedComplaint && selectedComplaint.id === id) {
+        setSelectedComplaint((prev) =>
+          prev ? { ...prev, status: "resolved", statusLabel: "تم الحل" } : null
         );
-        if (selectedComplaint && selectedComplaint.id === id) {
-          setSelectedComplaint((prev) =>
-            prev ? { ...prev, status: "resolved", statusLabel: "تم الحل" } : null
-          );
-        }
       }
+      loadMetadata();
     } catch (err) {
       console.error("Failed to resolve complaint:", err);
     } finally {
@@ -135,31 +137,55 @@ export default function ReviewsAndComplaintsPage() {
     }
   };
 
-  const handleReject = async (id: string) => {
+  // Handle Reject Complaint
+  const handleReject = async (id: string | number) => {
     setConfirmDialog({
       isOpen: true,
       variant: "danger",
       title: "تأكيد رفض الشكوى",
-      description: "هل تريد بالتأكيد رفض هذه الشكوى؟ سيتم تحديث حالة الشكوى في النظام.",
+      description: "هل أنت متأكد من رفض هذه الشكوى وإغلاقها؟",
       confirmText: "تأكيد الرفض",
       onConfirm: async () => {
         try {
           setActionLoading(true);
-          const res = await reviewsService.rejectComplaint(id);
-          if (res.success && res.data) {
-            setReviews((prev) =>
-              prev.map((item) =>
-                item.id === id ? { ...item, status: "pending", statusLabel: "مرفوضة" } : item
-              )
+          await reviewsService.rejectComplaint(id);
+          setReviews((prev) =>
+            prev.map((item) =>
+              item.id === id ? { ...item, status: "rejected", statusLabel: "مرفوضة" } : item
+            )
+          );
+          if (selectedComplaint && selectedComplaint.id === id) {
+            setSelectedComplaint((prev) =>
+              prev ? { ...prev, status: "rejected", statusLabel: "مرفوضة" } : null
             );
-            if (selectedComplaint && selectedComplaint.id === id) {
-              setSelectedComplaint((prev) =>
-                prev ? { ...prev, status: "pending", statusLabel: "مرفوضة" } : null
-              );
-            }
           }
+          loadMetadata();
         } catch (err) {
           console.error("Failed to reject complaint:", err);
+        } finally {
+          setActionLoading(false);
+          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+        }
+      },
+    });
+  };
+
+  // Handle Delete Review
+  const handleDeleteReview = (id: string | number) => {
+    setConfirmDialog({
+      isOpen: true,
+      variant: "danger",
+      title: "تأكيد حذف التقييم",
+      description: "هل تريد حذف هذا التقييم بشكل نهائي من المنصة؟",
+      confirmText: "تأكيد الحذف",
+      onConfirm: async () => {
+        try {
+          setActionLoading(true);
+          await reviewsService.deleteReview(id);
+          setReviews((prev) => prev.filter((item) => item.id !== id));
+          setSelectedComplaint(null);
+        } catch (err) {
+          console.error("Failed to delete review:", err);
         } finally {
           setActionLoading(false);
           setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
@@ -172,18 +198,26 @@ export default function ReviewsAndComplaintsPage() {
   const columns: Column<ComplaintReviewItem>[] = [
     {
       key: "typeLabel",
-      header: t("common.status", "النوع"),
+      header: "النوع",
       sortable: true,
+      align: "center",
       render: (item) => (
-        <span className="text-xs font-semibold text-[#333748]">
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${
+            item.type === "complaint"
+              ? "bg-[#FEF2F2] text-[#EF4444] border-[#FEE2E2]"
+              : "bg-[#FAF4E8] text-[#B8860B] border-[#EADBBD]"
+          }`}
+        >
           {item.typeLabel || (item.type === "complaint" ? "شكوى" : "تقييم")}
         </span>
       ),
     },
     {
       key: "subject",
-      header: t("reviews.subject", "الموضوع"),
+      header: t("reviews.subject", "الموضوع / العنوان"),
       sortable: true,
+      align: "right",
       render: (item) => (
         <span className="text-xs font-bold text-[#1E1E2D]">
           {item.subject}
@@ -192,11 +226,12 @@ export default function ReviewsAndComplaintsPage() {
     },
     {
       key: "sellerName",
-      header: t("reviews.merchant", "اسم البائع"),
+      header: t("reviews.merchant", "اسم البائع / المتجر"),
       sortable: true,
+      align: "right",
       render: (item) => (
-        <span className="text-xs font-medium text-[#333748]">
-          {item.sellerName}
+        <span className="text-xs font-medium text-[#1E1E2D]">
+          {item.sellerStore || item.sellerName}
         </span>
       ),
     },
@@ -204,8 +239,9 @@ export default function ReviewsAndComplaintsPage() {
       key: "customerName",
       header: t("reviews.customer", "اسم العميل"),
       sortable: true,
+      align: "right",
       render: (item) => (
-        <span className="text-xs font-medium text-[#333748]">
+        <span className="text-xs font-medium text-[#4A4E5A]">
           {item.customerName}
         </span>
       ),
@@ -214,6 +250,7 @@ export default function ReviewsAndComplaintsPage() {
       key: "status",
       header: t("common.status", "الحالة"),
       sortable: true,
+      align: "center",
       render: (item) => (
         <StatusBadge status={item.status} customLabel={item.statusLabel} />
       ),
@@ -222,11 +259,12 @@ export default function ReviewsAndComplaintsPage() {
       key: "rating",
       header: "التقييم",
       sortable: true,
+      align: "center",
       render: (item) =>
         item.rating ? (
-          <div className="flex items-center gap-1 font-bold text-xs text-[#1E1E2D]">
+          <div className="flex items-center justify-center gap-1 font-bold text-xs text-[#1E1E2D] bg-[#FAF4E8] px-2 py-0.5 rounded-lg w-fit mx-auto border border-[#EADBBD]">
             <span>{item.rating}</span>
-            <span className="text-[#F59E0B] text-xs">⭐</span>
+            <Star className="h-3 w-3 fill-[#F59E0B] text-[#F59E0B]" />
           </div>
         ) : (
           <span className="text-xs text-[#8E8E93]">-</span>
@@ -234,30 +272,46 @@ export default function ReviewsAndComplaintsPage() {
     },
     {
       key: "joinedDate",
-      header: t("customers.joinedDate", "تاريخ الانضمام"),
+      header: "تاريخ الإرسال",
       sortable: true,
+      align: "center",
       render: (item) => (
-        <span className="text-xs text-[#4B5563] font-medium" dir="ltr">
+        <span className="text-xs text-[#8E8E93] font-medium">
           {item.joinedDate}
         </span>
       ),
     },
     {
       key: "actions",
-      header: t("common.actions", "الاجراءات"),
+      header: t("common.actions", "الإجراءات"),
       align: "center",
       render: (item) => (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedComplaint(item);
-          }}
-          className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FAF4E8] text-[#A6883C] hover:bg-[#F3E7C9] transition-colors cursor-pointer"
-          title="عرض التفاصيل"
-        >
-          <Eye className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedComplaint(item);
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FAF4E8] text-[#B8860B] hover:bg-[#F3E7C9] transition-colors cursor-pointer"
+            title="عرض التفاصيل"
+          >
+            <Eye className="h-4 w-4" />
+          </button>
+          {item.type === "review" && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteReview(item.id);
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FEF2F2] text-[#EF4444] hover:bg-[#FEE2E2] transition-colors cursor-pointer"
+              title="حذف التقييم"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       ),
     },
   ];
@@ -295,8 +349,11 @@ export default function ReviewsAndComplaintsPage() {
         {/* Dynamic Table Toolbar */}
         <TableToolbar
           searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchPlaceholder="ابحث هنا"
+          onSearchChange={(q) => {
+            setSearchQuery(q);
+            setCurrentPage(1);
+          }}
+          searchPlaceholder="ابحث بالاسم، المتجر، الموضوع أو الوصف..."
           tabs={filterTabs}
           activeTab={activeTab}
           onTabChange={(tabKey) => {
@@ -312,7 +369,7 @@ export default function ReviewsAndComplaintsPage() {
           columns={columns}
           data={reviews}
           loading={loading}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => String(item.id)}
           onRowClick={(item) => setSelectedComplaint(item)}
           emptyMessage="لا توجد شكاوى أو تقييمات مطابقة"
         />
@@ -333,6 +390,7 @@ export default function ReviewsAndComplaintsPage() {
         onClose={() => setSelectedComplaint(null)}
         onResolve={handleResolve}
         onReject={handleReject}
+        onDeleteReview={handleDeleteReview}
         actionLoading={actionLoading}
       />
 
