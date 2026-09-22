@@ -57,12 +57,21 @@ export class ApiClient {
     const fullUrl = this.buildUrl(endpoint, params);
     const authToken = token || (!skipAuth ? this.getToken() : null);
 
+    const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+
     const requestHeaders: Record<string, string> = {
-      "Content-Type": "application/json",
+      ...(!isFormData ? { "Content-Type": "application/json" } : {}),
       Accept: "application/json",
+      "Accept-Language": "ar",
+      lang: "ar",
       ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       ...(headers as Record<string, string>),
     };
+
+    if (isFormData) {
+      delete requestHeaders["Content-Type"];
+      delete requestHeaders["content-type"];
+    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), apiConfig.timeout);
@@ -72,19 +81,36 @@ export class ApiClient {
         ...customConfig,
         headers: requestHeaders,
         signal: controller.signal,
-        body: body ? JSON.stringify(body) : undefined,
+        body: isFormData
+          ? (body as FormData)
+          : body !== null && body !== undefined
+          ? JSON.stringify(body)
+          : customConfig.method === "POST" || customConfig.method === "PUT" || customConfig.method === "PATCH"
+          ? JSON.stringify({})
+          : undefined,
       });
 
       clearTimeout(timeoutId);
 
-      // Handle 401 Unauthorized / Token Expiration
+      // Handle 401 Unauthorized
       if (response.status === 401 && typeof window !== "undefined") {
-        // Clear token cookie & dispatch custom event or redirect
         document.cookie = `${apiConfig.cookieNames.auth}=; Max-Age=0; path=/;`;
         window.dispatchEvent(new CustomEvent("admin:unauthorized"));
       }
 
       const responseData = await response.json().catch(() => null);
+
+      // Check for 405 session termination inside response body as per backend contract
+      if (responseData && (responseData.statusCode === 405 || responseData.status === 405)) {
+        if (typeof window !== "undefined") {
+          document.cookie = `${apiConfig.cookieNames.auth}=; Max-Age=0; path=/;`;
+          window.dispatchEvent(new CustomEvent("admin:unauthorized"));
+        }
+        throw new ApiError(
+          responseData.message || "انتهت الجلسة، يرجى إعادة تسجيل الدخول",
+          405
+        );
+      }
 
       if (!response.ok) {
         const errorData = responseData as ApiErrorResponse | null;
@@ -95,7 +121,37 @@ export class ApiClient {
         );
       }
 
-      return responseData as ApiResponse<T>;
+      // Normalize successful response structure
+      let isSuccess = true;
+      let dataPayload: any = responseData;
+      let message = "";
+
+      if (responseData && typeof responseData === "object") {
+        if ("statusCode" in responseData) {
+          isSuccess = Number(responseData.statusCode) >= 200 && Number(responseData.statusCode) < 300;
+        } else if ("isSuccess" in responseData) {
+          isSuccess = Boolean(responseData.isSuccess);
+        } else if ("success" in responseData) {
+          isSuccess = Boolean(responseData.success);
+        }
+
+        if ("data" in responseData) {
+          dataPayload = responseData.data;
+        } else if ("result" in responseData) {
+          dataPayload = responseData.result;
+        }
+
+        if ("message" in responseData) {
+          message = String(responseData.message || "");
+        }
+      }
+
+      return {
+        success: isSuccess,
+        message,
+        data: (dataPayload !== undefined ? dataPayload : responseData) as T,
+        ...(responseData && typeof responseData === "object" ? responseData : {}),
+      } as ApiResponse<T>;
     } catch (error: unknown) {
       clearTimeout(timeoutId);
       if (error instanceof ApiError) {

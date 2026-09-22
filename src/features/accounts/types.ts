@@ -7,6 +7,7 @@ export interface UserAccountItem {
   name: string;
   phone: string;
   email: string;
+  roleName?: string;
   idFrontUrl: string;
   idBackUrl: string;
   selfieWithIdUrl: string;
@@ -17,6 +18,7 @@ export interface UserAccountItem {
 
 export interface AccountFilterParams extends BaseFilterParams {
   status?: string;
+  roleName?: string;
   search?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc";

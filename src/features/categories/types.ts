@@ -40,3 +40,26 @@ export interface CategoriesPaginationResponse {
     totalPages: number;
   };
 }
+
+export interface BreedItem {
+  id: string | number;
+  name: string;
+  horsesCount?: number;
+  createdAt?: string;
+}
+
+export interface BreedFilterParams extends BaseFilterParams {
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface BreedsPaginationResponse {
+  items: BreedItem[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}

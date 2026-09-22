@@ -6,7 +6,10 @@ export function middleware(request: NextRequest) {
   const authToken = request.cookies.get(apiConfig.cookieNames.auth)?.value;
 
   // Public routes that don't require authentication
-  const isAuthPage = pathname.startsWith("/login");
+  const isAuthPage =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password");
   const isApiRoute = pathname.startsWith("/api");
   const isStaticFile =
     pathname.startsWith("/_next") ||
@@ -25,7 +28,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect authenticated admin from /login to dashboard root /
+  // Redirect authenticated admin from auth pages to dashboard root /
   if (authToken && isAuthPage) {
     return NextResponse.redirect(new URL("/", request.url));
   }

@@ -30,9 +30,10 @@ export default function UserAccountsReviewPage() {
   const [accounts, setAccounts] = useState<UserAccountItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(4);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
   // Modals state
   const [approvingAccount, setApprovingAccount] = useState<UserAccountItem | null>(null);
@@ -46,18 +47,21 @@ export default function UserAccountsReviewPage() {
   const loadAccounts = useCallback(async () => {
     try {
       setLoading(true);
+      setErrorMessage(null);
       const res = await accountsService.getAccounts({
         page: currentPage,
-        limit: 11,
+        limit: 10,
         search: searchQuery,
       });
 
       if (res.success && res.data) {
         setAccounts(res.data.items);
-        setTotalPages(res.data.pagination.totalPages || 4);
+        setTotalPages(res.data.pagination.totalPages || 1);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to load accounts:", err);
+      const e = err as { message?: string };
+      setErrorMessage(e?.message || "فشل تحميل طلبات توثيق الحسابات");
     } finally {
       setLoading(false);
     }
@@ -255,6 +259,22 @@ export default function UserAccountsReviewPage() {
     <div className="space-y-6">
       {/* 1. Breadcrumb Header */}
       <Breadcrumb pageTitle={t("userAccounts.title", "حسابات المستخدمين")} />
+
+      {/* Error Alert Banner */}
+      {errorMessage && (
+        <div className="flex items-center justify-between rounded-2xl bg-rose-50 border border-rose-200 p-4 text-xs font-semibold text-rose-800 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="text-rose-500 hover:text-rose-700 font-bold px-2 py-1 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* 2. Page Header Title */}
       <div className="flex items-center justify-between">

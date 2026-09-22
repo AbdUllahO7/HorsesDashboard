@@ -59,7 +59,9 @@ export function InvoiceDetailsModal({
       sortable: true,
       align: "center",
       render: (item) => (
-        <span className="text-xs font-medium text-[#1E1E2D]">{item.unitPrice}</span>
+        <span className="text-xs font-medium text-[#1E1E2D]" dir="ltr">
+          {Number(item.unitPrice).toLocaleString()} 
+        </span>
       ),
     },
     {
@@ -68,7 +70,9 @@ export function InvoiceDetailsModal({
       sortable: true,
       align: "center",
       render: (item) => (
-        <span className="text-xs font-bold text-[#1E1E2D]">{item.totalPrice}</span>
+        <span className="text-xs font-bold text-[#A6883C]" dir="ltr">
+          {Number(item.totalPrice).toLocaleString()}
+        </span>
       ),
     },
   ];
@@ -77,7 +81,7 @@ export function InvoiceDetailsModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-black/40 transition-opacity"
         onClick={onClose}
       />
 
@@ -89,14 +93,16 @@ export function InvoiceDetailsModal({
       >
         {/* Modal Top Bar */}
         <div className="flex items-center justify-between pb-4 border-b border-[#EDEEF2]">
-          {/* Header matching Figma: تفاصيل الفاتورة  السعر الإجمالي :50000 */}
+          {/* Header: تفاصيل الفاتورة  السعر الإجمالي : 50000 */}
           <div className="flex items-center gap-4 flex-wrap">
             <h2 className="text-lg sm:text-xl font-bold text-[#1E1E2D]">
               تفاصيل الفاتورة
             </h2>
-            <div className="text-base sm:text-lg font-bold text-[#A6883C]">
+            <div className="text-base sm:text-lg font-bold text-[#A6883C] flex items-center gap-1">
               <span>السعر الإجمالي :</span>
-              <span className="font-extrabold">{invoice.totalAmount}</span>
+              <span className="font-extrabold" dir="ltr">
+                {Number(invoice.totalAmount).toLocaleString()} 
+              </span>
             </div>
             {invoice.serialNumber && (
               <span className="text-xs bg-[#FAF4E6] text-[#A6883C] px-2.5 py-1 rounded-full font-bold">

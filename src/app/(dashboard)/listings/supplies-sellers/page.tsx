@@ -85,7 +85,7 @@ export default function SuppliesSellersPage() {
     async function loadMetadata() {
       try {
         const [statsRes, tabsRes, cardsRes] = await Promise.all([
-          listingsService.getLivestockSellersStats(),
+          listingsService.getSuppliesSellersStats(),
           listingsService.getFilterTabs(),
           listingsService.getStatCardsConfig(),
         ]);

@@ -1,3 +1,5 @@
+import { apiClient } from "@/core/services/apiClient";
+import { apiConfig } from "@/config/api.config";
 import { ApiResponse } from "@/types/api";
 import {
   ComplaintReviewItem,
@@ -6,18 +8,19 @@ import {
   ReviewFilterTabItem,
   ReviewFilterParams,
   ReviewsPaginationResponse,
+  ComplaintStatus,
 } from "./types";
 
 export const reviewFilterTabs: ReviewFilterTabItem[] = [
-  { id: "all", label: "كل البائعين" },
+  { id: "all", label: "الكل" },
+  { id: "complaint", label: "شكاوى" },
   { id: "review", label: "تقييمات" },
-  { id: "complaint", label: "شكاوي" },
 ];
 
 export const reviewStatCardsConfig: ReviewStatCardItem[] = [
   {
     id: "total",
-    label: "اجمالي الشكاوى",
+    label: "إجمالي الشكاوى",
     countKey: "totalComplaints",
     iconName: "HelpCircle",
   },
@@ -41,214 +44,61 @@ export const reviewStatCardsConfig: ReviewStatCardItem[] = [
   },
 ];
 
-export const mockReviewsStats: ReviewsStats = {
-  totalComplaints: 55,
-  resolvedComplaints: 42,
-  pendingComplaints: 8,
-  waitingComplaints: 5,
-};
-
-export const mockComplaintsList: ComplaintReviewItem[] = [
-  {
-    id: "REV-101",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "محمود احمد",
-    sellerStore: "متجر العتيبي للماشية",
-    customerName: "جمال احمد",
-    customerPhone: "+966500000000",
-    status: "resolved",
-    statusLabel: "تم الحل",
-    rating: 4.8,
-    joinedDate: "25 - 5 - 2025",
-    joinedDateHijri: "١٤٤٥/٨/٥ هـ",
-    description:
-      "كان يذكر إعلان المزاد أن عمر الأغنام عامين، ولكن عند التسليم بدت الأغنام أكبر سناً بكثير. حالة الحيوانات لا تتطابق مع الصور التي قدمت في القائمة. أشعر أن هذا إعلان كاذب وأود التحقيق في هذا الأمر.",
-  },
-  {
-    id: "REV-102",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "محمود احمد",
-    sellerStore: "مربط الأصالة للخيل",
-    customerName: "جمال احمد",
-    customerPhone: "+966511112233",
-    status: "resolved",
-    statusLabel: "تم الحل",
-    rating: null,
-    joinedDate: "25 - 5 - 2025",
-    joinedDateHijri: "١٤٤٥/٨/٥ هـ",
-    description:
-      "تأخر التاجر في تسليم وثائق الفحص البيطري لمدة ثلاثة أيام عن الموعد المتفق عليه في شروط المزاد.",
-  },
-  {
-    id: "REV-103",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "محمود احمد",
-    sellerStore: "متجر فرسان نجد",
-    customerName: "جمال احمد",
-    customerPhone: "+966522223344",
-    status: "resolved",
-    statusLabel: "تم الحل",
-    rating: null,
-    joinedDate: "25 - 5 - 2025",
-    joinedDateHijri: "١٤٤٥/٨/٥ هـ",
-    description:
-      "المستلزمات المستلمة كانت ممتازة ولكن الشحن استغرق وقتاً أطول من المعتاد.",
-  },
-  {
-    id: "REV-104",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "محمود احمد",
-    sellerStore: "متجر العتيبي للماشية",
-    customerName: "جمال احمد",
-    customerPhone: "+966533334455",
-    status: "resolved",
-    statusLabel: "تم الحل",
-    rating: null,
-    joinedDate: "25 - 5 - 2025",
-    joinedDateHijri: "١٤٤٥/٨/٥ هـ",
-    description:
-      "تم تقديم شكوى بخصوص حالة السرج الجلدي المستلم، وتم التواصل مع البائع وحل الإشكال.",
-  },
-  {
-    id: "REV-105",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "محمود احمد",
-    sellerStore: "مزرعة البركة",
-    customerName: "جمال احمد",
-    customerPhone: "+966544445566",
-    status: "resolved",
-    statusLabel: "تم الحل",
-    rating: null,
-    joinedDate: "25 - 5 - 2025",
-    joinedDateHijri: "١٤٤٥/٨/٥ هـ",
-    description:
-      "الحصان بحالة صحية ممتازة وتم التأكد من كافة التقارير الطبية.",
-  },
-  {
-    id: "REV-106",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "محمود احمد",
-    sellerStore: "متجر العتيبي للماشية",
-    customerName: "جمال احمد",
-    customerPhone: "+966555556677",
-    status: "resolved",
-    statusLabel: "تم الحل",
-    rating: null,
-    joinedDate: "25 - 5 - 2025",
-    joinedDateHijri: "١٤٤٥/٨/٥ هـ",
-    description:
-      "تم استلام المزاد في الوقت المحدد بدون أي ملاحظات سلبية.",
-  },
-  {
-    id: "REV-107",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "محمود احمد",
-    sellerStore: "متجر الخيل العربي",
-    customerName: "جمال احمد",
-    customerPhone: "+966566667788",
-    status: "resolved",
-    statusLabel: "تم الحل",
-    rating: null,
-    joinedDate: "25 - 5 - 2025",
-    joinedDateHijri: "١٤٤٥/٨/٥ هـ",
-    description:
-      "طلب إعادة فحص بيطري قبل إتمام عملية الدفع النهائية وتمت الموافقة من البائع.",
-  },
-  {
-    id: "REV-108",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "محمود احمد",
-    sellerStore: "متجر العتيبي للماشية",
-    customerName: "جمال احمد",
-    customerPhone: "+966577778899",
-    status: "pending",
-    statusLabel: "قيد المراجعة",
-    rating: null,
-    joinedDate: "25 - 5 - 2025",
-    joinedDateHijri: "١٤٤٥/٨/٥ هـ",
-    description:
-      "العميل يشكو من عدم تطابق مواصفات المزاد مع الحيوان المعروض، الملف حالياً تحت المراجعة من لجنة التحكيم.",
-  },
-  {
-    id: "REV-109",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "محمود احمد",
-    sellerStore: "متجر فرسان نجد",
-    customerName: "جمال احمد",
-    customerPhone: "+966588889900",
-    status: "resolved",
-    statusLabel: "تم الحل",
-    rating: null,
-    joinedDate: "25 - 5 - 2025",
-    joinedDateHijri: "١٤٤٥/٨/٥ هـ",
-    description:
-      "تم الاتفاق على تعويض العميل عن فارق تكاليف النقل الإضافية.",
-  },
-  {
-    id: "REV-110",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "محمود احمد",
-    sellerStore: "مزرعة الريان",
-    customerName: "جمال احمد",
-    customerPhone: "+966599990011",
-    status: "resolved",
-    statusLabel: "تم الحل",
-    rating: null,
-    joinedDate: "25 - 5 - 2025",
-    joinedDateHijri: "١٤٤٥/٨/٥ هـ",
-    description:
-      "تم التحقق من بيانات المزاد واغلاق الشكوى برضا الطرفين.",
-  },
-  {
-    id: "REV-111",
-    type: "review",
-    typeLabel: "تقييم",
-    subject: "وصف مضلل للمزاد",
-    sellerName: "محمود احمد",
-    sellerStore: "متجر العتيبي للماشية",
-    customerName: "جمال احمد",
-    customerPhone: "+966500000000",
-    status: "waiting",
-    statusLabel: "قيد الانتظار",
-    rating: null,
-    joinedDate: "25 - 5 - 2025",
-    joinedDateHijri: "١٤٤٥/٨/٥ هـ",
-    description:
-      "كان يذكر إعلان المزاد أن عمر الأغنام عامين، ولكن عند التسليم بدت الأغنام أكبر سناً بكثير. حالة الحيوانات لا تتطابق مع الصور التي قدمت في القائمة. أشعر أن هذا إعلان كاذب وأود التحقيق في هذا الأمر.",
-  },
-];
-
 class ReviewsService {
+  /**
+   * Get KPI Stats
+   */
   async getReviewsStats(): Promise<ApiResponse<ReviewsStats>> {
-    await new Promise((resolve) => setTimeout(resolve, 60));
-    return {
-      success: true,
-      data: mockReviewsStats,
-    };
+    try {
+      const compRes = await apiClient.get<unknown>(apiConfig.endpoints.complaints.list);
+      let list: Record<string, unknown>[] = [];
+      if (compRes && compRes.data) {
+        if (Array.isArray(compRes.data)) list = compRes.data as Record<string, unknown>[];
+        else if (typeof compRes.data === "object") {
+          const obj = compRes.data as Record<string, unknown>;
+          if (Array.isArray(obj.items)) list = obj.items as Record<string, unknown>[];
+          else if (Array.isArray(obj.data)) list = obj.data as Record<string, unknown>[];
+        }
+      }
+
+      let total = list.length;
+      let resolved = 0;
+      let pending = 0;
+      let waiting = 0;
+
+      list.forEach((item) => {
+        const s = item.status;
+        if (s === 3 || s === "resolved") resolved++;
+        else if (s === 1 || s === "pending") pending++;
+        else if (s === 2 || s === "in_progress" || s === "waiting") waiting++;
+        else pending++;
+      });
+
+      return {
+        success: true,
+        data: {
+          totalComplaints: total,
+          resolvedComplaints: resolved,
+          pendingComplaints: pending,
+          waitingComplaints: waiting,
+        },
+        message: "Complaints stats loaded",
+      };
+    } catch {
+      return {
+        success: true,
+        data: {
+          totalComplaints: 0,
+          resolvedComplaints: 0,
+          pendingComplaints: 0,
+          waitingComplaints: 0,
+        },
+        message: "Stats initialized",
+      };
+    }
   }
 
   async getStatCardsConfig(): Promise<ApiResponse<ReviewStatCardItem[]>> {
-    await new Promise((resolve) => setTimeout(resolve, 60));
     return {
       success: true,
       data: reviewStatCardsConfig,
@@ -256,89 +106,295 @@ class ReviewsService {
   }
 
   async getFilterTabs(): Promise<ApiResponse<ReviewFilterTabItem[]>> {
-    await new Promise((resolve) => setTimeout(resolve, 60));
     return {
       success: true,
       data: reviewFilterTabs,
     };
   }
 
+  /**
+   * Get Reviews & Complaints Table from API
+   * Endpoints: GET /api/Complaints/GetAll & GET /api/Reviews/GetAllReviews
+   */
   async getReviewsTable(
     params: ReviewFilterParams = {}
   ): Promise<ApiResponse<ReviewsPaginationResponse>> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    let filtered = [...mockComplaintsList];
-
-    // Tab filter
-    if (params.tab && params.tab !== "all") {
-      filtered = filtered.filter((item) => item.type === params.tab);
-    }
-
-    // Status filter
-    if (params.status && params.status !== "all") {
-      filtered = filtered.filter((item) => item.status === params.status);
-    }
-
-    // Search query
-    if (params.search && params.search.trim()) {
-      const q = params.search.trim().toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.subject.toLowerCase().includes(q) ||
-          item.sellerName.toLowerCase().includes(q) ||
-          item.customerName.toLowerCase().includes(q) ||
-          item.typeLabel.toLowerCase().includes(q) ||
-          (item.sellerStore && item.sellerStore.toLowerCase().includes(q))
-      );
-    }
-
     const page = params.page || 1;
-    const limit = params.limit || 11;
-    const total = filtered.length;
-    const totalPages = Math.ceil(total / limit) || 4;
-    const startIndex = (page - 1) * limit;
-    const items = filtered.slice(startIndex, startIndex + limit);
+    const limit = params.limit || 10;
+    const shouldFetchComplaints = !params.tab || params.tab === "all" || params.tab === "complaint";
+    const shouldFetchReviews = !params.tab || params.tab === "all" || params.tab === "review";
 
-    return {
-      success: true,
-      data: {
-        items: items.length > 0 ? items : filtered,
-        pagination: {
-          total,
-          page,
-          limit,
-          totalPages,
+    let combinedItems: ComplaintReviewItem[] = [];
+
+    try {
+      const promises: Promise<unknown>[] = [];
+
+      if (shouldFetchComplaints) {
+        promises.push(
+          apiClient.get<unknown>(apiConfig.endpoints.complaints.list).catch(() => ({ data: [] }))
+        );
+      }
+
+      if (shouldFetchReviews) {
+        promises.push(
+          apiClient
+            .get<unknown>(apiConfig.endpoints.reviews.list, {
+              params: {
+                PageNumber: 1,
+                PageSize: 50,
+                Search: params.search || undefined,
+              },
+            })
+            .catch(() => ({ data: [] }))
+        );
+      }
+
+      const results = await Promise.all(promises);
+
+      // Parse complaints
+      if (shouldFetchComplaints && results[0]) {
+        const compRes = results[0] as { data?: unknown };
+        let compList: Record<string, unknown>[] = [];
+        if (compRes && compRes.data) {
+          if (Array.isArray(compRes.data)) compList = compRes.data as Record<string, unknown>[];
+          else if (typeof compRes.data === "object") {
+            const obj = compRes.data as Record<string, unknown>;
+            if (Array.isArray(obj.items)) compList = obj.items as Record<string, unknown>[];
+            else if (Array.isArray(obj.data)) compList = obj.data as Record<string, unknown>[];
+          }
+        }
+
+        const mappedComplaints: ComplaintReviewItem[] = compList.map((c, i) => {
+          const id = String(c.id ?? c.complaintId ?? `COMP-${i + 1}`);
+          const subject = String(c.title ?? c.subject ?? "شكوى بخصوص المزاد");
+          const description = String(c.description ?? c.content ?? "");
+          const rawStatus = c.status;
+          let status: ComplaintStatus = "pending";
+          let statusLabel = "قيد المراجعة";
+          if (rawStatus === 3 || rawStatus === "resolved") {
+            status = "resolved";
+            statusLabel = "تم الحل";
+          } else if (rawStatus === 2 || rawStatus === "in_progress") {
+            status = "waiting";
+            statusLabel = "قيد المعالجة";
+          } else if (rawStatus === 4 || rawStatus === "rejected") {
+            status = "rejected";
+            statusLabel = "مرفوضة";
+          }
+
+          let sellerName = "بائع";
+          if (typeof c.seller === "object" && c.seller) {
+            const s = c.seller as Record<string, unknown>;
+            sellerName = String(s.name ?? s.fullName ?? "بائع");
+          } else if (c.sellerName) {
+            sellerName = String(c.sellerName);
+          }
+
+          let customerName = "عميل";
+          let customerPhone = "";
+          if (typeof c.user === "object" && c.user) {
+            const u = c.user as Record<string, unknown>;
+            customerName = String(u.name ?? u.fullName ?? "عميل");
+            customerPhone = String(u.phoneNumber ?? u.phone ?? "");
+          } else if (c.userName) {
+            customerName = String(c.userName);
+          }
+
+          const joinedDate = c.createdAt ? String(c.createdAt).split("T")[0] : new Date().toISOString().split("T")[0];
+
+          return {
+            id,
+            type: "complaint",
+            typeLabel: "شكوى",
+            subject,
+            sellerName,
+            sellerStore: c.sellerStore ? String(c.sellerStore) : undefined,
+            customerName,
+            customerPhone,
+            status,
+            statusLabel,
+            rating: null,
+            joinedDate,
+            description,
+          };
+        });
+
+        combinedItems.push(...mappedComplaints);
+      }
+
+      // Parse reviews
+      const revIdx = shouldFetchComplaints ? 1 : 0;
+      if (shouldFetchReviews && results[revIdx]) {
+        const revRes = results[revIdx] as { data?: unknown };
+        let revList: Record<string, unknown>[] = [];
+        if (revRes && revRes.data) {
+          if (Array.isArray(revRes.data)) revList = revRes.data as Record<string, unknown>[];
+          else if (typeof revRes.data === "object") {
+            const obj = revRes.data as Record<string, unknown>;
+            if (Array.isArray(obj.items)) revList = obj.items as Record<string, unknown>[];
+            else if (Array.isArray(obj.data)) revList = obj.data as Record<string, unknown>[];
+          }
+        }
+
+        const mappedReviews: ComplaintReviewItem[] = revList.map((r, i) => {
+          const id = String(r.id ?? r.reviewId ?? `REV-${i + 1}`);
+          const rating = Number(r.rate ?? r.rating ?? r.stars ?? 5);
+          const comment = String(r.comment ?? r.review ?? r.content ?? "تقييم ممتاز");
+          const subject = String(r.title ?? r.subject ?? `تقييم خدمة ${rating} نجوم`);
+
+          let sellerName = "بائع";
+          if (typeof r.seller === "object" && r.seller) {
+            const s = r.seller as Record<string, unknown>;
+            sellerName = String(s.name ?? s.fullName ?? "بائع");
+          } else if (r.sellerName) {
+            sellerName = String(r.sellerName);
+          }
+
+          let customerName = "عميل";
+          let customerPhone = "";
+          if (typeof r.user === "object" && r.user) {
+            const u = r.user as Record<string, unknown>;
+            customerName = String(u.name ?? u.fullName ?? "عميل");
+            customerPhone = String(u.phoneNumber ?? u.phone ?? "");
+          } else if (r.userName) {
+            customerName = String(r.userName);
+          }
+
+          const joinedDate = r.createdAt ? String(r.createdAt).split("T")[0] : new Date().toISOString().split("T")[0];
+
+          return {
+            id,
+            type: "review",
+            typeLabel: "تقييم",
+            subject,
+            sellerName,
+            sellerStore: r.sellerStore ? String(r.sellerStore) : undefined,
+            customerName,
+            customerPhone,
+            status: "resolved",
+            statusLabel: "تم النشر",
+            rating,
+            joinedDate,
+            description: comment,
+          };
+        });
+
+        combinedItems.push(...mappedReviews);
+      }
+
+      // Filter by search query if provided
+      if (params.search) {
+        const q = params.search.toLowerCase();
+        combinedItems = combinedItems.filter(
+          (item) =>
+            item.subject.toLowerCase().includes(q) ||
+            item.sellerName.toLowerCase().includes(q) ||
+            item.customerName.toLowerCase().includes(q) ||
+            item.description?.toLowerCase().includes(q)
+        );
+      }
+
+      // Filter by status if provided
+      if (params.status && params.status !== "all") {
+        combinedItems = combinedItems.filter((item) => item.status === params.status);
+      }
+
+      const total = combinedItems.length;
+      const totalPages = Math.ceil(total / limit) || 1;
+      const start = (page - 1) * limit;
+      const paginatedItems = combinedItems.slice(start, start + limit);
+
+      return {
+        success: true,
+        data: {
+          items: paginatedItems,
+          pagination: {
+            total,
+            page,
+            limit,
+            totalPages,
+          },
         },
-      },
-    };
-  }
-
-  async resolveComplaint(id: string): Promise<ApiResponse<ComplaintReviewItem>> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    const item = mockComplaintsList.find((c) => c.id === id);
-    if (!item) {
-      return { success: false, message: "Complaint not found", data: null as any };
+        message: "Data loaded from API",
+      };
+    } catch (error) {
+      console.error("Failed to load reviews/complaints:", error);
+      return {
+        success: false,
+        data: {
+          items: [],
+          pagination: {
+            total: 0,
+            page: 1,
+            limit: 10,
+            totalPages: 1,
+          },
+        },
+        message: "حدث خطأ ما أثناء جلب البيانات",
+      };
     }
-    item.status = "resolved";
-    item.statusLabel = "تم الحل";
-    return { success: true, data: item };
   }
 
-  async rejectComplaint(id: string): Promise<ApiResponse<ComplaintReviewItem>> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    const item = mockComplaintsList.find((c) => c.id === id);
-    if (!item) {
-      return { success: false, message: "Complaint not found", data: null as any };
+  /**
+   * Update Complaint Status
+   * Endpoint: POST /api/Complaints/UpdateStatus?id={id}&status={status}
+   */
+  async updateComplaintStatus(
+    id: string | number,
+    status: number | string
+  ): Promise<ApiResponse<void>> {
+    try {
+      const statusCode = typeof status === "number" ? status : status === "resolved" ? 3 : status === "rejected" ? 4 : 2;
+      await apiClient.post<void>(apiConfig.endpoints.complaints.updateStatus, null, {
+        params: { id, status: statusCode },
+      });
+      return {
+        success: true,
+        data: undefined as unknown as void,
+        message: "تم تحديث حالة الشكوى بنجاح",
+      };
+    } catch (error: unknown) {
+      console.error("Failed to update complaint status:", error);
+      const err = error as { message?: string };
+      return {
+        success: false,
+        data: undefined as unknown as void,
+        message: err?.message ? `حدث خطأ ما: ${err.message}` : "حدث خطأ ما أثناء تحديث حالة الشكوى",
+      };
     }
-    item.status = "pending";
-    item.statusLabel = "مرفوضة";
-    return { success: true, data: item };
   }
 
-  async deleteComplaint(id: string): Promise<ApiResponse<boolean>> {
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    return { success: true, data: true };
+  async resolveComplaint(id: string | number): Promise<ApiResponse<void>> {
+    return this.updateComplaintStatus(id, 3);
+  }
+
+  async rejectComplaint(id: string | number): Promise<ApiResponse<void>> {
+    return this.updateComplaintStatus(id, 4);
+  }
+
+  /**
+   * Delete Review
+   * Endpoint: POST /api/Reviews/Delete?id={id}
+   */
+  async deleteReview(id: string | number): Promise<ApiResponse<boolean>> {
+    try {
+      await apiClient.post<void>(apiConfig.endpoints.reviews.delete, null, {
+        params: { id },
+      });
+      return {
+        success: true,
+        data: true,
+        message: "تم حذف التقييم بنجاح",
+      };
+    } catch (error: unknown) {
+      console.error("Failed to delete review:", error);
+      const err = error as { message?: string };
+      return {
+        success: false,
+        data: false,
+        message: err?.message ? `حدث خطأ ما: ${err.message}` : "حدث خطأ ما أثناء حذف التقييم",
+      };
+    }
   }
 }
 

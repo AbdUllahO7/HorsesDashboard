@@ -3,13 +3,14 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { AdminUser } from "@/types/common";
 import { apiConfig } from "@/config/api.config";
+import { authService } from "@/features/auth/services";
 import { useRouter } from "next/navigation";
 
 export interface AuthContextType {
   user: AdminUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string, user: AdminUser) => void;
+  login: (tokens: { accessToken: string; refreshToken?: string }, user: AdminUser) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -51,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleUnauthorized = () => {
       setUser(null);
       localStorage.removeItem("horses_admin_user");
+      localStorage.removeItem("horses_admin_refresh_token");
       router.push("/login");
     };
 
@@ -58,18 +60,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("admin:unauthorized", handleUnauthorized);
   }, [checkAuth, router]);
 
-  const login = (token: string, userData: AdminUser) => {
-    document.cookie = `${apiConfig.cookieNames.auth}=${token}; path=/; max-age=604800; SameSite=Lax;`;
+  const login = (tokens: { accessToken: string; refreshToken?: string }, userData: AdminUser) => {
+    document.cookie = `${apiConfig.cookieNames.auth}=${tokens.accessToken}; path=/; max-age=604800; SameSite=Lax;`;
+    if (tokens.refreshToken) {
+      document.cookie = `${apiConfig.cookieNames.refresh}=${tokens.refreshToken}; path=/; max-age=2592000; SameSite=Lax;`;
+      localStorage.setItem("horses_admin_refresh_token", tokens.refreshToken);
+    }
     localStorage.setItem("horses_admin_user", JSON.stringify(userData));
     setUser(userData);
     router.push("/");
   };
 
   const logout = async () => {
-    document.cookie = `${apiConfig.cookieNames.auth}=; path=/; max-age=0;`;
-    localStorage.removeItem("horses_admin_user");
-    setUser(null);
-    router.push("/login");
+    try {
+      const refreshToken = localStorage.getItem("horses_admin_refresh_token") || undefined;
+      await authService.logout(refreshToken).catch(() => {});
+    } finally {
+      document.cookie = `${apiConfig.cookieNames.auth}=; path=/; max-age=0;`;
+      document.cookie = `${apiConfig.cookieNames.refresh}=; path=/; max-age=0;`;
+      localStorage.removeItem("horses_admin_user");
+      localStorage.removeItem("horses_admin_refresh_token");
+      setUser(null);
+      router.push("/login");
+    }
   };
 
   return (

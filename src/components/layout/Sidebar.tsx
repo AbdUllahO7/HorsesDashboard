@@ -23,6 +23,7 @@ import {
   Megaphone,
   Calculator,
   Receipt,
+  Bell,
   LogOut,
   X,
 } from "lucide-react";
@@ -41,6 +42,7 @@ const iconMap: Record<string, React.ReactNode> = {
   Megaphone: <Megaphone className="h-5 w-5" strokeWidth={1.8} />,
   Calculator: <Calculator className="h-5 w-5" strokeWidth={1.8} />,
   Receipt: <Receipt className="h-5 w-5" strokeWidth={1.8} />,
+  Bell: <Bell className="h-5 w-5 shrink-0" strokeWidth={1.8} />,
   Settings: <Settings className="h-5 w-5" strokeWidth={1.8} />,
 };
 
@@ -58,6 +60,7 @@ const navKeyMap: Record<string, TranslationKey> = {
   ads: "nav.ads",
   accounting: "nav.accounting",
   invoices: "nav.invoices",
+  notifications: "nav.notifications" as any,
   settings: "nav.settings",
 };
 
@@ -77,7 +80,7 @@ export function Sidebar({ mobileOpen, onCloseMobile, className }: SidebarProps) 
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
           onClick={onCloseMobile}
         />
       )}

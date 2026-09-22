@@ -6,6 +6,7 @@ export type SellerStatus = "active" | "pending" | "inactive" | "blocked";
 
 export interface LivestockSeller {
   id: string;
+  businessProfileId?: number;
   name: string;
   email: string;
   phone: string;
@@ -14,11 +15,19 @@ export interface LivestockSeller {
   auctionsCount: number;
   isLiveStreamEnabled: boolean;
   createdAt: string;
+  stableName?: string;
+  address?: string;
+  city?: string;
+  description?: string;
+  whatsappNumber?: string;
+  googleMapLink?: string;
 }
 
 export interface SuppliesSeller {
   id: string;
+  businessProfileId?: number;
   name: string;
+  storeName?: string;
   email: string;
   phone: string;
   status: SellerStatus;
@@ -27,6 +36,10 @@ export interface SuppliesSeller {
   followersCount?: number;
   reviewsCount?: number;
   address?: string;
+  city?: string;
+  description?: string;
+  whatsappNumber?: string;
+  googleMapLink?: string;
   createdAt?: string;
 }
 
@@ -70,6 +83,26 @@ export interface Seller {
   joinedDate?: string;
 }
 
+export interface ProductItem {
+  id: string | number;
+  name: string;
+  description?: string;
+  price: number;
+  categoryId?: number;
+  categoryName?: string;
+  breedId?: number;
+  breedName?: string;
+  sellerId?: string;
+  sellerName?: string;
+  sellerPhone?: string;
+  age?: number;
+  weight?: number;
+  address?: string;
+  images: string[];
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface ListingItem {
   id: string;
   title: string;
@@ -77,12 +110,29 @@ export interface ListingItem {
   price: number;
   sellerId: string;
   sellerName: string;
+  sellerPhone?: string;
   status: "active" | "draft" | "sold" | "archived";
   viewsCount: number;
   createdAt: string;
+  images?: string[];
+}
+
+export interface ProductFilterParams extends BaseFilterParams {
+  categoryId?: number;
+  breedId?: number;
+  userId?: string;
+  search?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minAge?: number;
+  maxAge?: number;
+  isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 export interface ListingFilterParams extends BaseFilterParams {
   category?: ListingCategory;
   sellerType?: "livestock" | "supplies";
+  search?: string;
 }

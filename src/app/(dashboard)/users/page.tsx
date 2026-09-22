@@ -72,6 +72,8 @@ export default function CustomersPage() {
 
   // Modals state
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerUser | null>(null);
+  const [detailedCustomer, setDetailedCustomer] = useState<CustomerUser | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState<boolean>(false);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>({
     isOpen: false,
     variant: "danger",
@@ -124,6 +126,37 @@ export default function CustomersPage() {
   useEffect(() => {
     loadCustomers();
   }, [loadCustomers]);
+
+  // Fetch full customer details when modal opens
+  const openCustomerModal = useCallback(async (customer: CustomerUser) => {
+    setSelectedCustomer(customer);
+    setDetailedCustomer(customer); // show basic data immediately
+    setDetailsLoading(true);
+    try {
+      const res = await usersService.getCustomerDetails(String(customer.id));
+      if (res.success && res.data) {
+        const raw = ((res.data as Record<string, unknown>).data ?? res.data) as Record<string, unknown>;
+        setDetailedCustomer({
+          ...customer,
+          name:              String(raw.fullName ?? raw.name ?? raw.userName ?? customer.name),
+          email:             String(raw.email ?? raw.profile_Email ?? customer.email),
+          phone:             String(raw.phoneNumber ?? raw.phone_Number ?? customer.phone),
+          address:           raw.address ? String(raw.address) : customer.address,
+          bidsCount:         Number(raw.auctionsParticipated ?? raw.bidsCount ?? raw.totalBids ?? raw.auctionsCount ?? 0),
+          ordersCount:       Number(raw.wonAuctionsCount ?? raw.ordersCount ?? raw.totalOrders ?? 0),
+          totalSpent:        Number(raw.walletBalance ?? raw.totalSpent ?? raw.totalPurchases ?? 0),
+          interactionsCount: Number(raw.liveCommentsCount ?? raw.interactionsCount ?? raw.interactions ?? customer.interactionsCount ?? 0),
+          status:            raw.status !== undefined ? usersService.mapBackendToStatus(raw.status) : customer.status,
+          joinedDate:        raw.createdAt ? String(raw.createdAt) : customer.joinedDate,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to load customer details:", err);
+    } finally {
+      setDetailsLoading(false);
+    }
+  }, []);
+
 
   // Handlers for Status and Actions
   const handleStatusChange = (customer: CustomerUser, newStatus: CustomerStatus) => {
@@ -235,7 +268,7 @@ export default function CustomersPage() {
       render: (customer) => (
         <button
           type="button"
-          onClick={() => setSelectedCustomer(customer)}
+          onClick={() => openCustomerModal(customer)}
           className="text-right font-bold text-[#1E1E2D] hover:text-[#B8860B] transition-colors cursor-pointer"
           title="عرض تفاصيل العميل"
         >
@@ -384,7 +417,7 @@ export default function CustomersPage() {
           columns={columns}
           data={customers}
           loading={loading}
-          onRowClick={(customer) => setSelectedCustomer(customer)}
+          onRowClick={(customer) => openCustomerModal(customer)}
           keyExtractor={(customer) => customer.id}
         />
 
@@ -400,8 +433,12 @@ export default function CustomersPage() {
       {/* Customer Details Modal */}
       <CustomerDetailsModal
         isOpen={Boolean(selectedCustomer)}
-        customer={selectedCustomer}
-        onClose={() => setSelectedCustomer(null)}
+        customer={detailedCustomer}
+        loading={detailsLoading}
+        onClose={() => {
+          setSelectedCustomer(null);
+          setDetailedCustomer(null);
+        }}
         onStatusChange={(cust, status) => {
           handleStatusChange(cust, status);
         }}
