@@ -13,20 +13,20 @@ export const formatVerificationImageUrl = (img?: string): string => {
   if (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/images/")) {
     return img;
   }
-  const clean = img.replace(/^\/?(auctionImg|storeImg|img)\//, "");
-  return `${apiConfig.imageBaseUrl}/${clean}`;
+  const clean = img.replace(/^\/?(auctionImg|storeImg|img)\//, "").replace(/^\/+/, "");
+  return `${apiConfig.serverUrl}/${clean}`;
 };
 
 export const mapBackendVerificationStatus = (val: unknown): AccountVerificationStatus => {
-  if (val === 2 || val === "approved" || val === "Approved" || val === true) return "approved";
-  if (val === 3 || val === "rejected" || val === "Rejected") return "rejected";
+  if (val === 2 || val === "2" || val === "approved" || val === "Approved" || val === true) return "approved";
+  if (val === 3 || val === "3" || val === 4 || val === "4" || val === "rejected" || val === "Rejected") return "rejected";
   return "pending";
 };
 
 class AccountsService {
   /**
    * Get verification requests list
-   * Endpoint: POST /api/Users/GetVerificationRequests
+   * Endpoint: GET /api/Users/GetVerificationRequests
    */
   async getAccounts(
     params: AccountFilterParams = {}
@@ -38,32 +38,39 @@ class AccountsService {
       let statusEnum: number | undefined = undefined;
       if (params.status === "pending") statusEnum = 1;
       else if (params.status === "approved") statusEnum = 2;
-      else if (params.status === "rejected") statusEnum = 3;
+      else if (params.status === "rejected") statusEnum = 4;
 
-      const bodyPayload: Record<string, unknown> = {
+      const queryParams: Record<string, string | number | boolean | undefined> = {
         pageNumber: page,
         pageSize: limit,
+        PageNumber: page,
+        PageSize: limit,
       };
 
       if (params.search) {
-        bodyPayload.search = params.search;
+        queryParams.search = params.search;
+        queryParams.Search = params.search;
       }
       if (statusEnum !== undefined) {
-        bodyPayload.status = statusEnum;
+        queryParams.status = statusEnum;
+        queryParams.Status = statusEnum;
       }
-      if (params.roleName) {
-        bodyPayload.roleName = params.roleName;
+      if (params.roleName && params.roleName !== "all") {
+        queryParams.roleName = params.roleName;
+        queryParams.RoleName = params.roleName;
       }
       if (params.sortBy) {
-        bodyPayload.sortBy = params.sortBy;
+        queryParams.sortBy = params.sortBy;
+        queryParams.SortBy = params.sortBy;
       }
       if (params.sortOrder) {
-        bodyPayload.sortDirection = params.sortOrder;
+        queryParams.sortDirection = params.sortOrder;
+        queryParams.SortDirection = params.sortOrder;
       }
 
-      const response = await apiClient.post<unknown>(
+      const response = await apiClient.get<unknown>(
         apiConfig.endpoints.users.verificationRequests,
-        bodyPayload
+        { params: queryParams }
       );
 
       let rawList: Record<string, unknown>[] = [];
@@ -99,18 +106,24 @@ class AccountsService {
         const roleName = item.roleName ? String(item.roleName) : undefined;
         
         const idFrontUrl = formatVerificationImageUrl(
-          String(item.frontIdentityImage ?? item.idFrontUrl ?? item.frontImage ?? "")
+          String(item.frontIdImage ?? item.frontIdentityImage ?? item.idFrontUrl ?? item.frontImage ?? "")
         );
         const idBackUrl = formatVerificationImageUrl(
-          String(item.backIdentityImage ?? item.idBackUrl ?? item.backImage ?? "")
+          String(item.backIdImage ?? item.backIdentityImage ?? item.idBackUrl ?? item.backImage ?? "")
         );
         const selfieWithIdUrl = formatVerificationImageUrl(
-          String(item.selfieWithIdentityImage ?? item.selfieWithIdUrl ?? item.selfieImage ?? "")
+          String(item.selfieWithIdImage ?? item.selfieWithIdentityImage ?? item.selfieWithIdUrl ?? item.selfieImage ?? "")
         );
 
         const status = mapBackendVerificationStatus(item.status ?? item.verificationStatus);
-        const rejectionReason = item.rejectionReason ? String(item.rejectionReason) : (item.reason ? String(item.reason) : undefined);
-        const createdAt = String(item.createdAt ?? item.created_At ?? item.requestDate ?? "2025-05-25");
+        const rejectionReason = item.rejectReason
+          ? String(item.rejectReason)
+          : item.rejectionReason
+          ? String(item.rejectionReason)
+          : item.reason
+          ? String(item.reason)
+          : undefined;
+        const createdAt = String(item.create_At ?? item.createdAt ?? item.created_At ?? item.requestDate ?? "2025-05-25");
 
         return {
           id,
@@ -172,16 +185,17 @@ class AccountsService {
         }
       );
       return {
-        success: true,
+        success: response.success ?? true,
         data: response.data || null,
         message: response.message || "تم قبول وتفعيل حساب المستخدم بنجاح",
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to approve verification:", error);
+      const msg = error?.message || "فشل في اعتماد التوثيق";
       return {
         success: false,
         data: null,
-        message: "فشل في اعتماد التوثيق",
+        message: msg,
       };
     }
   }
@@ -200,16 +214,17 @@ class AccountsService {
         }
       );
       return {
-        success: true,
+        success: response.success ?? true,
         data: response.data || null,
         message: response.message || "تم رفض طلب التوثيق وإشعار المستخدم",
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to reject verification:", error);
+      const msg = error?.message || "فشل في رفض الطلب";
       return {
         success: false,
         data: null,
-        message: "فشل في رفض الطلب",
+        message: msg,
       };
     }
   }

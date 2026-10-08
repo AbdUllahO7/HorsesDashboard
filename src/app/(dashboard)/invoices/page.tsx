@@ -183,16 +183,21 @@ export default function InvoicesPage() {
       header: "العميل",
       sortable: true,
       align: "right",
-      render: (item) => (
-        <div className="text-right">
-          <p className="text-xs font-semibold text-[#1E1E2D]">{item.customerName || "—"}</p>
-          {item.customerPhone && (
-            <p className="text-[11px] text-[#8E8E93]" dir="ltr">
-              {item.customerPhone}
-            </p>
-          )}
-        </div>
-      ),
+      render: (item) => {
+        const isPhone = (val?: string) => Boolean(val && (val.startsWith("+") || /^[0-9\s\-+()]{7,}$/.test(val.trim())));
+        const name = isPhone(item.customerName) ? "مستخدم المنصة" : (item.customerName || "—");
+        const phone = item.customerPhone || (isPhone(item.customerName) ? item.customerName : null);
+        return (
+          <div className="text-right">
+            <p className="text-xs font-semibold text-[#1E1E2D]">{name}</p>
+            {phone && (
+              <p className="text-[11px] text-[#8E8E93]" dir="ltr">
+                {phone}
+              </p>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "sellerName",

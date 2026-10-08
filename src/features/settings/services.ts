@@ -421,7 +421,11 @@ class SettingsService {
   async changeCouponStatus(id: string | number, isActive: boolean): Promise<ApiResponse<boolean>> {
     try {
       const res = await apiClient.post<any>(
-        `${apiConfig.endpoints.coupons.changeStatus}?id=${id}&isActive=${isActive}`
+        apiConfig.endpoints.coupons.changeStatus,
+        null,
+        {
+          params: { id: Number(id) || id, isActive },
+        }
       );
       if (res.success) {
         this.localCoupons = this.localCoupons.map((c) =>
@@ -430,7 +434,7 @@ class SettingsService {
         return {
           success: true,
           data: true,
-          message: "تم تغيير حالة الكوبون بنجاح",
+          message: isActive ? "تم تفعيل الكوبون بنجاح" : "تم إلغاء تفعيل الكوبون بنجاح",
         };
       }
     } catch (err) {
@@ -443,34 +447,15 @@ class SettingsService {
     return {
       success: true,
       data: true,
-      message: "تم تحديث حالة الكوبون",
+      message: isActive ? "تم تفعيل الكوبون" : "تم إلغاء تفعيل الكوبون",
     };
   }
 
+  /**
+   * Deactivate Coupon (instead of permanent delete)
+   */
   async deleteCoupon(id: string | number): Promise<ApiResponse<boolean>> {
-    try {
-      const res = await apiClient.post<any>(
-        `${apiConfig.endpoints.coupons.delete}?id=${id}`
-      );
-      if (res.success) {
-        this.localCoupons = this.localCoupons.filter((c) => String(c.id) !== String(id));
-        return {
-          success: true,
-          data: true,
-          message: "تم حذف الكوبون بنجاح",
-        };
-      }
-    } catch (err) {
-      console.warn("API /Coupons/Delete failed:", err);
-      throw err;
-    }
-
-    this.localCoupons = this.localCoupons.filter((c) => String(c.id) !== String(id));
-    return {
-      success: true,
-      data: true,
-      message: "تم حذف الكوبون",
-    };
+    return this.changeCouponStatus(id, false);
   }
 
   // -------------------------------------------------------------
