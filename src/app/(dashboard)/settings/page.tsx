@@ -9,7 +9,6 @@ import {
   Sliders,
   Plus,
   Edit2,
-  Trash2,
   CheckCircle2,
   AlertCircle,
   Save,
@@ -40,7 +39,6 @@ import {
   ToggleSwitch,
   PlanModal,
   CouponModal,
-  ConfirmModal,
 } from "@/components";
 import { cn } from "@/core/utils/cn";
 
@@ -62,7 +60,6 @@ export default function SettingsPage() {
   const [coupons, setCoupons] = useState<CouponItem[]>([]);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState<boolean>(false);
   const [selectedCoupon, setSelectedCoupon] = useState<CouponItem | null>(null);
-  const [couponToDelete, setCouponToDelete] = useState<CouponItem | null>(null);
 
   // CMS State
   const [selectedSysPage, setSelectedSysPage] = useState<SysPageType>("privacy");
@@ -239,22 +236,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleDeleteCoupon = async () => {
-    if (!couponToDelete) return;
-    try {
-      const res = await settingsService.deleteCoupon(couponToDelete.id);
-      if (res.success) {
-        showToast("تم حذف الكوبون بنجاح");
-        await loadCoupons();
-      }
-    } catch (err) {
-      console.error("Failed to delete coupon:", err);
-      setErrorMsg("حدث خطأ أثناء حذف الكوبون");
-    } finally {
-      setCouponToDelete(null);
-    }
-  };
-
   // CMS Handlers
   const handleSaveCMS = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -375,13 +356,6 @@ export default function SettingsPage() {
             title="تعديل الكوبون"
           >
             <Edit2 className="h-3.5 w-3.5" />
-          </button>
-          <button
-            onClick={() => setCouponToDelete(item)}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-            title="حذف الكوبون"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       ),
@@ -902,17 +876,6 @@ export default function SettingsPage() {
         onClose={() => setIsCouponModalOpen(false)}
         onSave={handleSaveCoupon}
         coupon={selectedCoupon}
-      />
-
-      {/* Delete Coupon Confirm Modal */}
-      <ConfirmModal
-        isOpen={Boolean(couponToDelete)}
-        onClose={() => setCouponToDelete(null)}
-        onConfirm={handleDeleteCoupon}
-        title="تأكيد حذف الكوبون"
-        description={`هل أنت متأكد من رغبتك في حذف الكوبون "${couponToDelete?.code}" نهائياً؟`}
-        confirmText="حذف"
-        variant="danger"
       />
     </div>
   );

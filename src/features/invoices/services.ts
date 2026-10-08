@@ -60,6 +60,15 @@ const parsePaymentMethodLabel = (method?: string): string => {
   return String(method);
 };
 
+const isPhoneNumber = (val?: unknown): boolean => {
+  if (!val || typeof val !== "string") return false;
+  const trimmed = val.trim();
+  return trimmed.startsWith("+") || /^[0-9\s\-+()]{7,}$/.test(trimmed);
+};
+
+// In-memory cache for customer details
+const customerDetailsCache = new Map<string, { name: string; phone?: string }>();
+
 const normalizeInvoiceItem = (raw: unknown, index: number = 0): InvoiceItem => {
   if (!raw || typeof raw !== "object") {
     return {
@@ -121,18 +130,9 @@ const normalizeInvoice = (raw: unknown, index: number = 0): Invoice => {
     `#${id.slice(0, 8)}`
   );
 
-  const customerName = String(
-    r.customerName ||
-    r.customer_Name ||
-    r.userName ||
-    r.user_Name ||
-    r.buyerName ||
-    (r.user && typeof r.user === "object" ? (r.user as Record<string, unknown>).userName : "") ||
-    (r.buyer && typeof r.buyer === "object" ? (r.buyer as Record<string, unknown>).userName : "") ||
-    "مستخدم المنصة"
-  );
+  const userId = String(r.user_Id || r.userId || r.customerId || (r.user && typeof r.user === "object" ? (r.user as Record<string, unknown>).id : "") || "");
 
-  const customerPhone = String(
+  let customerPhone = String(
     r.customerPhone ||
     r.customer_Phone ||
     r.phoneNumber ||
@@ -141,6 +141,49 @@ const normalizeInvoice = (raw: unknown, index: number = 0): Invoice => {
     (r.user && typeof r.user === "object" ? (r.user as Record<string, unknown>).phoneNumber : "") ||
     ""
   );
+
+  const rawCandidateName = String(
+    r.fullName ||
+    r.full_Name ||
+    r.name ||
+    r.customerName ||
+    r.customer_Name ||
+    r.buyerName ||
+    (r.user && typeof r.user === "object" ? ((r.user as Record<string, unknown>).fullName || (r.user as Record<string, unknown>).name) : "") ||
+    (r.buyer && typeof r.buyer === "object" ? ((r.buyer as Record<string, unknown>).fullName || (r.buyer as Record<string, unknown>).name) : "") ||
+    ""
+  );
+
+  const rawUserName = String(
+    r.userName ||
+    r.user_Name ||
+    (r.user && typeof r.user === "object" ? (r.user as Record<string, unknown>).userName : "") ||
+    (r.buyer && typeof r.buyer === "object" ? (r.buyer as Record<string, unknown>).userName : "") ||
+    ""
+  );
+
+  if (isPhoneNumber(rawUserName) && !customerPhone) {
+    customerPhone = rawUserName.trim();
+  }
+
+  let customerName = "";
+  if (rawCandidateName && !isPhoneNumber(rawCandidateName)) {
+    customerName = rawCandidateName.trim();
+  } else if (rawUserName && !isPhoneNumber(rawUserName)) {
+    customerName = rawUserName.trim();
+  }
+
+  if (!customerName && userId && customerDetailsCache.has(userId)) {
+    const cached = customerDetailsCache.get(userId);
+    if (cached) {
+      customerName = cached.name;
+      if (!customerPhone && cached.phone) customerPhone = cached.phone;
+    }
+  }
+
+  if (!customerName) {
+    customerName = customerPhone ? "مستخدم المنصة" : "عميل";
+  }
 
   const sellerName = String(
     r.sellerName ||
@@ -206,7 +249,7 @@ const normalizeInvoice = (raw: unknown, index: number = 0): Invoice => {
     transactionId: r.transactionId ? String(r.transactionId) : undefined,
     orderId: r.orderId ? String(r.orderId) : undefined,
     customerName,
-    customerPhone,
+    customerPhone: customerPhone || undefined,
     customerEmail: r.customerEmail ? String(r.customerEmail) : undefined,
     sellerName,
     sellerPhone: r.sellerPhone ? String(r.sellerPhone) : undefined,
@@ -277,6 +320,39 @@ class InvoicesService {
             total = Number(d.totalCount ?? d.total ?? d.payments.length);
           }
         }
+      }
+
+      // Enrich customer names from details API in parallel if user_Id is available and not in cache
+      const missingUserIds = Array.from(
+        new Set(
+          rawList
+            .map((item: any) => String(item?.user_Id || item?.userId || item?.customerId || ""))
+            .filter((uid) => uid && !customerDetailsCache.has(uid))
+        )
+      );
+
+      if (missingUserIds.length > 0) {
+        await Promise.allSettled(
+          missingUserIds.map(async (uid) => {
+            try {
+              const uRes = await apiClient.get<Record<string, unknown>>(
+                apiConfig.endpoints.users.customerDetails,
+                { params: { userId: uid } }
+              );
+              const uData = (uRes?.data || uRes) as Record<string, unknown>;
+              const profile = (uData.data || uData.value || uData) as Record<string, unknown>;
+              if (profile && typeof profile === "object") {
+                const name = String(profile.fullName || profile.name || profile.userName || "").trim();
+                const phone = String(profile.phoneNumber || profile.phone || "").trim();
+                if (name && !isPhoneNumber(name)) {
+                  customerDetailsCache.set(uid, { name, phone: phone || undefined });
+                }
+              }
+            } catch {
+              // Ignore background fetch error
+            }
+          })
+        );
       }
 
       const items = rawList.map((item, idx) => normalizeInvoice(item, idx));
