@@ -81,23 +81,24 @@ export default function SuppliesSellersPage() {
   });
 
   // Load KPI Stats, Filter Tabs, and Stat Cards config from service
-  useEffect(() => {
-    async function loadMetadata() {
-      try {
-        const [statsRes, tabsRes, cardsRes] = await Promise.all([
-          listingsService.getSuppliesSellersStats(),
-          listingsService.getFilterTabs(),
-          listingsService.getStatCardsConfig(),
-        ]);
-        if (statsRes.success && statsRes.data) setStats(statsRes.data);
-        if (tabsRes.success && tabsRes.data) setFilterTabs(tabsRes.data);
-        if (cardsRes.success && cardsRes.data) setStatCardsConfig(cardsRes.data);
-      } catch (err) {
-        console.error("Failed to load metadata:", err);
-      }
+  const loadMetadata = useCallback(async () => {
+    try {
+      const [statsRes, tabsRes, cardsRes] = await Promise.all([
+        listingsService.getSuppliesSellersStats(),
+        listingsService.getFilterTabs(),
+        listingsService.getStatCardsConfig(),
+      ]);
+      if (statsRes.success && statsRes.data) setStats(statsRes.data);
+      if (tabsRes.success && tabsRes.data) setFilterTabs(tabsRes.data);
+      if (cardsRes.success && cardsRes.data) setStatCardsConfig(cardsRes.data);
+    } catch (err) {
+      console.error("Failed to load metadata:", err);
     }
-    loadMetadata();
   }, []);
+
+  useEffect(() => {
+    loadMetadata();
+  }, [loadMetadata]);
 
   // Load Supplies Sellers Table Data from service
   const loadSellers = useCallback(async () => {
