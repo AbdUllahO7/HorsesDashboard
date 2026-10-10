@@ -76,15 +76,57 @@ export const listingsService = {
 
   /**
    * Get livestock sellers KPI summary stats
-   * Endpoint: GET /api/Users/DashboardStats
+   * Endpoint: GET /api/Users/GetStableOwners & GET /api/Users/DashboardStats
    */
   getLivestockSellersStats: async (): Promise<ApiResponse<SellersStats>> => {
     try {
-      const response = await apiClient.get<Record<string, unknown>>(apiConfig.endpoints.users.dashboardStats);
-      if (response && (response.data || response.success)) {
-        const raw = (response.data || response) as Record<string, unknown>;
-        const total = Number(raw.livestockSellersCount ?? raw.stableOwnersCount ?? raw.stablesCount ?? 0);
-        const active = Number(raw.activeLivestockSellersCount ?? raw.activeStableOwners ?? total);
+      // 1. Fetch stable owners list to compute status metrics directly from API
+      const response = await apiClient.get<unknown>(apiConfig.endpoints.users.stableOwners, {
+        params: { PageNumber: 1, PageSize: 1000 },
+      });
+
+      let rawList: Record<string, unknown>[] = [];
+      if (response && response.data) {
+        if (Array.isArray(response.data)) {
+          rawList = response.data as Record<string, unknown>[];
+        } else if (typeof response.data === "object") {
+          const obj = response.data as Record<string, unknown>;
+          if (Array.isArray(obj.items)) rawList = obj.items as Record<string, unknown>[];
+          else if (Array.isArray(obj.data)) rawList = obj.data as Record<string, unknown>[];
+        }
+      }
+
+      if (rawList.length > 0) {
+        let active = 0;
+        let inactive = 0;
+        let blocked = 0;
+
+        rawList.forEach((item) => {
+          const status = listingsService.mapBackendToStatus(item.status ?? item.profileStatus ?? item.isActive);
+          if (status === "active") active++;
+          else if (status === "inactive") inactive++;
+          else if (status === "blocked") blocked++;
+          else active++;
+        });
+
+        return {
+          success: true,
+          data: {
+            totalSellers: rawList.length,
+            activeSellers: active,
+            inactiveSellers: inactive,
+            blockedSellers: blocked,
+          },
+          message: "Livestock sellers stats loaded",
+        };
+      }
+
+      // 2. Fallback to DashboardStats
+      const dashRes = await apiClient.get<Record<string, unknown>>(apiConfig.endpoints.users.dashboardStats);
+      if (dashRes && (dashRes.data || dashRes.success)) {
+        const raw = (dashRes.data || dashRes) as Record<string, unknown>;
+        const total = Number(raw.livestockSellersCount ?? raw.stableOwnersCount ?? raw.stablesCount ?? raw.activeSellers ?? 0);
+        const active = Number(raw.activeLivestockSellersCount ?? raw.activeStableOwners ?? raw.activeSellers ?? total);
         const inactive = Number(raw.inactiveLivestockSellersCount ?? 0);
         const blocked = Number(raw.blockedLivestockSellersCount ?? raw.blockedUsersCount ?? 0);
 
@@ -96,9 +138,10 @@ export const listingsService = {
             inactiveSellers: inactive,
             blockedSellers: blocked,
           },
-          message: "Livestock sellers stats loaded",
+          message: "Livestock sellers stats loaded from dashboard stats",
         };
       }
+
       return {
         success: true,
         data: {
@@ -109,7 +152,8 @@ export const listingsService = {
         },
         message: "Loaded default stats",
       };
-    } catch {
+    } catch (err) {
+      console.error("Failed to load livestock sellers stats:", err);
       return {
         success: true,
         data: {
@@ -378,13 +422,55 @@ export const listingsService = {
 
   /**
    * Get Supplies Sellers KPI summary stats
-   * Endpoint: GET /api/Users/DashboardStats
+   * Endpoint: GET /api/Users/GetStoreOwners & GET /api/Users/DashboardStats
    */
   getSuppliesSellersStats: async (): Promise<ApiResponse<SellersStats>> => {
     try {
-      const response = await apiClient.get<Record<string, unknown>>(apiConfig.endpoints.users.dashboardStats);
-      if (response && (response.data || response.success)) {
-        const raw = (response.data || response) as Record<string, unknown>;
+      // 1. Fetch store owners list to compute status metrics directly from API
+      const response = await apiClient.get<unknown>(apiConfig.endpoints.users.storeOwners, {
+        params: { PageNumber: 1, PageSize: 1000 },
+      });
+
+      let rawList: Record<string, unknown>[] = [];
+      if (response && response.data) {
+        if (Array.isArray(response.data)) {
+          rawList = response.data as Record<string, unknown>[];
+        } else if (typeof response.data === "object") {
+          const obj = response.data as Record<string, unknown>;
+          if (Array.isArray(obj.items)) rawList = obj.items as Record<string, unknown>[];
+          else if (Array.isArray(obj.data)) rawList = obj.data as Record<string, unknown>[];
+        }
+      }
+
+      if (rawList.length > 0) {
+        let active = 0;
+        let inactive = 0;
+        let blocked = 0;
+
+        rawList.forEach((item) => {
+          const status = listingsService.mapBackendToStatus(item.status ?? item.profileStatus ?? item.isActive);
+          if (status === "active") active++;
+          else if (status === "inactive") inactive++;
+          else if (status === "blocked") blocked++;
+          else active++;
+        });
+
+        return {
+          success: true,
+          data: {
+            totalSellers: rawList.length,
+            activeSellers: active,
+            inactiveSellers: inactive,
+            blockedSellers: blocked,
+          },
+          message: "Supplies sellers stats loaded",
+        };
+      }
+
+      // 2. Fallback to DashboardStats
+      const dashRes = await apiClient.get<Record<string, unknown>>(apiConfig.endpoints.users.dashboardStats);
+      if (dashRes && (dashRes.data || dashRes.success)) {
+        const raw = (dashRes.data || dashRes) as Record<string, unknown>;
         const total = Number(raw.suppliesSellersCount ?? raw.storeOwnersCount ?? raw.storesCount ?? 0);
         const active = Number(raw.activeSuppliesSellersCount ?? raw.activeStoreOwners ?? total);
         const inactive = Number(raw.inactiveSuppliesSellersCount ?? 0);
@@ -398,9 +484,10 @@ export const listingsService = {
             inactiveSellers: inactive,
             blockedSellers: blocked,
           },
-          message: "Supplies sellers stats loaded",
+          message: "Supplies sellers stats loaded from dashboard stats",
         };
       }
+
       return {
         success: true,
         data: {
@@ -411,7 +498,8 @@ export const listingsService = {
         },
         message: "Loaded default stats",
       };
-    } catch {
+    } catch (err) {
+      console.error("Failed to load supplies sellers stats:", err);
       return {
         success: true,
         data: {
@@ -427,24 +515,27 @@ export const listingsService = {
 
   /**
    * Get Supplies Sellers list (بائعي المستلزمات والمتاجر)
-   * Endpoint: POST /api/Users/GetStoreOwners
+   * Endpoint: GET /api/Users/GetStoreOwners
    */
   getSuppliesSellers: async (
     params?: LivestockSellerFilterParams
   ): Promise<ApiResponse<PaginatedData<SuppliesSeller>>> => {
     try {
-      const bodyPayload = {
-        pageNumber: params?.page || 1,
-        pageSize: params?.limit || 10,
-        search: params?.search || undefined,
-        sortBy: params?.sortBy || undefined,
-        sortDirection: params?.sortOrder || undefined,
-        profileStatus: listingsService.mapStatusToBackend(params?.statusTab),
+      const queryParams: Record<string, string | number | boolean | undefined> = {
+        PageNumber: params?.page || 1,
+        PageSize: params?.limit || 10,
+        Search: params?.search || undefined,
+        SortBy: params?.sortBy || undefined,
+        SortDirection: params?.sortOrder || undefined,
       };
 
-      const response = await apiClient.post<unknown>(
+      if (params?.statusTab && params.statusTab !== "all") {
+        queryParams.ProfileStatus = listingsService.mapStatusToBackend(params.statusTab);
+      }
+
+      const response = await apiClient.get<unknown>(
         apiConfig.endpoints.users.storeOwners,
-        bodyPayload
+        { params: queryParams }
       );
 
       let rawList: Record<string, unknown>[] = [];
