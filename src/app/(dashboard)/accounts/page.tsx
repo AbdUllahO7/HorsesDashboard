@@ -10,6 +10,7 @@ import {
   Clock,
   ShieldCheck,
   AlertCircle,
+  Download,
 } from "lucide-react";
 import { accountsService } from "@/features/accounts/services";
 import { UserAccountItem } from "@/features/accounts/types";
@@ -161,6 +162,55 @@ export default function UserAccountsReviewPage() {
       setActionLoading(false);
       setRejectingAccount(null);
     }
+  };
+
+  // Handle Bulk Approve
+  const handleBulkApprove = async (selectedIds: string[], clearSelection: () => void) => {
+    if (!selectedIds.length) return;
+    try {
+      setActionLoading(true);
+      let successCount = 0;
+      for (const id of selectedIds) {
+        try {
+          const res = await accountsService.approveAccount(id);
+          if (res.success) successCount++;
+        } catch (e) {
+          console.debug("Failed to approve in bulk for ID:", id, e);
+        }
+      }
+      showToast(`تمت الموافقة بنجاح على ${successCount} من أصل ${selectedIds.length} حساب`, "success");
+      clearSelection();
+      loadAccounts();
+    } catch (err) {
+      console.error("Bulk approve error:", err);
+      showToast("حدث خطأ أثناء تنفيذ الاعتماد المجمع", "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Handle Export Selected
+  const handleExportSelected = (selectedItems: UserAccountItem[]) => {
+    if (!selectedItems.length) return;
+    const headers = ["المعرف", "الاسم", "رقم الهاتف", "الدور", "الحالة", "تاريخ الطلب"];
+    const rows = selectedItems.map((u) => [
+      u.id,
+      `"${u.name || ""}"`,
+      `"${u.phone || ""}"`,
+      `"${u.roleName || ""}"`,
+      `"${u.status || ""}"`,
+      `"${u.createdAt || ""}"`,
+    ]);
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `selected_accounts_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(`تم تصدير ${selectedItems.length} حساب بصيغة CSV بنجاح`, "success");
   };
 
   const getRoleBadge = (role?: string) => {
@@ -428,7 +478,7 @@ export default function UserAccountsReviewPage() {
             {t("userAccounts.listTitle", "قائمة طلبات الحسابات والتوثيق")}
           </h1>
           <p className="text-xs text-[#8E8E93] mt-0.5">
-            مراجعة هويات ومستندات أصحاب المرابط، المتاجر، المعلنين والعملاء واعتمادها
+            مراجعة هويات ومستندات أصحاب العزب، المتاجر، المعلنين والعملاء واعتمادها
           </p>
         </div>
 
@@ -473,13 +523,35 @@ export default function UserAccountsReviewPage() {
           sortLabel="فرز"
         />
 
-        {/* Dynamic Data Table */}
+        {/* Dynamic Data Table with Bulk Actions & Shimmer Skeletons */}
         <DataTable
           columns={columns}
           data={accounts}
           loading={loading}
           keyExtractor={(item) => item.id}
           emptyMessage="لا توجد طلبات توثيق مسجلة في هذا القسم"
+          selectable={true}
+          renderBulkActions={(selectedIds, selectedItems, clearSelection) => (
+            <>
+              <button
+                type="button"
+                onClick={() => handleBulkApprove(selectedIds, clearSelection)}
+                disabled={actionLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+              >
+                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>اعتماد الكل ({selectedIds.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleExportSelected(selectedItems)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-[#EFE9E0] text-xs font-semibold transition-all cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-[#C88F45]" />
+                <span>تصدير CSV</span>
+              </button>
+            </>
+          )}
         />
 
         {/* Pagination */}
@@ -487,7 +559,7 @@ export default function UserAccountsReviewPage() {
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
-          className="mt-6 border-t border-[#EDEEF2] pt-4"
+          className="mt-6 border-t border-[#ECE4D9] pt-4"
         />
       </div>
 

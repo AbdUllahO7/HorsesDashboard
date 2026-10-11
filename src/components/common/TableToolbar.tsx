@@ -57,7 +57,7 @@ export function TableToolbar<T = string>({
             type="button"
             onClick={onSortClick}
             title="فرز النتائج"
-            className="flex items-center gap-1.5 rounded-md border border-[#EADBBD] bg-[#FAF4E6] px-3.5 py-1.5 text-xs font-bold text-[#A6883C] hover:bg-[#F3E7C9] transition-colors cursor-pointer shadow-2xs"
+            className="flex items-center gap-1.5 rounded-xl border border-[#E0CEBE] bg-[#F8F1EA] px-3.5 py-2 text-xs font-bold text-[#8B5E3C] hover:bg-[#F0E3D3] transition-colors cursor-pointer shadow-2xs"
           >
             <ArrowUpDown className="h-3.5 w-3.5" />
             <span>{resolvedSortLabel}</span>
@@ -71,9 +71,9 @@ export function TableToolbar<T = string>({
               value={searchQuery}
               onChange={(e) => onSearchChange?.(e.target.value)}
               placeholder={resolvedSearchPlaceholder}
-              className="w-full rounded-md border border-[#E5E7EB] bg-white py-1.5 pr-3 pl-9 text-xs text-[#1E1E2D] placeholder-[#9CA3AF] outline-none focus:border-[#B59E5F] transition-all"
+              className="w-full rounded-xl border border-[#ECE4D9] bg-white py-2 pr-3.5 pl-9 text-xs text-[#2F241C] placeholder-[#8F7E72] outline-none focus:border-[#8B5E3C] focus:ring-2 focus:ring-[#8B5E3C]/15 transition-all shadow-2xs"
             />
-            <Search className="absolute left-2.5 top-2 h-4 w-4 text-[#9CA3AF]" />
+            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#8F7E72]" />
           </div>
         )}
 
@@ -91,18 +91,18 @@ export function TableToolbar<T = string>({
                 key={String(tab.id)}
                 onClick={() => onTabChange?.(tab.id)}
                 className={cn(
-                  "px-6.5 py-3.5 text-xs font-semibold rounded-sm border transition-all cursor-pointer whitespace-nowrap",
+                  "px-4 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer whitespace-nowrap shadow-2xs",
                   isActive
-                    ? "bg-[#B8860B] text-white border-[#B8860B] shadow-2xs"
-                    : "border-[#E5E7EB] bg-white text-[#4A4E5A] hover:bg-[#F9FAFB]"
+                    ? "bg-[#8B5E3C] text-white border-[#8B5E3C] shadow-xs"
+                    : "border-[#ECE4D9] bg-white text-[#5E4E42] hover:bg-[#FAF4EB] hover:text-[#8B5E3C]"
                 )}
               >
                 <span>{tab.label}</span>
                 {tab.count !== undefined && (
                   <span
                     className={cn(
-                      "mr-1.5 rounded-full px-1.5 py-0.5 text-[10px]",
-                      isActive ? "bg-white/20 text-white" : "bg-stone-100 text-[#4A4E5A]"
+                      "mr-1.5 rounded-full px-2 py-0.5 text-[10px] font-extrabold",
+                      isActive ? "bg-white/20 text-white" : "bg-[#FAF4EB] text-[#8B5E3C]"
                     )}
                   >
                     {tab.count}

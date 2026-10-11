@@ -28,3 +28,5 @@ export * from "./ProductDetailsModal";
 export * from "./PlanModal";
 export * from "./CouponModal";
 export * from "./SendNotificationModal";
+export * from "./HorseProductCard";
+export * from "./MediaLightboxModal";
