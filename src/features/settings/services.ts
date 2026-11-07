@@ -69,6 +69,7 @@ const normalizeCoupon = (raw: unknown, index: number = 0): CouponItem => {
   const rawExpire = r.expireDate || r.expiryDate;
   const expireDate = rawExpire ? String(rawExpire) : undefined;
   const maxUsage = r.maxUsage !== undefined ? Number(r.maxUsage) : (r.usageLimit !== undefined ? Number(r.usageLimit) : undefined);
+  const maxUsesPerUser = r.maxUsesPerUser !== undefined ? Number(r.maxUsesPerUser) : (r.maxUsagePerUser !== undefined ? Number(r.maxUsagePerUser) : undefined);
   const usedCount = Number(r.usedCount ?? r.usageCount ?? r.timesUsed ?? 0);
   const isActive = r.isActive !== undefined ? Boolean(r.isActive) : (r.status === 1 || r.status === "active" || true);
 
@@ -83,6 +84,7 @@ const normalizeCoupon = (raw: unknown, index: number = 0): CouponItem => {
     expiryDate: expireDate ? expireDate.split("T")[0] : undefined,
     maxUsage,
     usageLimit: maxUsage,
+    maxUsesPerUser,
     usedCount,
     usageCount: usedCount,
     startDate: r.startDate ? String(r.startDate).split("T")[0] : undefined,
@@ -296,6 +298,7 @@ class SettingsService {
         ? (rawExpire.includes("T") ? rawExpire : new Date(rawExpire).toISOString())
         : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       const maxUsage = Number(data.maxUsage ?? data.usageLimit ?? 100);
+      const maxUsesPerUser = data.maxUsesPerUser !== undefined ? Number(data.maxUsesPerUser) : undefined;
       const usedCount = Number(data.usedCount ?? 0);
 
       const payload = {
@@ -304,6 +307,7 @@ class SettingsService {
         isPercentage,
         expireDate,
         maxUsage,
+        maxUsesPerUser,
         usedCount,
       };
 
@@ -360,6 +364,7 @@ class SettingsService {
         ? (rawExpire.includes("T") ? rawExpire : new Date(rawExpire).toISOString())
         : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       const maxUsage = Number(data.maxUsage ?? data.usageLimit ?? 100);
+      const maxUsesPerUser = data.maxUsesPerUser !== undefined ? Number(data.maxUsesPerUser) : undefined;
       const usedCount = Number(data.usedCount ?? 0);
 
       const payload = {
@@ -370,6 +375,7 @@ class SettingsService {
         isPercentage,
         expireDate,
         maxUsage,
+        maxUsesPerUser,
         usedCount,
       };
 

@@ -3,6 +3,7 @@ export interface DashboardOverviewStats {
   suppliesSellersCount: number;
   customersCount: number;
   activeAuctionsCount: number;
+  cashCollected?: number;
   totalRevenue?: number;
   activeListingsCount?: number;
 }
@@ -11,7 +12,7 @@ export interface AnalyticsStatCardItem {
   id: string;
   label: string;
   countKey: keyof DashboardOverviewStats;
-  iconName: "Users" | "UsersRound" | "UserCheck" | "Gavel";
+  iconName: "Users" | "UsersRound" | "UserCheck" | "Gavel" | "Banknote";
 }
 
 export interface PlatformGrowthDataPoint {

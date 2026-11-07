@@ -45,6 +45,7 @@ export function CouponModal({ isOpen, onClose, onSave, coupon }: CouponModalProp
       const rawExp = coupon.expireDate || coupon.expiryDate || "";
       const expDate = rawExp ? rawExp.split("T")[0] : "";
       const maxU = coupon.maxUsage ?? coupon.usageLimit ?? 100;
+      const maxUser = coupon.maxUsesPerUser ?? 1;
       const usedC = coupon.usedCount ?? coupon.usageCount ?? 0;
 
       setFormData({
@@ -57,6 +58,7 @@ export function CouponModal({ isOpen, onClose, onSave, coupon }: CouponModalProp
         expiryDate: expDate,
         maxUsage: maxU,
         usageLimit: maxU,
+        maxUsesPerUser: maxUser,
         usedCount: usedC,
         isActive: coupon.isActive ?? true,
       });
@@ -71,6 +73,7 @@ export function CouponModal({ isOpen, onClose, onSave, coupon }: CouponModalProp
         expiryDate: "",
         maxUsage: 100,
         usageLimit: 100,
+        maxUsesPerUser: 1,
         usedCount: 0,
         isActive: true,
       });
@@ -110,6 +113,7 @@ export function CouponModal({ isOpen, onClose, onSave, coupon }: CouponModalProp
           isPercentage: isPerc,
           expireDate: expireDateIso,
           maxUsage: Number(formData.maxUsage ?? formData.usageLimit ?? 100),
+          maxUsesPerUser: formData.maxUsesPerUser !== undefined ? Number(formData.maxUsesPerUser) : 1,
           usedCount: Number(formData.usedCount ?? 0),
           isActive: formData.isActive ?? true,
         },
@@ -218,7 +222,21 @@ export function CouponModal({ isOpen, onClose, onSave, coupon }: CouponModalProp
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#1E1E2D] mb-1.5">أقصى عدد لاستخدام الكوبون (maxUsage)</label>
+              <label className="block text-xs font-bold text-[#1E1E2D] mb-1.5">تاريخ الانتهاء (expireDate)</label>
+              <input
+                type="date"
+                value={formData.expireDate || formData.expiryDate || ""}
+                onChange={(e) => setFormData({ ...formData, expireDate: e.target.value, expiryDate: e.target.value })}
+                className="w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-xs text-[#1E1E2D] outline-none focus:border-[#B8860B] transition-colors"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-[#1E1E2D] mb-1.5">
+                الحد الأقصى الإجمالي (maxUsage)
+              </label>
               <input
                 type="number"
                 value={formData.maxUsage ?? formData.usageLimit ?? ""}
@@ -231,16 +249,23 @@ export function CouponModal({ isOpen, onClose, onSave, coupon }: CouponModalProp
                 min={1}
               />
             </div>
-          </div>
 
-          <div>
-            <label className="block text-xs font-bold text-[#1E1E2D] mb-1.5">تاريخ الانتهاء (expireDate)</label>
-            <input
-              type="date"
-              value={formData.expireDate || formData.expiryDate || ""}
-              onChange={(e) => setFormData({ ...formData, expireDate: e.target.value, expiryDate: e.target.value })}
-              className="w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-xs text-[#1E1E2D] outline-none focus:border-[#B8860B] transition-colors"
-            />
+            <div>
+              <label className="block text-xs font-bold text-[#1E1E2D] mb-1.5">
+                الحد لكل مستخدم (MaxUsesPerUser) *
+              </label>
+              <input
+                type="number"
+                value={formData.maxUsesPerUser ?? 1}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  setFormData({ ...formData, maxUsesPerUser: v });
+                }}
+                placeholder="مثال: 1"
+                className="w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-xs text-[#1E1E2D] placeholder-[#9CA3AF] outline-none focus:border-[#B8860B] transition-colors"
+                min={1}
+              />
+            </div>
           </div>
 
           <div className="pt-1">

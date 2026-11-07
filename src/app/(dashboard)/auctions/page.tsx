@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Eye, Gavel, Radio, CheckCircle2, Clock, Trash2, ShieldAlert } from "lucide-react";
+import { Eye, Gavel, Radio, CheckCircle2, Clock, ShieldAlert } from "lucide-react";
 import {
   auctionsService,
   auctionFilterTabs,
@@ -184,34 +184,6 @@ export default function AuctionsPage() {
     });
   };
 
-  // Handle Delete Auction
-  const handleDeleteAuction = (auction: AuctionTableItem) => {
-    setErrorMessage(null);
-    setConfirmDialog({
-      isOpen: true,
-      variant: "danger",
-      title: "تأكيد حذف المزاد",
-      description: `هل أنت متأكد من حذف المزاد "${auction.title}" بشكل نهائي؟`,
-      confirmText: "تأكيد الحذف",
-      onConfirm: async () => {
-        try {
-          setActionLoading(true);
-          const res = await auctionsService.deleteAuction(auction.id);
-          if (res.success) {
-            setAuctions((prev) => prev.filter((a) => a.id !== auction.id));
-            setSelectedAuction(null);
-            loadMetadata();
-          } else {
-            setErrorMessage(res.message || "تعذر حذف المزاد (403 Forbidden)");
-          }
-        } finally {
-          setActionLoading(false);
-          setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
-        }
-      },
-    });
-  };
-
   // Handle Toggle Live Stream
   const handleToggleAuctionLive = async (auction: AuctionTableItem) => {
     const nextState = !auction.isLiveEnabled;
@@ -343,18 +315,20 @@ export default function AuctionsPage() {
             <Eye className="h-4 w-4" />
           </button>
 
-          {/* Delete Action Button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteAuction(auction);
-            }}
-            title="حذف المزاد"
-            className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FEF2F2] text-[#EF4444] hover:bg-[#FEE2E2] transition-colors cursor-pointer"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {/* Stop Auction Action (Auctions/Delete was deprecated in favor of StopAuction) */}
+          {auction.status === "active" && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleStopAuction(auction);
+              }}
+              title="إيقاف المزاد"
+              className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FFFBEB] text-[#D97706] hover:bg-[#FEF3C7] transition-colors cursor-pointer"
+            >
+              <ShieldAlert className="h-4 w-4" />
+            </button>
+          )}
 
           {/* Live / Activation Toggle */}
           <ToggleSwitch
@@ -458,7 +432,6 @@ export default function AuctionsPage() {
         }}
         onAccept={handleAcceptAuction}
         onStop={handleStopAuction}
-        onDelete={handleDeleteAuction}
         onToggleLive={handleToggleAuctionLive}
         errorMessage={errorMessage}
         onClearError={() => setErrorMessage(null)}

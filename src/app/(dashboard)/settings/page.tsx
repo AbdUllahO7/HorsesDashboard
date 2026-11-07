@@ -306,7 +306,7 @@ export default function SettingsPage() {
     },
     {
       key: "usageCount",
-      header: "مرات الاستخدام",
+      header: "الاستخدام الإجمالي",
       align: "center",
       render: (item) => {
         const used = item.usedCount ?? item.usageCount ?? 0;
@@ -317,6 +317,16 @@ export default function SettingsPage() {
           </span>
         );
       },
+    },
+    {
+      key: "maxUsesPerUser",
+      header: "الحد لكل مستخدم",
+      align: "center",
+      render: (item) => (
+        <span className="text-xs font-semibold text-[#1E1E2D] bg-[#F8F9FA] px-2 py-0.5 rounded border border-[#EDEEF2]">
+          {item.maxUsesPerUser ? `${item.maxUsesPerUser} مرة` : "1 مرة"}
+        </span>
+      ),
     },
     {
       key: "expiryDate",

@@ -98,6 +98,11 @@ export class ApiClient {
         window.dispatchEvent(new CustomEvent("admin:unauthorized"));
       }
 
+      // Handle 409 Conflict (Concurrent Admin Action / Resource Conflict)
+      if (response.status === 409 && typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("admin:conflict"));
+      }
+
       const responseData = await response.json().catch(() => null);
 
       // Check for 405 session termination inside response body as per backend contract
@@ -114,8 +119,12 @@ export class ApiClient {
 
       if (!response.ok) {
         const errorData = responseData as ApiErrorResponse | null;
+        const fallbackMsg = response.status === 409
+          ? "حدث تعارض في البيانات (409): قام مشرف آخر بتعديل هذا السجل أو العملية قيد المعالجة، يرجى إعادة التحميل"
+          : `HTTP Error ${response.status}: ${response.statusText}`;
+
         throw new ApiError(
-          errorData?.message || `HTTP Error ${response.status}: ${response.statusText}`,
+          errorData?.message || fallbackMsg,
           response.status,
           errorData?.errors
         );
@@ -185,6 +194,44 @@ export class ApiClient {
 
   delete<T>(endpoint: string, options?: RequestOptions): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { ...options, method: "DELETE" });
+  }
+
+  async getBlob(endpoint: string, options: RequestOptions = {}): Promise<Blob> {
+    const { params, headers, token, skipAuth = false, body, ...customConfig } = options;
+    const fullUrl = this.buildUrl(endpoint, params);
+    const authToken = token || (!skipAuth ? this.getToken() : null);
+
+    const requestHeaders: Record<string, string> = {
+      Accept: "*/*",
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...(headers as Record<string, string>),
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), apiConfig.timeout);
+
+    try {
+      const response = await fetch(fullUrl, {
+        ...customConfig,
+        method: "GET",
+        headers: requestHeaders,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        if (response.status === 401 && typeof window !== "undefined") {
+          document.cookie = `${apiConfig.cookieNames.auth}=; Max-Age=0; path=/;`;
+          window.dispatchEvent(new CustomEvent("admin:unauthorized"));
+        }
+        throw new ApiError(`فشل تحميل الملف: ${response.status}`, response.status);
+      }
+      return await response.blob();
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err instanceof ApiError) throw err;
+      throw new ApiError("فشل تحميل الملف كـ blob", 500);
+    }
   }
 }
 

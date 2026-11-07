@@ -22,7 +22,6 @@ export const apiConfig = {
       create: "/Auctions/Create",
       stop: "/Auctions/StopAuction",
       accept: "/Auctions/AcceptAuction",
-      delete: "/Auctions/Delete",
     },
     listings: {
       list: "/Products/GetProducts",
@@ -53,8 +52,8 @@ export const apiConfig = {
       storeOwners: "/Users/GetStoreOwners",
       stores: "/Users/GetStores",
       businessDetails: "/Users/GetBusinessProfileDetails",
-      advertiserDetails: "/Users/GetAdvertiserDetails",
       customerDetails: "/Users/GetCustomerDetails",
+      customerPublicProfile: (userId: string) => `/Users/GetCustomerPublicProfile?userId=${userId}`,
       updateStatus: (id?: string) => id ? `/Users/UpdateUserStatus?userId=${id}` : "/Users/UpdateUserStatus",
       updateFeatures: "/Users/UpdateBusinessFeatures",
       updateBusinessProfile: "/Users/UpdateBusinessProfile",
@@ -62,6 +61,7 @@ export const apiConfig = {
       verificationRequests: "/Users/GetVerificationRequests",
       approveVerification: "/Users/ApproveVerification",
       rejectVerification: "/Users/RejectVerification",
+      verificationFile: (fileId: string) => `/Users/GetVerificationFile?fileId=${fileId}`,
     },
     accounting: {
       dashboard: "/Admin/GetAccountingDashboard",
@@ -73,6 +73,10 @@ export const apiConfig = {
       list: "/Payments/GetAllPayments",
       details: "/Payments/GetPaymentById",
       status: "/Payments/GetPaymentStatus",
+      checkStatus: "/Payments/CheckPaymentStatus",
+      createRenewalPayment: "/Payments/CreateRenewalPayment",
+      paymentsRequiringReview: "/Payments/GetPaymentsRequiringReview",
+      resolvePaymentReview: "/Payments/ResolvePaymentReview",
     },
     reviews: {
       list: "/Reviews/GetAllReviews",

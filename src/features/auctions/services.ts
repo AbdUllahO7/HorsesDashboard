@@ -623,35 +623,10 @@ export const auctionsService = {
   },
 
   /**
-   * Delete Auction
-   * Endpoint: POST /api/Auctions/Delete?id={id}
+   * Delete Auction (Deprecated: Backend removed /Auctions/Delete; StopAuction is used instead)
    */
   deleteAuction: async (id: string | number): Promise<ApiResponse<void>> => {
-    try {
-      await apiClient.post<void>(apiConfig.endpoints.auctions.delete, null, {
-        params: { id },
-      });
-      return {
-        success: true,
-        data: undefined as unknown as void,
-        message: "تم حذف المزاد بنجاح",
-      };
-    } catch (error: unknown) {
-      console.error("Failed to delete auction:", error);
-      const err = error as { message?: string; statusCode?: number; response?: { status?: number; data?: { message?: string } } };
-      const rawMsg = err?.response?.data?.message || err?.message;
-      const msg =
-        rawMsg && rawMsg !== "Error" && !rawMsg.includes("HTTP Error")
-          ? `حدث خطأ ما: ${rawMsg}`
-          : (err?.statusCode === 403 || err?.response?.status === 403
-            ? "حدث خطأ ما: غير مصرح بهذا الإجراء (403 Forbidden) - حذف المزاد متاح فقط لمالك المزاد (البائع)"
-            : "حدث خطأ ما أثناء حذف المزاد، يرجى المحاولة مرة أخرى");
-      return {
-        success: false,
-        data: undefined as unknown as void,
-        message: msg,
-      };
-    }
+    return auctionsService.stopAuction(id);
   },
 
   /**

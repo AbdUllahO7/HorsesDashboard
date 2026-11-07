@@ -202,7 +202,7 @@ export const ar = {
     title: "الإعلانات",
     listTitle: "قائمة الإعلانات",
     adName: "اسم الإعلان",
-    company: "الشركة / المعلن",
+    company: "الشركة / العميل",
     startDate: "تاريخ البدء",
     endDate: "تاريخ الانتهاء",
     status: "حالة الإعلان",

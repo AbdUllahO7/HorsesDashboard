@@ -10,6 +10,7 @@ import {
   Eye,
   RefreshCw,
   Inbox,
+  Banknote,
 } from "lucide-react";
 import { analyticsService } from "@/features/analytics/services";
 import {
@@ -89,6 +90,13 @@ export default function DashboardOverviewPage() {
       icon: Gavel,
       href: "/auctions",
     },
+    {
+      id: "cash-collected",
+      label: "المبالغ المحصلة نقدياً",
+      count: stats?.cashCollected !== undefined ? `${stats.cashCollected.toLocaleString()} د.ك` : "0 د.ك",
+      icon: Banknote,
+      href: "/accounting",
+    },
   ];
 
   return (
@@ -96,10 +104,10 @@ export default function DashboardOverviewPage() {
       {/* Top Bar with Page Title and Refresh Button */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-[#1E1E2D]">
+          <h1 className="text-xl font-bold text-[#2F241C]">
             {t("dashboard.title", "لوحة التحكم الرئيسية")}
           </h1>
-          <p className="text-xs text-[#8E8E93] mt-1">
+          <p className="text-xs text-[#8F7E72] mt-1">
             {t("dashboard.subtitle", "ملخص حركة ونشاط المنصة والمزادات والبائعين")}
           </p>
         </div>
@@ -107,15 +115,15 @@ export default function DashboardOverviewPage() {
           type="button"
           onClick={() => loadDashboardData(true)}
           disabled={loading || refreshing}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#EDEEF2] text-xs font-semibold text-[#4A4E5A] hover:text-[#1E1E2D] hover:bg-[#F3F4F8] transition-all shadow-2xs disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#ECE4D9] text-xs font-bold text-[#8B5E3C] hover:bg-[#FAF4EB] transition-all shadow-2xs disabled:opacity-50 cursor-pointer"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-[#B59E5F]" : ""}`} />
+          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-[#C88F45]" : ""}`} />
           <span>تحديث البيانات</span>
         </button>
       </div>
 
-      {/* 4 Dynamic Summary Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Dynamic Summary Metric Cards (Updated: CashCollected added, Advertisers excluded) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {statCardsConfig.map((card) => (
           <StatCard
             key={card.id}

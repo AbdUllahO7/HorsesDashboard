@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { notificationsService } from "@/features/notifications/services";
 import { NotificationItem, NotificationType } from "@/features/notifications/types";
+import { LiveUrgentAlerts } from "./LiveUrgentAlerts";
 
 export interface HeaderProps {
   onOpenMobileMenu: () => void;
@@ -116,7 +117,7 @@ export function Header({ onOpenMobileMenu, className }: HeaderProps) {
   return (
     <header
       className={cn(
-        "sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-[#EDEEF2] bg-white px-6 shadow-2xs",
+        "sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-[#ECE4D9] bg-white px-6 shadow-2xs",
         className
       )}
     >
@@ -124,7 +125,7 @@ export function Header({ onOpenMobileMenu, className }: HeaderProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={onOpenMobileMenu}
-          className="rounded-lg border border-[#EDEEF2] p-2 text-[#4A4E5A] hover:bg-[#F3F4F8] lg:hidden cursor-pointer"
+          className="rounded-xl border border-[#ECE4D9] p-2 text-[#5E4E42] hover:bg-[#FAF4EB] lg:hidden cursor-pointer"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -134,13 +135,13 @@ export function Header({ onOpenMobileMenu, className }: HeaderProps) {
             type="text"
             placeholder={t("common.searchPlaceholder")}
             className={cn(
-              "w-full rounded-xl border-none bg-[#F3F4F8] py-2 text-xs text-[#1E1E2D] placeholder-[#A0A4B5] outline-none focus:ring-1 focus:ring-[#B59E5F] transition-all",
+              "w-full rounded-xl border border-transparent bg-[#F4EFE8] py-2 text-xs text-[#2F241C] placeholder-[#8F7E72] outline-none focus:border-[#8B5E3C] focus:bg-white focus:ring-2 focus:ring-[#8B5E3C]/15 transition-all",
               isRTL ? "pr-4 pl-10" : "pl-4 pr-10"
             )}
           />
           <div
             className={cn(
-              "absolute flex items-center gap-1.5 text-[#9DA2B4]",
+              "absolute flex items-center gap-1.5 text-[#8F7E72]",
               isRTL ? "left-3" : "right-3"
             )}
           >
@@ -149,13 +150,16 @@ export function Header({ onOpenMobileMenu, className }: HeaderProps) {
         </div>
       </div>
 
-      {/* Profile, Notifications & Language Switcher */}
-      <div className="flex items-center gap-3">
+      {/* Live Alerts, Profile, Notifications & Language Switcher */}
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        {/* Live Urgent Alerts Pill for Accounts & Reports */}
+        <LiveUrgentAlerts />
+
         {/* Language Switcher Toggle */}
         <button
           onClick={toggleLanguage}
           title={`Switch to ${locale === "ar" ? "English" : "العربية"}`}
-          className="flex items-center gap-1.5 rounded-lg border border-[#EADBBD] bg-[#FAF4E6] px-2.5 py-1.5 text-xs font-bold text-[#A6883C] hover:bg-[#F3E7C9] transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 rounded-xl border border-[#E0CEBE] bg-[#F8F1EA] px-2.5 py-1.5 text-xs font-bold text-[#8B5E3C] hover:bg-[#F0E3D3] transition-colors cursor-pointer shadow-2xs"
         >
           <Globe className="h-3.5 w-3.5" />
           <span>{locale === "ar" ? "EN" : "عربي"}</span>
@@ -166,11 +170,11 @@ export function Header({ onOpenMobileMenu, className }: HeaderProps) {
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             title={t("common.notifications")}
-            className="relative flex h-9 w-9 items-center justify-center rounded-xl text-[#6C7280] hover:bg-[#F3F4F8] hover:text-[#A6883C] transition-colors cursor-pointer"
+            className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-[#ECE4D9] bg-white text-[#5E4E42] hover:bg-[#FAF4EB] hover:text-[#8B5E3C] transition-colors cursor-pointer shadow-2xs"
           >
             <Bell className="h-4.5 w-4.5" />
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#EF4444] px-1 text-[9px] font-extrabold text-white shadow-2xs animate-pulse">
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#EF4444] px-1 text-[9px] font-extrabold text-white shadow-xs animate-pulse">
                 {unreadCount > 9 ? "+9" : unreadCount}
               </span>
             )}
@@ -180,16 +184,16 @@ export function Header({ onOpenMobileMenu, className }: HeaderProps) {
           {notificationsOpen && (
             <div
               className={cn(
-                "absolute top-11 z-50 w-80 sm:w-96 rounded-2xl border border-[#EDEEF2] bg-white p-3 shadow-xl animate-fade-in",
+                "absolute top-11 z-50 w-80 sm:w-96 rounded-2xl border border-[#ECE4D9] bg-white p-3 shadow-xl animate-fade-in",
                 isRTL ? "left-0" : "right-0"
               )}
             >
               {/* Dropdown Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-[#EDEEF2] px-2">
+              <div className="flex items-center justify-between pb-3 border-b border-[#ECE4D9] px-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-[#1E1E2D]">الإشعارات</span>
+                  <span className="text-xs font-bold text-[#2F241C]">الإشعارات</span>
                   {unreadCount > 0 && (
-                    <span className="text-[10px] font-bold bg-[#FAF4E6] text-[#A6883C] px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-bold bg-[#F8F1EA] text-[#8B5E3C] px-2 py-0.5 rounded-full border border-[#E0CEBE]">
                       {unreadCount} جديدة
                     </span>
                   )}
@@ -198,7 +202,7 @@ export function Header({ onOpenMobileMenu, className }: HeaderProps) {
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllRead}
-                    className="flex items-center gap-1 text-[11px] font-bold text-[#10B981] hover:underline cursor-pointer"
+                    className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:underline cursor-pointer"
                   >
                     <CheckCheck className="w-3.5 h-3.5" />
                     <span>قراءة الكل</span>
@@ -207,9 +211,9 @@ export function Header({ onOpenMobileMenu, className }: HeaderProps) {
               </div>
 
               {/* Notifications List */}
-              <div className="max-h-72 overflow-y-auto divide-y divide-[#F3F4F8] my-1">
+              <div className="max-h-72 overflow-y-auto divide-y divide-[#F8F4EF] my-1">
                 {recentNotifications.length === 0 ? (
-                  <div className="py-6 text-center text-xs text-[#8E8E93]">
+                  <div className="py-6 text-center text-xs text-[#8F7E72]">
                     لا توجد إشعارات جديدة
                   </div>
                 ) : (
@@ -219,21 +223,21 @@ export function Header({ onOpenMobileMenu, className }: HeaderProps) {
                       onClick={() => handleNotificationClick(n)}
                       className={cn(
                         "flex items-start gap-3 p-2.5 rounded-xl transition-colors cursor-pointer text-right",
-                        n.isRead ? "hover:bg-[#F9FAFB]" : "bg-[#FAF8F2] hover:bg-[#F3ECE0]"
+                        n.isRead ? "hover:bg-[#FCFAF7]" : "bg-[#FAF4EB]/50 hover:bg-[#FAF4EB]"
                       )}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-white border border-[#EADBBD] flex items-center justify-center shrink-0 mt-0.5">
+                      <div className="w-8 h-8 rounded-lg bg-white border border-[#E0CEBE] flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
                         {getNotifIcon(n.type)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
-                          <p className="text-xs font-bold text-[#1E1E2D] truncate">{n.title}</p>
+                          <p className="text-xs font-bold text-[#2F241C] truncate">{n.title}</p>
                           {!n.isRead && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#A6883C] shrink-0" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#C88F45] shrink-0" />
                           )}
                         </div>
-                        <p className="text-[11px] text-[#6B7280] line-clamp-2 mt-0.5">{n.message}</p>
-                        <span className="text-[9px] text-[#8E8E93] mt-1 block">
+                        <p className="text-[11px] text-[#5E4E42] line-clamp-2 mt-0.5">{n.message}</p>
+                        <span className="text-[9px] text-[#8F7E72] mt-1 block">
                           {n.timeAgo || n.createdAt.split("T")[0]}
                         </span>
                       </div>
@@ -243,11 +247,11 @@ export function Header({ onOpenMobileMenu, className }: HeaderProps) {
               </div>
 
               {/* Footer */}
-              <div className="pt-2 border-t border-[#EDEEF2] text-center">
+              <div className="pt-2 border-t border-[#ECE4D9] text-center">
                 <Link
                   href="/notifications"
                   onClick={() => setNotificationsOpen(false)}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-[#A6883C] hover:underline"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-[#8B5E3C] hover:underline"
                 >
                   <span>عرض كافة الإشعارات</span>
                   <ExternalLink className="w-3 h-3" />
@@ -258,16 +262,16 @@ export function Header({ onOpenMobileMenu, className }: HeaderProps) {
         </div>
 
         {/* User Profile Pill */}
-        <div className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity">
-          <ChevronDown className="h-3.5 w-3.5 text-[#8E8E93]" />
+        <div className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity bg-[#FAF4EB]/50 border border-[#ECE4D9] rounded-xl px-2.5 py-1.5 shadow-2xs">
+          <ChevronDown className="h-3 w-3 text-[#8F7E72]" />
           <div className={cn(isRTL ? "text-right" : "text-left")}>
-            <p className="text-xs font-bold text-[#1E1E2D]">
-              {user?.name || "تالية الهلاوي"}
+            <p className="text-xs font-bold text-[#2F241C]">
+              {user?.name || "مدير النظام"}
             </p>
-            <p className="text-[10px] text-[#8E8E93]">{t("common.admin")}</p>
+            <p className="text-[10px] text-[#8F7E72] font-medium">{t("common.admin")}</p>
           </div>
-          <div className="h-9 w-9 overflow-hidden rounded-full border border-stone-200 bg-amber-100 flex items-center justify-center font-bold text-amber-800 text-xs">
-            👩‍💼
+          <div className="h-7.5 w-7.5 overflow-hidden rounded-lg bg-[#8B5E3C] text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+            {user?.name ? user.name.slice(0, 1) : "🐪"}
           </div>
         </div>
       </div>

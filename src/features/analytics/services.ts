@@ -35,6 +35,12 @@ export const analyticsStatCardsConfig: AnalyticsStatCardItem[] = [
     countKey: "suppliesSellersCount",
     iconName: "UsersRound",
   },
+  {
+    id: "cash-collected",
+    label: "المبالغ المحصلة نقدياً",
+    countKey: "cashCollected",
+    iconName: "Banknote",
+  },
 ];
 
 const emptyOverviewStats: DashboardOverviewStats = {
@@ -42,6 +48,7 @@ const emptyOverviewStats: DashboardOverviewStats = {
   suppliesSellersCount: 0,
   customersCount: 0,
   activeAuctionsCount: 0,
+  cashCollected: 0,
   totalRevenue: 0,
   activeListingsCount: 0,
 };
@@ -57,6 +64,7 @@ export const analyticsService = {
 
   /**
    * Fetch Dashboard Overview Stats from GET /api/Users/DashboardStats
+   * Updated: AdvertisersCount removed, CashCollected added
    */
   getOverviewStats: async (): Promise<ApiResponse<DashboardOverviewStats>> => {
     try {
@@ -65,13 +73,13 @@ export const analyticsService = {
       if (response && (response.data || response.success)) {
         const raw = (response.data || response) as Record<string, unknown>;
 
-        // Map exact fields from GET /api/Users/DashboardStats:
-        // { activeCustomers, activeSellers, openAuctions, liveStreams, totalProducts }
+        // Map exact fields from GET /api/Users/DashboardStats (Updated: CashCollected included, Advertisers excluded)
         const normalizedStats: DashboardOverviewStats = {
           customersCount:        Number(raw.activeCustomers ?? raw.customersCount ?? raw.activeCustomersCount ?? 0),
           livestockSellersCount: Number(raw.activeSellers ?? raw.livestockSellersCount ?? raw.stableOwnersCount ?? 0),
           activeAuctionsCount:   Number(raw.openAuctions ?? raw.activeAuctionsCount ?? raw.auctionsCount ?? 0),
           suppliesSellersCount:  Number(raw.liveStreams ?? raw.suppliesSellersCount ?? raw.storeOwnersCount ?? 0),
+          cashCollected:         Number(raw.cashCollected ?? raw.CashCollected ?? raw.cash_Collected ?? 0),
           totalRevenue:          Number(raw.totalRevenue ?? 0),
           activeListingsCount:   Number(raw.totalProducts ?? raw.activeListingsCount ?? 0),
         };
