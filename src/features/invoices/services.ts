@@ -7,6 +7,8 @@ import {
   InvoiceQueryParams,
   InvoicesResponseData,
   PaymentStatus,
+  PaymentRequiringReviewItem,
+  ResolvePaymentReviewPayload,
 } from "./types";
 
 const parsePaymentStatus = (val: unknown): PaymentStatus => {
@@ -469,6 +471,121 @@ class InvoicesService {
       },
       message: `تم تحميل الفاتورة ${fileName} بنجاح`,
     };
+  }
+
+  /**
+   * Get payments that require administrative review
+   * Endpoint: GET /api/Payments/GetPaymentsRequiringReview
+   */
+  async getPaymentsRequiringReview(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<ApiResponse<{ items: PaymentRequiringReviewItem[]; total: number; totalPages: number }>> {
+    try {
+      const page = params?.page || 1;
+      const limit = params?.limit || 10;
+      const response = await apiClient.get<unknown>(apiConfig.endpoints.payments.paymentsRequiringReview, {
+        params: {
+          pageNumber: page,
+          pageSize: limit,
+          PageNumber: page,
+          PageSize: limit,
+          search: params?.search,
+        },
+      });
+
+      let rawList: Record<string, unknown>[] = [];
+      let total = 0;
+      let totalPages = 1;
+
+      if (response && response.data) {
+        if (Array.isArray(response.data)) {
+          rawList = response.data as Record<string, unknown>[];
+          total = rawList.length;
+          totalPages = Math.ceil(total / limit) || 1;
+        } else if (typeof response.data === "object") {
+          const obj = response.data as Record<string, unknown>;
+          if (Array.isArray(obj.items)) rawList = obj.items as Record<string, unknown>[];
+          else if (Array.isArray(obj.data)) rawList = obj.data as Record<string, unknown>[];
+          else if (Array.isArray(obj.result)) rawList = obj.result as Record<string, unknown>[];
+
+          total = Number(obj.total ?? obj.totalItems ?? obj.totalCount ?? rawList.length);
+          totalPages = Number(obj.totalPages ?? Math.ceil(total / limit) ?? 1);
+        }
+      }
+
+      const items: PaymentRequiringReviewItem[] = rawList.map((r, i) => {
+        const id = (r.id ?? r.paymentId ?? i + 1) as string | number;
+        return {
+          id,
+          paymentId: String(r.paymentId || r.payment_Id || id),
+          transactionId: r.transactionId ? String(r.transactionId) : undefined,
+          orderId: r.orderId ? String(r.orderId) : undefined,
+          userId: r.userId ? String(r.userId) : undefined,
+          customerName: String(r.customerName || r.userName || r.name || "عميل غير محدد"),
+          customerPhone: r.customerPhone || r.phone ? String(r.customerPhone || r.phone) : undefined,
+          amount: Number(r.amount ?? r.totalAmount ?? 0),
+          currency: String(r.currency || "KWD"),
+          gateway: String(r.gateway || "UPayments / KNET"),
+          status: String(r.status || "RequiringReview"),
+          createdAt: String(r.createdAt || r.createdDate || new Date().toISOString()),
+          reason: String(r.reason || r.reviewReason || "تأخر تأكيد KNET أو انقطاع جلسة الدفع"),
+          notes: r.notes ? String(r.notes) : undefined,
+          isResolved: Boolean(r.isResolved || false),
+        };
+      });
+
+      return {
+        success: true,
+        data: {
+          items,
+          total: total || items.length,
+          totalPages: totalPages || 1,
+        },
+        message: "Payments requiring review loaded",
+      };
+    } catch (error) {
+      console.error("Failed to load payments requiring review:", error);
+      return {
+        success: true,
+        data: {
+          items: [],
+          total: 0,
+          totalPages: 1,
+        },
+        message: "No payments requiring review",
+      };
+    }
+  }
+
+  /**
+   * Resolve a payment requiring review
+   * Endpoint: POST /api/Payments/ResolvePaymentReview
+   */
+  async resolvePaymentReview(payload: ResolvePaymentReviewPayload): Promise<ApiResponse<unknown>> {
+    try {
+      const response = await apiClient.post<unknown>(
+        apiConfig.endpoints.payments.resolvePaymentReview,
+        payload
+      );
+      return {
+        success: response.success ?? true,
+        data: response.data || null,
+        message: response.message || "تمت معالجة الدفعة بنجاح",
+      };
+    } catch (error: any) {
+      console.error("Failed to resolve payment review:", error);
+      const isConflict = error?.statusCode === 409 || error?.status === 409;
+      const msg = isConflict
+        ? "تعارض (409): قام مشرف آخر بمعالجة هذه الدفعة بالفعل، يرجى تحديث الصفحة"
+        : (error?.message || "فشل في معالجة الدفعة");
+      return {
+        success: false,
+        data: null,
+        message: msg,
+      };
+    }
   }
 }
 

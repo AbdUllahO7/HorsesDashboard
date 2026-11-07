@@ -191,7 +191,10 @@ class AccountsService {
       };
     } catch (error: any) {
       console.error("Failed to approve verification:", error);
-      const msg = error?.message || "فشل في اعتماد التوثيق";
+      const isConflict = error?.statusCode === 409 || error?.status === 409;
+      const msg = isConflict
+        ? "تعارض (409): قام مشرف آخر بمراجعة هذا الطلب بالفعل، يرجى تحديث الصفحة"
+        : (error?.message || "فشل في اعتماد التوثيق");
       return {
         success: false,
         data: null,
@@ -201,32 +204,62 @@ class AccountsService {
   }
 
   /**
-   * Reject verification request
+   * Reject verification request or request modification
    * Endpoint: POST /api/Users/RejectVerification
+   * Requirement: Mandatory note for reject or modification request
    */
-  async rejectAccount(userId: string, reason?: string): Promise<ApiResponse<unknown>> {
+  async rejectAccount(
+    userId: string,
+    reason: string,
+    actionType: "amendment" | "reject" = "reject"
+  ): Promise<ApiResponse<unknown>> {
     try {
+      if (!reason || !reason.trim()) {
+        return {
+          success: false,
+          data: null,
+          message: "الملاحظة إجبارية عند الرفض أو طلب التعديل",
+        };
+      }
+
       const response = await apiClient.post<unknown>(
         apiConfig.endpoints.users.rejectVerification,
         {
           userId,
-          reason: reason || "صور إثبات الهوية غير واضحة، يرجى إعادة رفع صور واضحة للبطاقة والسيلفي",
+          reason: reason.trim(),
+          isAmendment: actionType === "amendment",
+          actionType: actionType === "amendment" ? "AmendmentRequested" : "Rejected",
         }
       );
       return {
         success: response.success ?? true,
         data: response.data || null,
-        message: response.message || "تم رفض طلب التوثيق وإشعار المستخدم",
+        message:
+          response.message ||
+          (actionType === "amendment"
+            ? "تم إرسال طلب التعديل بنجاح ليتمكن المستخدم من إعادة رفع المستندات"
+            : "تم رفض طلب التوثيق بنجاح وإشعار المستخدم"),
       };
     } catch (error: any) {
       console.error("Failed to reject verification:", error);
-      const msg = error?.message || "فشل في رفض الطلب";
+      const isConflict = error?.statusCode === 409 || error?.status === 409;
+      const msg = isConflict
+        ? "تعارض (409): قام مشرف آخر باتخاذ إجراء على هذا الطلب بالفعل، يرجى تحديث الصفحة"
+        : (error?.message || "فشل في تنفيذ العملية");
       return {
         success: false,
         data: null,
         message: msg,
       };
     }
+  }
+
+  /**
+   * Fetch private verification file via token as Blob
+   * Endpoint: GET /api/Users/GetVerificationFile?fileId={fileId}
+   */
+  async getVerificationFileBlob(fileId: string): Promise<Blob> {
+    return apiClient.getBlob(apiConfig.endpoints.users.verificationFile(fileId));
   }
 }
 

@@ -1,16 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, AlertTriangle, RefreshCw } from "lucide-react";
 import { cn } from "@/core/utils/cn";
 import { useTranslation } from "@/i18n";
+
+export type RejectionActionType = "amendment" | "reject";
 
 export interface RejectAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (reason: string) => Promise<void> | void;
+  onConfirm: (reason: string, actionType: RejectionActionType) => Promise<void> | void;
   loading?: boolean;
   className?: string;
+  initialActionType?: RejectionActionType;
 }
 
 export function RejectAccountModal({
@@ -19,15 +22,20 @@ export function RejectAccountModal({
   onConfirm,
   loading = false,
   className,
+  initialActionType = "amendment",
 }: RejectAccountModalProps) {
   const { isRTL } = useTranslation();
   const [reason, setReason] = useState<string>("");
+  const [actionType, setActionType] = useState<RejectionActionType>(initialActionType);
+  const [errorText, setErrorText] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setReason("");
+      setActionType(initialActionType);
+      setErrorText(null);
     }
-  }, [isOpen]);
+  }, [isOpen, initialActionType]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -40,6 +48,18 @@ export function RejectAccountModal({
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+
+  const handleConfirm = () => {
+    const trimmed = reason.trim();
+    if (!trimmed) {
+      setErrorText("الملاحظة إجبارية عند اتخاذ هذا القرار لتوضيح السبب للمستخدم");
+      return;
+    }
+    setErrorText(null);
+    onConfirm(trimmed, actionType);
+  };
+
+  const isAmendment = actionType === "amendment";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -70,42 +90,112 @@ export function RejectAccountModal({
           <X className="h-4 w-4" />
         </button>
 
-        {/* Circular Gold Icon with X */}
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#B8860B] text-white shadow-md mb-5">
-          <X className="h-10 w-10 stroke-[3]" />
+        {/* Circular Icon */}
+        <div
+          className={cn(
+            "mx-auto flex h-20 w-20 items-center justify-center rounded-full text-white shadow-md mb-4 transition-colors",
+            isAmendment ? "bg-[#D97706]" : "bg-[#DC2626]"
+          )}
+        >
+          {isAmendment ? (
+            <RefreshCw className="h-9 w-9 stroke-[2.5]" />
+          ) : (
+            <AlertTriangle className="h-10 w-10 stroke-[2.5]" />
+          )}
         </div>
 
-        {/* Title & Subtitle */}
+        {/* Title */}
         <h3 className="text-lg font-bold text-[#1E1E2D] mb-1.5">
-          تأكيد رفض المستخدم
+          {isAmendment ? "طلب تعديل المستندات" : "تأكيد رفض طلب التوثيق"}
         </h3>
         <p className="text-xs text-[#8E8E93] mb-4">
-          هل أنت متأكد من رفض المستخدم ورفض حسابه من النظام
+          {isAmendment
+            ? "سيتم إشعار المستخدم بالملاحظة ليتمكن من إعادة رفع المستندات مجاناً دون دفع جديد"
+            : "سيتم رفض طلب التوثيق بالكامل وإشعار المستخدم بالسبب"}
         </p>
 
-        {/* Reason Input */}
-        <div className="text-right mb-6">
-          <label className="block text-xs font-bold text-[#1E1E2D] mb-2">
-            أدخل سبب الرفض
-          </label>
+        {/* Action Type Selector */}
+        <div className="grid grid-cols-2 gap-2 mb-4 p-1 rounded-2xl bg-[#F8F9FA] border border-[#EDEEF2]">
+          <button
+            type="button"
+            onClick={() => setActionType("amendment")}
+            className={cn(
+              "py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer",
+              isAmendment
+                ? "bg-[#D97706] text-white shadow-xs"
+                : "text-[#6B7280] hover:text-[#1E1E2D]"
+            )}
+          >
+            طلب تعديل (إعادة رفع)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActionType("reject")}
+            className={cn(
+              "py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer",
+              !isAmendment
+                ? "bg-[#DC2626] text-white shadow-xs"
+                : "text-[#6B7280] hover:text-[#1E1E2D]"
+            )}
+          >
+            رفض نهائي
+          </button>
+        </div>
+
+        {/* Reason Input (MANDATORY) */}
+        <div className="text-right mb-5">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] font-bold text-[#DC2626] bg-[#FEF2F2] px-2 py-0.5 rounded-full border border-[#FECACA]">
+              ملاحظة إجبارية *
+            </span>
+            <label className="block text-xs font-bold text-[#1E1E2D]">
+              {isAmendment ? "ملاحظات التعديل المطلوبة" : "سبب الرفض"}
+            </label>
+          </div>
           <textarea
             rows={3}
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="سبب الرفض"
-            className="w-full rounded-2xl border border-[#E5E7EB] bg-white p-3.5 text-xs text-[#1E1E2D] placeholder-[#9CA3AF] outline-none focus:border-[#B8860B] transition-colors resize-none"
+            onChange={(e) => {
+              setReason(e.target.value);
+              if (e.target.value.trim()) setErrorText(null);
+            }}
+            placeholder={
+              isAmendment
+                ? "مثال: صورة البطاقة غير واضحة من الخلف، يرجى إعادة التقاط صورة واضحة ومطابقة..."
+                : "أدخل سبب الرفض الإجباري ليظهر للمستخدم..."
+            }
+            className={cn(
+              "w-full rounded-2xl border bg-white p-3.5 text-xs text-[#1E1E2D] placeholder-[#9CA3AF] outline-none transition-colors resize-none",
+              errorText
+                ? "border-[#DC2626] focus:border-[#DC2626]"
+                : "border-[#E5E7EB] focus:border-[#B8860B]"
+            )}
           />
+          {errorText && (
+            <p className="text-[11px] font-semibold text-[#DC2626] mt-1 text-right">
+              {errorText}
+            </p>
+          )}
         </div>
 
         {/* Action Buttons */}
         <div className="flex items-center justify-center gap-3">
           <button
             type="button"
-            disabled={loading}
-            onClick={() => onConfirm(reason)}
-            className="flex-1 rounded-2xl bg-[#B8860B] py-2.5 px-6 text-xs font-bold text-white hover:bg-[#A37508] transition-colors cursor-pointer disabled:opacity-50 shadow-2xs"
+            disabled={loading || !reason.trim()}
+            onClick={handleConfirm}
+            className={cn(
+              "flex-1 rounded-2xl py-2.5 px-6 text-xs font-bold text-white transition-colors cursor-pointer disabled:opacity-50 shadow-2xs",
+              isAmendment
+                ? "bg-[#D97706] hover:bg-[#B45309]"
+                : "bg-[#DC2626] hover:bg-[#B91C1C]"
+            )}
           >
-            {loading ? "جاري الرفض..." : "رفض"}
+            {loading
+              ? "جاري المعالجة..."
+              : isAmendment
+              ? "إرسال طلب التعديل"
+              : "تأكيد الرفض"}
           </button>
           <button
             type="button"

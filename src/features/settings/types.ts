@@ -47,6 +47,7 @@ export interface CouponItem {
   isPercentage: boolean;
   expireDate?: string;
   maxUsage?: number;
+  maxUsesPerUser?: number;
   usedCount?: number;
   discountType?: "percentage" | "fixed";
   discountValue?: number;
@@ -66,6 +67,7 @@ export interface CouponFormData {
   isPercentage: boolean;
   expireDate?: string;
   maxUsage?: number;
+  maxUsesPerUser?: number;
   usedCount?: number;
   discountType?: "percentage" | "fixed";
   discountValue?: number;

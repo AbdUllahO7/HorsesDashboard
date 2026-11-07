@@ -204,7 +204,7 @@ export const en: TranslationSchema = {
     title: "Ads Management",
     listTitle: "Advertisements List",
     adName: "Ad Title",
-    company: "Company / Advertiser",
+    company: "Company / Client",
     startDate: "Start Date",
     endDate: "End Date",
     status: "Ad Status",

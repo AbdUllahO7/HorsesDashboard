@@ -10,6 +10,7 @@ import {
   Eye,
   RefreshCw,
   Inbox,
+  Banknote,
 } from "lucide-react";
 import { analyticsService } from "@/features/analytics/services";
 import {
@@ -89,6 +90,13 @@ export default function DashboardOverviewPage() {
       icon: Gavel,
       href: "/auctions",
     },
+    {
+      id: "cash-collected",
+      label: "المبالغ المحصلة نقدياً",
+      count: stats?.cashCollected !== undefined ? `${stats.cashCollected.toLocaleString()} د.ك` : "0 د.ك",
+      icon: Banknote,
+      href: "/accounting",
+    },
   ];
 
   return (
@@ -114,8 +122,8 @@ export default function DashboardOverviewPage() {
         </button>
       </div>
 
-      {/* 4 Dynamic Summary Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Dynamic Summary Metric Cards (Updated: CashCollected added, Advertisers excluded) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {statCardsConfig.map((card) => (
           <StatCard
             key={card.id}

@@ -113,13 +113,9 @@ export default function UserAccountsReviewPage() {
       } else {
         const msg = res.message || "فشل في اعتماد التوثيق";
         showToast(msg, "error");
-        // If already approved on backend, update local status so UI reflects reality
-        if (msg.includes("مسبق") || msg.includes("already") || msg.includes("معتمد")) {
-          setAccounts((prev) =>
-            prev.map((a) =>
-              a.id === approvingAccount.id ? { ...a, status: "approved" } : a
-            )
-          );
+        // If conflict (409) or already updated, reload to reflect reality
+        if (msg.includes("409") || msg.includes("تعارض") || msg.includes("مسبق") || msg.includes("already") || msg.includes("معتمد")) {
+          loadAccounts();
         }
       }
     } catch (err: unknown) {
@@ -127,37 +123,46 @@ export default function UserAccountsReviewPage() {
       const e = err as { message?: string };
       const msg = e?.message || "فشل في اعتماد التوثيق";
       showToast(msg, "error");
+      loadAccounts();
     } finally {
       setActionLoading(false);
       setApprovingAccount(null);
     }
   };
 
-  // Handle Reject
-  const handleRejectConfirm = async (reason: string) => {
+  // Handle Reject or Request Amendment
+  const handleRejectConfirm = async (reason: string, actionType: "amendment" | "reject" = "reject") => {
     if (!rejectingAccount) return;
     try {
       setActionLoading(true);
       setErrorMessage(null);
-      const res = await accountsService.rejectAccount(rejectingAccount.id, reason);
+      const res = await accountsService.rejectAccount(rejectingAccount.id, reason, actionType);
       if (res.success) {
-        showToast(res.message || "تم رفض طلب التوثيق وإشعار المستخدم", "success");
+        showToast(res.message || "تم تنفيذ العملية بنجاح", "success");
         setAccounts((prev) =>
           prev.map((a) =>
             a.id === rejectingAccount.id
-              ? { ...a, status: "rejected", rejectionReason: reason }
+              ? {
+                  ...a,
+                  status: actionType === "amendment" ? "pending" : "rejected",
+                  rejectionReason: reason,
+                }
               : a
           )
         );
+        loadAccounts();
       } else {
-        const msg = res.message || "فشل في رفض الطلب";
+        const msg = res.message || "فشل في تنفيذ العملية";
         showToast(msg, "error");
+        if (msg.includes("409") || msg.includes("تعارض")) {
+          loadAccounts();
+        }
       }
     } catch (err: unknown) {
-      console.error("Failed to reject account:", err);
+      console.error("Failed to process account rejection/amendment:", err);
       const e = err as { message?: string };
-      const msg = e?.message || "فشل في رفض الطلب";
-      showToast(msg, "error");
+      showToast(e?.message || "فشل في تنفيذ العملية", "error");
+      loadAccounts();
     } finally {
       setActionLoading(false);
       setRejectingAccount(null);
@@ -227,13 +232,6 @@ export default function UserAccountsReviewPage() {
       return (
         <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE]">
           صاحب متجر
-        </span>
-      );
-    }
-    if (r.includes("advertiser")) {
-      return (
-        <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-[#FDF2F8] text-[#DB2777] border border-[#FBCFE8]">
-          معلن معتمد
         </span>
       );
     }
@@ -478,7 +476,7 @@ export default function UserAccountsReviewPage() {
             {t("userAccounts.listTitle", "قائمة طلبات الحسابات والتوثيق")}
           </h1>
           <p className="text-xs text-[#8E8E93] mt-0.5">
-            مراجعة هويات ومستندات أصحاب العزب، المتاجر، المعلنين والعملاء واعتمادها
+            مراجعة هويات ومستندات أصحاب المرابط، المتاجر، والعملاء واعتمادها
           </p>
         </div>
 

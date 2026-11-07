@@ -30,3 +30,4 @@ export * from "./CouponModal";
 export * from "./SendNotificationModal";
 export * from "./HorseProductCard";
 export * from "./MediaLightboxModal";
+export * from "./ResolvePaymentReviewModal";

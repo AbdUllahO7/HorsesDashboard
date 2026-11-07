@@ -15,7 +15,6 @@ export interface AuctionDetailsModalProps {
   auction: AuctionTableItem | null;
   onAccept?: (auction: AuctionTableItem) => void;
   onStop?: (auction: AuctionTableItem) => void;
-  onDelete?: (auction: AuctionTableItem) => void;
   onToggleLive?: (auction: AuctionTableItem) => void;
   errorMessage?: string | null;
   onClearError?: () => void;
@@ -28,7 +27,6 @@ export function AuctionDetailsModal({
   auction,
   onAccept,
   onStop,
-  onDelete,
   onToggleLive,
   errorMessage,
   onClearError,
@@ -284,16 +282,6 @@ export function AuctionDetailsModal({
                     <span>إيقاف المزاد</span>
                   </button>
                 )}
-
-                {/* Delete Button */}
-                <button
-                  type="button"
-                  onClick={() => onDelete?.(auction)}
-                  className="w-full rounded-xl py-2.5 px-3 text-xs font-bold border border-[#EF4444] text-[#EF4444] bg-[#FEF2F2] hover:bg-[#FEE2E2] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span>حذف المزاد</span>
-                </button>
               </div>
             </div>
 

@@ -68,3 +68,27 @@ export interface InvoicesResponseData {
   limit: number;
   totalPages: number;
 }
+
+export interface PaymentRequiringReviewItem {
+  id: string | number;
+  paymentId: string;
+  transactionId?: string;
+  orderId?: string;
+  userId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  amount: number;
+  currency?: string;
+  gateway?: string;
+  status: "Pending" | "RequiringReview" | "PendingTimeout" | string;
+  createdAt: string;
+  reason?: string;
+  notes?: string;
+  isResolved?: boolean;
+}
+
+export interface ResolvePaymentReviewPayload {
+  paymentId: string | number;
+  action: "Approve" | "Reject" | "Refund" | string;
+  notes?: string;
+}
