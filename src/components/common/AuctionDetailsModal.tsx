@@ -259,8 +259,8 @@ export function AuctionDetailsModal({
             <div>
               <h3 className="text-xs font-bold text-[#1E1E2D] mb-3">إجراءات الإدارة</h3>
               <div className="space-y-2">
-                {/* Accept Button */}
-                {activeData.status !== "active" && (
+                {/* Accept Button: Only for upcoming auctions */}
+                {activeData.status === "upcoming" && (
                   <button
                     type="button"
                     onClick={() => onAccept?.(auction)}
@@ -271,7 +271,7 @@ export function AuctionDetailsModal({
                   </button>
                 )}
 
-                {/* Stop Button */}
+                {/* Stop Button: Only for active auctions */}
                 {activeData.status === "active" && (
                   <button
                     type="button"
@@ -281,6 +281,32 @@ export function AuctionDetailsModal({
                     <ShieldAlert className="h-3.5 w-3.5" />
                     <span>إيقاف المزاد</span>
                   </button>
+                )}
+
+                {/* Stopped Auction Info */}
+                {activeData.status === "stopped" && (
+                  <div className="rounded-xl bg-[#FFFBEB] border border-[#FDE68A] p-3 text-center">
+                    <div className="flex items-center justify-center gap-1.5 text-[#D97706] text-xs font-bold mb-1">
+                      <ShieldAlert className="h-4 w-4" />
+                      <span>المزاد متوقف</span>
+                    </div>
+                    <p className="text-[11px] text-[#92400E]">
+                      تم إيقاف هذا المزاد. نظام المزادات في الباك إند لا يتيح إعادة فتح مزاد تم إيقافه.
+                    </p>
+                  </div>
+                )}
+
+                {/* Completed Auction Info */}
+                {activeData.status === "completed" && (
+                  <div className="rounded-xl bg-[#ECFDF5] border border-[#A7F3D0] p-3 text-center">
+                    <div className="flex items-center justify-center gap-1.5 text-[#059669] text-xs font-bold mb-1">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>المزاد مكتمل</span>
+                    </div>
+                    <p className="text-[11px] text-[#065F46]">
+                      انتهت فترة المزاد واكتملت المزايدات بنجاح.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>

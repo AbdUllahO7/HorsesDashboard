@@ -580,7 +580,7 @@ export const auctionsService = {
         rawMsg && rawMsg !== "Error" && !rawMsg.includes("HTTP Error")
           ? `حدث خطأ ما: ${rawMsg}`
           : (err?.statusCode === 403 || err?.response?.status === 403
-            ? "حدث خطأ ما: غير مصرح بهذا الإجراء (403 Forbidden) - قبول المزاد مخصص لمالك المزاد أو بحاجة لصلاحية الإدارة في السيرفر"
+            ? "غير مصرح بهذا الإجراء (403 Forbidden): قبول المزاد مخصص لمالك المزاد (البائع) فقط، كما أن المزادات المتوقفة لا يمكن إعادة فتحها"
             : "حدث خطأ ما أثناء قبول المزاد، يرجى المحاولة مرة أخرى");
       return {
         success: false,

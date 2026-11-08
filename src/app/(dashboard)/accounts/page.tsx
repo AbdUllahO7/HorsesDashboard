@@ -172,18 +172,41 @@ export default function UserAccountsReviewPage() {
   // Handle Bulk Approve
   const handleBulkApprove = async (selectedIds: string[], clearSelection: () => void) => {
     if (!selectedIds.length) return;
+    const pendingItems = accounts.filter(
+      (a) => selectedIds.includes(a.id) && a.status === "pending"
+    );
+
+    if (pendingItems.length === 0) {
+      showToast("لا توجد طلبات قيد المراجعة ضمن الحسابات المحددة للاعتماد", "error");
+      return;
+    }
+
     try {
       setActionLoading(true);
       let successCount = 0;
-      for (const id of selectedIds) {
+      let lastErrorMessage = "";
+      for (const item of pendingItems) {
         try {
-          const res = await accountsService.approveAccount(id);
-          if (res.success) successCount++;
-        } catch (e) {
-          console.debug("Failed to approve in bulk for ID:", id, e);
+          const res = await accountsService.approveAccount(item.id);
+          if (res.success) {
+            successCount++;
+          } else if (res.message) {
+            lastErrorMessage = res.message;
+          }
+        } catch (e: any) {
+          console.debug("Failed to approve in bulk for ID:", item.id, e);
+          if (e?.message) lastErrorMessage = e.message;
         }
       }
-      showToast(`تمت الموافقة بنجاح على ${successCount} من أصل ${selectedIds.length} حساب`, "success");
+
+      if (successCount > 0) {
+        showToast(
+          `تمت الموافقة بنجاح على ${successCount} من أصل ${pendingItems.length} حساب قيد المراجعة`,
+          "success"
+        );
+      } else {
+        showToast(lastErrorMessage || "تعذر اعتماد الحسابات المحددة", "error");
+      }
       clearSelection();
       loadAccounts();
     } catch (err) {
@@ -376,23 +399,23 @@ export default function UserAccountsReviewPage() {
           className="flex items-center justify-center gap-2"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* If already approved, show verified badge instead of approve button */}
+          {/* Status-specific actions */}
           {item.status === "approved" ? (
-            <div className="flex items-center gap-1.5">
-              <span className="flex h-7 px-2.5 items-center justify-center rounded-lg bg-[#ECFDF5] text-[#059669] text-[11px] font-bold border border-[#A7F3D0]">
-                <ShieldCheck className="w-3.5 h-3.5 mr-1 text-[#059669]" />
-                <span>معتمد</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setRejectingAccount(item)}
-                title="إلغاء التوثيق أو رفض الحساب"
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#EF4444]/30 text-[#EF4444] hover:bg-[#FEF2F2] transition-colors cursor-pointer"
-              >
-                <X className="h-3.5 w-3.5" strokeWidth={2.5} />
-              </button>
-            </div>
+            <span className="flex h-7 px-2.5 items-center justify-center rounded-lg bg-[#ECFDF5] text-[#059669] text-[11px] font-bold border border-[#A7F3D0]">
+              <ShieldCheck className="w-3.5 h-3.5 ml-1 text-[#059669]" />
+              <span>معتمد</span>
+            </span>
+          ) : item.status === "rejected" ? (
+            /* Rejected accounts cannot be approved or rejected again per backend rules */
+            <span
+              className="flex h-7 px-2.5 items-center justify-center rounded-lg bg-[#FEF2F2] text-[#DC2626] text-[11px] font-bold border border-[#FECACA]"
+              title={item.rejectionReason ? `سبب الرفض: ${item.rejectionReason}` : "تم رفض طلب التوثيق"}
+            >
+              <X className="w-3.5 h-3.5 ml-1 text-[#DC2626]" strokeWidth={2.5} />
+              <span>مرفوض</span>
+            </span>
           ) : (
+            /* Only pending accounts can be approved or rejected */
             <>
               {/* Approve Action */}
               <button
@@ -529,27 +552,35 @@ export default function UserAccountsReviewPage() {
           keyExtractor={(item) => item.id}
           emptyMessage="لا توجد طلبات توثيق مسجلة في هذا القسم"
           selectable={true}
-          renderBulkActions={(selectedIds, selectedItems, clearSelection) => (
-            <>
-              <button
-                type="button"
-                onClick={() => handleBulkApprove(selectedIds, clearSelection)}
-                disabled={actionLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer"
-              >
-                <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>اعتماد الكل ({selectedIds.length})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleExportSelected(selectedItems)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-[#EFE9E0] text-xs font-semibold transition-all cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5 text-[#C88F45]" />
-                <span>تصدير CSV</span>
-              </button>
-            </>
-          )}
+          renderBulkActions={(selectedIds, selectedItems, clearSelection) => {
+            const pendingSelectedCount = selectedItems.filter((i) => i.status === "pending").length;
+            return (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleBulkApprove(selectedIds, clearSelection)}
+                  disabled={actionLoading || pendingSelectedCount === 0}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+                  title={
+                    pendingSelectedCount === 0
+                      ? "لا توجد طلبات قيد المراجعة محددة"
+                      : `اعتماد ${pendingSelectedCount} طلب قيد المراجعة`
+                  }
+                >
+                  <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>اعتماد قيد المراجعة ({pendingSelectedCount})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleExportSelected(selectedItems)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-[#EFE9E0] text-xs font-semibold transition-all cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#C88F45]" />
+                  <span>تصدير CSV ({selectedItems.length})</span>
+                </button>
+              </>
+            );
+          }}
         />
 
         {/* Pagination */}

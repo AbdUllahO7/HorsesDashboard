@@ -124,6 +124,14 @@ class AccountsService {
           ? String(item.reason)
           : undefined;
         const createdAt = String(item.create_At ?? item.createdAt ?? item.created_At ?? item.requestDate ?? "2025-05-25");
+        const hasSubscription = item.hasSubscription !== undefined
+          ? Boolean(item.hasSubscription)
+          : item.isSubscribed !== undefined
+          ? Boolean(item.isSubscribed)
+          : Boolean(item.subscriptionId || item.subscription || item.planId);
+        const subscriptionName = item.subscriptionName || item.planName || item.subscriptionPlanName
+          ? String(item.subscriptionName || item.planName || item.subscriptionPlanName)
+          : undefined;
 
         return {
           id,
@@ -137,6 +145,8 @@ class AccountsService {
           status,
           rejectionReason,
           createdAt,
+          hasSubscription,
+          subscriptionName,
         };
       });
 
@@ -192,9 +202,11 @@ class AccountsService {
     } catch (error: any) {
       console.error("Failed to approve verification:", error);
       const isConflict = error?.statusCode === 409 || error?.status === 409;
-      const msg = isConflict
-        ? "تعارض (409): قام مشرف آخر بمراجعة هذا الطلب بالفعل، يرجى تحديث الصفحة"
-        : (error?.message || "فشل في اعتماد التوثيق");
+      const msg =
+        error?.message ||
+        (isConflict
+          ? "تعارض (409): قام مشرف آخر بمراجعة هذا الطلب بالفعل، يرجى تحديث الصفحة"
+          : "فشل في اعتماد التوثيق");
       return {
         success: false,
         data: null,
@@ -243,9 +255,11 @@ class AccountsService {
     } catch (error: any) {
       console.error("Failed to reject verification:", error);
       const isConflict = error?.statusCode === 409 || error?.status === 409;
-      const msg = isConflict
-        ? "تعارض (409): قام مشرف آخر باتخاذ إجراء على هذا الطلب بالفعل، يرجى تحديث الصفحة"
-        : (error?.message || "فشل في تنفيذ العملية");
+      const msg =
+        error?.message ||
+        (isConflict
+          ? "تعارض (409): قام مشرف آخر باتخاذ إجراء على هذا الطلب بالفعل، يرجى تحديث الصفحة"
+          : "فشل في تنفيذ العملية");
       return {
         success: false,
         data: null,
