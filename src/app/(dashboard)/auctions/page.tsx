@@ -330,12 +330,14 @@ export default function AuctionsPage() {
             </button>
           )}
 
-          {/* Live / Activation Toggle */}
-          <ToggleSwitch
-            checked={auction.isLiveEnabled}
-            onChange={() => handleToggleAuctionLive(auction)}
-            color="green"
-          />
+          {/* Live / Activation Toggle: only for active auctions */}
+          {auction.status === "active" && (
+            <ToggleSwitch
+              checked={auction.isLiveEnabled}
+              onChange={() => handleToggleAuctionLive(auction)}
+              color="green"
+            />
+          )}
         </div>
       ),
     },

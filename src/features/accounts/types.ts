@@ -14,6 +14,8 @@ export interface UserAccountItem {
   status: AccountVerificationStatus;
   rejectionReason?: string;
   createdAt: string;
+  hasSubscription?: boolean;
+  subscriptionName?: string;
 }
 
 export interface AccountFilterParams extends BaseFilterParams {
