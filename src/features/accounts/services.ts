@@ -270,10 +270,10 @@ class AccountsService {
 
   /**
    * Fetch private verification file via token as Blob
-   * Endpoint: GET /api/Users/GetVerificationFile?fileId={fileId}
+   * Endpoint: GET /api/Users/GetVerificationFile?path={path}
    */
-  async getVerificationFileBlob(fileId: string): Promise<Blob> {
-    return apiClient.getBlob(apiConfig.endpoints.users.verificationFile(fileId));
+  async getVerificationFileBlob(path: string): Promise<Blob> {
+    return apiClient.getBlob(apiConfig.endpoints.users.verificationFile(path));
   }
 }
 

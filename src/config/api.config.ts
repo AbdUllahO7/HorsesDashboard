@@ -61,7 +61,7 @@ export const apiConfig = {
       verificationRequests: "/Users/GetVerificationRequests",
       approveVerification: "/Users/ApproveVerification",
       rejectVerification: "/Users/RejectVerification",
-      verificationFile: (fileId: string) => `/Users/GetVerificationFile?fileId=${fileId}`,
+      verificationFile: (path: string) => `/Users/GetVerificationFile?path=${encodeURIComponent(path)}`,
     },
     accounting: {
       dashboard: "/Admin/GetAccountingDashboard",

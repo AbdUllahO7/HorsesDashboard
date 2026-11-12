@@ -136,6 +136,13 @@ export default function CustomersPage() {
       const res = await usersService.getCustomerDetails(String(customer.id));
       if (res.success && res.data) {
         const raw = ((res.data as Record<string, unknown>).data ?? res.data) as Record<string, unknown>;
+        const rawStatus =
+          raw.accountStatus ??
+          raw.account_Status ??
+          raw.userStatus ??
+          raw.status ??
+          (raw.isApproved === false ? "pending" : undefined) ??
+          raw.isActive;
         setDetailedCustomer({
           ...customer,
           name:              String(raw.fullName ?? raw.name ?? raw.userName ?? customer.name),
@@ -146,7 +153,7 @@ export default function CustomersPage() {
           ordersCount:       Number(raw.wonAuctionsCount ?? raw.ordersCount ?? raw.totalOrders ?? 0),
           totalSpent:        Number(raw.walletBalance ?? raw.totalSpent ?? raw.totalPurchases ?? 0),
           interactionsCount: Number(raw.liveCommentsCount ?? raw.interactionsCount ?? raw.interactions ?? customer.interactionsCount ?? 0),
-          status:            raw.status !== undefined ? usersService.mapBackendToStatus(raw.status) : customer.status,
+          status:            rawStatus !== undefined ? usersService.mapBackendToStatus(rawStatus) : customer.status,
           joinedDate:        raw.createdAt ? String(raw.createdAt) : customer.joinedDate,
         });
       }
@@ -159,7 +166,7 @@ export default function CustomersPage() {
 
 
   // Handlers for Status and Actions
-  const handleStatusChange = (customer: CustomerUser, newStatus: CustomerStatus) => {
+  const handleStatusChange = async (customer: CustomerUser, newStatus: CustomerStatus) => {
     if (newStatus === "blocked") {
       setConfirmDialog({
         isOpen: true,
@@ -207,13 +214,21 @@ export default function CustomersPage() {
         },
       });
     } else {
-      setCustomers((prev) =>
-        prev.map((c) => (c.id === customer.id ? { ...c, status: newStatus } : c))
-      );
-      if (selectedCustomer?.id === customer.id) {
-        setSelectedCustomer((prev) => (prev ? { ...prev, status: newStatus } : null));
+      try {
+        const res = await usersService.updateCustomerStatus(customer.id, newStatus);
+        if (res.success !== false) {
+          setCustomers((prev) =>
+            prev.map((c) => (c.id === customer.id ? { ...c, status: newStatus } : c))
+          );
+          if (selectedCustomer?.id === customer.id) {
+            setSelectedCustomer((prev) => (prev ? { ...prev, status: newStatus } : null));
+          }
+        } else {
+          loadCustomers();
+        }
+      } catch {
+        loadCustomers();
       }
-      usersService.updateCustomerStatus(customer.id, newStatus);
     }
   };
 

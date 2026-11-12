@@ -28,6 +28,7 @@ export function DocumentPreviewModal({
   const { isRTL } = useTranslation();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isPdf, setIsPdf] = useState<boolean>(false);
+  const [fileExt, setFileExt] = useState<string>("jpg");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,32 +42,54 @@ export function DocumentPreviewModal({
       const target = fileId || imageUrl;
       if (!target) {
         setBlobUrl(null);
+        setError(null);
         return;
       }
 
-      // Check if it's already a blob/data URL or standard static image
-      if (target.startsWith("blob:") || target.startsWith("data:")) {
+      const rawExt = target.split("?")[0].split(".").pop()?.toLowerCase();
+      if (rawExt && rawExt.length <= 5) {
+        setFileExt(rawExt);
+      }
+
+      // Check if it's already a blob/data URL or local static placeholder image
+      if (target.startsWith("blob:") || target.startsWith("data:") || target.startsWith("/images/")) {
         setBlobUrl(target);
+        setError(null);
         setIsPdf(target.includes("application/pdf"));
         return;
       }
 
-      // If it looks like a remote path or fileId, fetch via GetVerificationFile with auth token
+      // Extract relative path for GET /api/Users/GetVerificationFile?path=...
+      let pathToFetch = fileId || target;
+      if (!fileId && (target.startsWith("http://") || target.startsWith("https://"))) {
+        try {
+          pathToFetch = new URL(target).pathname.replace(/^\/+/, "");
+        } catch {
+          pathToFetch = target;
+        }
+      } else {
+        pathToFetch = pathToFetch.replace(/^\/+/, "");
+      }
+
       setLoading(true);
       setError(null);
       try {
-        const idToFetch = fileId || target.split("/").pop() || target;
-        const blob = await accountsService.getVerificationFileBlob(idToFetch);
+        const blob = await accountsService.getVerificationFileBlob(pathToFetch);
         if (!active) return;
 
         createdUrl = URL.createObjectURL(blob);
         setBlobUrl(createdUrl);
-        setIsPdf(blob.type === "application/pdf" || target.toLowerCase().endsWith(".pdf"));
-      } catch {
-        // Fallback to direct URL if public or error
+        const pdf = blob.type === "application/pdf" || target.toLowerCase().endsWith(".pdf");
+        setIsPdf(pdf);
+        if (pdf) setFileExt("pdf");
+        else if (blob.type.includes("webp")) setFileExt("webp");
+        else if (blob.type.includes("png")) setFileExt("png");
+        else if (blob.type.includes("jpeg") || blob.type.includes("jpg")) setFileExt("jpg");
+      } catch (err) {
+        console.error("Failed to fetch verification file:", err);
         if (!active) return;
-        setBlobUrl(target);
-        setIsPdf(target.toLowerCase().endsWith(".pdf"));
+        setBlobUrl(null);
+        setError("تعذر تحميل المستند من السيرفر، تأكد من صلاحية الجلسة أو مسار الملف");
       } finally {
         if (active) setLoading(false);
       }
@@ -180,9 +203,7 @@ export function DocumentPreviewModal({
           {blobUrl && (
             <a
               href={blobUrl}
-              download={`${title}.pdf`}
-              target="_blank"
-              rel="noreferrer"
+              download={`${userName ? `${userName}-` : ""}${title}.${fileExt}`}
               className="inline-flex items-center gap-1.5 rounded-2xl bg-[#F8F9FA] border border-[#E5E7EB] px-5 py-2 text-xs font-bold text-[#1E1E2D] hover:bg-[#F3F4F6] transition-colors cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-[#A6883C]" />

@@ -60,11 +60,28 @@ export const usersService = {
   },
 
   mapBackendToStatus: (val: unknown): CustomerStatus => {
-    if (val === 1 || val === "pending" || val === "Pending") return "pending";
-    if (val === 2 || val === "active" || val === "Active" || val === true) return "active";
-    if (val === 3 || val === "inactive" || val === "Inactive" || val === false) return "inactive";
-    if (val === 4 || val === "blocked" || val === "Blocked" || val === "Suspended") return "blocked";
-    return "active";
+    if (val === 1 || val === "1" || val === 0 || val === "0") return "pending";
+    if (typeof val === "string") {
+      const normalized = val.trim().toLowerCase();
+      if (
+        normalized === "pending" ||
+        normalized === "pendingapproval" ||
+        normalized === "waitingapproval" ||
+        normalized === "underreview" ||
+        normalized === "notapproved"
+      ) {
+        return "pending";
+      }
+      if (normalized === "active" || normalized === "approved") return "active";
+      if (normalized === "inactive" || normalized === "disabled") return "inactive";
+      if (normalized === "blocked" || normalized === "suspended" || normalized === "rejected") {
+        return "blocked";
+      }
+    }
+    if (val === 2 || val === "2" || val === true) return "active";
+    if (val === 3 || val === "3" || val === false) return "inactive";
+    if (val === 4 || val === "4" || val === 5 || val === "5") return "blocked";
+    return "pending";
   },
 
   getFilterTabs: async (): Promise<ApiResponse<CustomerFilterTabItem[]>> => {
@@ -186,7 +203,14 @@ export const usersService = {
         const name = String(item.fullName ?? item.name ?? item.userName ?? "عميل");
         const email = String(item.email ?? item.profile_Email ?? `${id}@horses.market`);
         const phone = String(item.phoneNumber ?? item.phone_Number ?? item.phone ?? "—");
-        const status = usersService.mapBackendToStatus(item.status ?? item.isActive);
+        const rawStatus =
+          item.accountStatus ??
+          item.account_Status ??
+          item.userStatus ??
+          item.status ??
+          (item.isApproved === false ? "pending" : undefined) ??
+          item.isActive;
+        const status = usersService.mapBackendToStatus(rawStatus);
         const interactionsCount = Number(item.liveCommentsCount ?? item.interactionsCount ?? item.interactions ?? 0);
         const joinedDate = String(item.createdAt ?? item.created_At ?? item.joinedDate ?? "2026-01-01");
         const bidsCount = Number(item.auctionsParticipated ?? item.bidsCount ?? item.totalBids ?? 0);
@@ -211,15 +235,23 @@ export const usersService = {
         };
       });
 
+      const filteredItems =
+        params?.statusTab && params.statusTab !== "all"
+          ? items.filter((item) => item.status === params.statusTab)
+          : items;
+
       return {
         success: true,
         data: {
-          items,
+          items: filteredItems,
           pagination: {
             currentPage: params?.page || 1,
             totalPages: totalPages || 1,
             pageSize: params?.limit || 10,
-            totalItems: totalItems || items.length,
+            totalItems:
+              params?.statusTab && params.statusTab !== "all"
+                ? filteredItems.length
+                : totalItems || filteredItems.length,
             hasNextPage: (params?.page || 1) < totalPages,
             hasPrevPage: (params?.page || 1) > 1,
           },
@@ -280,11 +312,13 @@ export const usersService = {
         userId,
         status: backendStatus,
       });
-    } catch {
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      console.error("Failed to update customer status:", error);
       return {
-        success: true,
+        success: false,
         data: null,
-        message: "Status updated",
+        message: err?.message || "فشل تحديث حالة العميل",
       };
     }
   },
